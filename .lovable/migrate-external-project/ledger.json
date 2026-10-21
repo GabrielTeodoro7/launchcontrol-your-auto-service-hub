@@ -1,0 +1,14 @@
+{
+  "delivery": "standalone-java-servlet-mysql-source-archive",
+  "reason": "Lovable's hosted preview is fixed to TanStack and cannot execute Java Servlets or MySQL; the user's requested standalone archive will not be substituted with a React application.",
+  "capabilities": [
+    {"capability":"source and design audit","source":"both attached ZIPs and PDF","outcome":"preserve dark graphite/orange interface and reconcile integrator flows","status":"audited","next_action":"implement standalone source"},
+    {"capability":"database schema and records","source":"both prototypes use browser localStorage; no database export supplied","outcome":"new MySQL schema and clearly identified optional demonstration records","status":"pending","next_action":"implement and test"},
+    {"capability":"auth identities and authorization","source":"mock login in both ZIPs","outcome":"Java session authentication and server-side ownership checks","status":"pending","next_action":"implement and test; no production identities were supplied"},
+    {"capability":"vehicle and service workflows","source":"integrator prototype and supplied specification","outcome":"Servlet-backed vehicle, request, quote, service and diagnosis workflows","status":"pending","next_action":"implement and verify"},
+    {"capability":"uploads and file bytes","source":"optional photo field, no object export","outcome":"validate and privately serve attachments","status":"pending","next_action":"implement"},
+    {"capability":"providers, callbacks, webhooks and schedules","source":"source audit","outcome":"no production integrations detected in supplied source","status":"not_detected","next_action":"do not invent integrations"},
+    {"capability":"UML and ER","source":"integrator duplicated class diagram, previously delivered v3 use cases","outcome":"validate and export editable profile diagrams","status":"pending","next_action":"generate and inspect"},
+    {"capability":"verification and cutover","source":"standalone deployment requirements","outcome":"compile Java, exercise available tests and report environment limitations","status":"pending","next_action":"verify before claiming completion"}
+  ]
+}
