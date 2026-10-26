@@ -1,6 +1,7 @@
 # LaunchControl standalone delivery
 
 - [x] Inspect both supplied archives and PDF; record current capabilities and runtime constraints.
+- [x] Compare reuploaded Sem_título_compressed-2.pdf with the original; identical content, reaffirmed as the visual reference.
 - [ ] Build standalone Java Servlet/JDBC source with layered services and ownership/RBAC.
 - [ ] Implement MySQL schema, optional demo seed and external configuration.
 - [ ] Preserve supplied graphite/orange design in vanilla HTML/CSS/JavaScript screens.
