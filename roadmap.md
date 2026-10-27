@@ -1,11 +1,8 @@
-# LaunchControl standalone delivery
+# LaunchControl standalone delivery (saved in Files: LaunchControl/)
 
 - [x] Inspect both supplied archives and PDF; record current capabilities and runtime constraints.
 - [x] Compare reuploaded Sem_título_compressed-2.pdf with the original; identical content, reaffirmed as the visual reference.
-- [ ] Build standalone Java Servlet/JDBC source with layered services and ownership/RBAC.
-- [ ] Implement MySQL schema, optional demo seed and external configuration.
-- [ ] Preserve supplied graphite/orange design in vanilla HTML/CSS/JavaScript screens.
-- [ ] Add diagnosis workflow, supplier/admin modules and private attachments.
-- [ ] Validate profile UML and ER exports and traceability.
-- [ ] Compile and test available flows; record unverified requirements explicitly.
-- [ ] Inspect clean archive and deliver source ZIP with installation instructions.
+- [x] Part 1: MySQL schema (23 tables) + demo seed + Java Servlet API with RBAC; 21/21 Python end-to-end checks against real MySQL.
+- [ ] Part 2: Preserve supplied graphite/orange design in vanilla HTML/CSS/JavaScript screens.
+- [ ] Part 3: Supplier part requests/offers, private photo attachments.
+- [ ] Part 4: Profile UML v4 + ER exports, traceability matrix, final ZIP with install instructions.
