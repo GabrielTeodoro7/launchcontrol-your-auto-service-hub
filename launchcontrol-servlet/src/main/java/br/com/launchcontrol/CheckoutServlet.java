@@ -36,6 +36,30 @@ public class CheckoutServlet extends HttpServlet {
         try (Connection c = Database.getConnection()) {
             c.setAutoCommit(false);
             try {
+                try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT pg.id,pg.valor,pg.status,pg.modo,pg.cliente_id,ped.id AS pedido_id,ped.orcamento_id " +
+                    "FROM pagamentos pg JOIN pedidos ped ON ped.id=pg.pedido_id WHERE pg.chave_idempotencia=? FOR UPDATE")) {
+                    ps.setString(1, idempotencyKey);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            if (rs.getLong("cliente_id") != userId || rs.getLong("orcamento_id") != quoteId) {
+                                c.rollback(); Json.error(response, 409, "A chave de idempotência já foi usada em outra operação."); return;
+                            }
+                            long paymentId = rs.getLong("id");
+                            long existingOrderId = rs.getLong("pedido_id");
+                            java.math.BigDecimal existingAmount = rs.getBigDecimal("valor");
+                            String existingStatus = rs.getString("status");
+                            String existingMode = rs.getString("modo");
+                            c.commit();
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\\"paymentId\\":" + paymentId + ",\\"pedidoId\\":" + existingOrderId +
+                                ",\\"valor\\":" + existingAmount.toPlainString() + ",\\"status\\":" + Json.quote(existingStatus) +
+                                ",\\"modo\\":" + Json.quote(existingMode) + ",\\"cobrado\\":false}");
+                            return;
+                        }
+                    }
+                }
+
                 java.math.BigDecimal amount;
                 try (PreparedStatement ps = c.prepareStatement(
                     "SELECT o.valor FROM orcamentos o JOIN solicitacoes_orcamento s ON s.id=o.solicitacao_id " +
@@ -52,6 +76,24 @@ public class CheckoutServlet extends HttpServlet {
                     "ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)", PreparedStatement.RETURN_GENERATED_KEYS)) {
                     ps.setLong(1, userId); ps.setLong(2, quoteId); ps.setBigDecimal(3, amount); ps.executeUpdate();
                     try (ResultSet rs = ps.getGeneratedKeys()) { if (!rs.next()) throw new SQLException("Pedido sem ID"); orderId = rs.getLong(1); }
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT id,valor,metodo,status,modo FROM pagamentos WHERE pedido_id=? AND status='PENDENTE' FOR UPDATE")) {
+                    ps.setLong(1, orderId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            if (!method.equals(rs.getString("metodo"))) {
+                                c.rollback(); Json.error(response, 409, "Já existe um pagamento pendente para este pedido. Cancele-o antes de escolher outro método."); return;
+                            }
+                            long paymentId = rs.getLong("id");
+                            java.math.BigDecimal existingAmount = rs.getBigDecimal("valor");
+                            c.commit();
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\\"paymentId\\":" + paymentId + ",\\"pedidoId\\":" + orderId +
+                                ",\\"valor\\":" + existingAmount.toPlainString() + ",\\"status\\":\\"PENDENTE\\",\\"modo\\":\\"DEMONSTRACAO\\",\\"cobrado\\":false}");
+                            return;
+                        }
+                    }
                 }
                 try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO pagamentos(pedido_id,cliente_id,metodo,status,modo,chave_idempotencia,valor) " +
