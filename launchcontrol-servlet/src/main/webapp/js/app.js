@@ -117,7 +117,7 @@ document.querySelector("#diagnostic-form").addEventListener("submit", async even
   status.textContent = "Enviando relato…";
   try {
     const response = await fetch("api/diagnosticos", {
-      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},
       body:new URLSearchParams({vehicle:form.get("vehicle"),symptoms:form.get("symptoms"),priority:form.get("priority")})
     });
     const result = await response.json();
@@ -134,7 +134,7 @@ document.querySelector("#checkout-form").addEventListener("submit", async event 
   status.textContent = "Criando registro demonstrativo pendente…";
   try {
     const response = await fetch("api/checkout", {
-      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Idempotency-Key":crypto.randomUUID().replaceAll("-","")},
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Idempotency-Key":crypto.randomUUID().replaceAll("-",""),"X-CSRF-Token":currentUser?.csrf || ""},
       body:new URLSearchParams({quoteId:form.get("quoteId"),method:form.get("method")})
     });
     const result = await response.json();
@@ -143,7 +143,16 @@ document.querySelector("#checkout-form").addEventListener("submit", async event 
   } catch (error) { status.textContent = error.message; }
 });
 
-document.querySelector("#auth-open").addEventListener("click", () => authDialog.showModal());
+document.querySelector("#auth-open").addEventListener("click", async () => {
+  if (!currentUser) { authDialog.showModal(); return; }
+  try {
+    const response = await fetch("api/auth", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:"logout"})});
+    if (!response.ok) throw new Error("Não foi possível encerrar a sessão.");
+    currentUser = null;
+    document.querySelector("#auth-open").textContent = "Entrar";
+    await loadOrders();
+  } catch (error) { apiStatus.textContent = error.message; }
+});
 document.querySelector("#auth-close").addEventListener("click", () => authDialog.close());
 document.querySelector("#auth-toggle").addEventListener("click", () => {
   authMode = authMode === "login" ? "register" : "login";
@@ -169,13 +178,6 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     authDialog.close();
     await loadOrders();
   } catch (error) { status.textContent = error.message; }
-});
-document.querySelector("#auth-open").addEventListener("dblclick", async () => {
-  if (!currentUser) return;
-  await fetch("api/auth",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:"logout"})});
-  currentUser = null;
-  document.querySelector("#auth-open").textContent = "Entrar";
-  loadOrders();
 });
 (async () => {
   try {
