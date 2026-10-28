@@ -44,13 +44,14 @@ code .
 6. Execute `banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql` para criar agenda, capacidade, preferências e fila de entregas externas. Faça backup antes de executar migrações em bancos com dados importantes.
 7. Configure no ambiente em que o Tomcat será iniciado as variáveis `LC_DB_URL`, `LC_DB_USER` e `LC_DB_PASSWORD`. Não publique senhas no GitHub. Para anexos do passaporte, configure também `LC_UPLOAD_DIR` com um caminho absoluto gravável fora da pasta pública do Tomcat. O upload aceita PDF, PNG e JPEG de até 5 MB; sem essa variável, o endpoint de anexos permanece desabilitado.
 8. Para habilitar a resposta de IA real, configure `OPENAI_API_KEY` no ambiente do Tomcat. `OPENAI_MODEL` é opcional e usa `gpt-5-mini` como padrão no código atual. Sem a chave, o modo de sintomas oferece orientação guiada explicitamente identificada como sem IA; o modo de pesquisa de peças depende do provedor. Não coloque a chave no frontend ou no repositório.
-8. Na raiz do projeto, compile:
+9. Para e-mail externo, configure `RESEND_API_KEY` e `EMAIL_FROM` com um remetente verificado no Resend. Para WhatsApp Cloud API, configure `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` e, opcionalmente, `WHATSAPP_API_VERSION` (padrão `v21.0`). Os usuários precisam habilitar o canal e informar seu número nas preferências. Sem credenciais, as notificações internas continuam funcionando e as entregas externas aguardam configuração. Nunca coloque tokens no frontend nem no GitHub.
+10. Na raiz do projeto, compile:
 
 ```bash
 mvn -f backend/pom.xml clean package
 ```
 
-10. Copie `backend/target/launchcontrol.war` para a pasta `webapps` do Tomcat, inicie o servidor e acesse `http://localhost:8080/launchcontrol/`.
+11. Copie `backend/target/launchcontrol.war` para a pasta `webapps` do Tomcat, inicie o servidor e acesse `http://localhost:8080/launchcontrol/`.
 
 O servidor precisa usar uma versão do JDK compatível com o `pom.xml` e conseguir acessar o MySQL.
 
