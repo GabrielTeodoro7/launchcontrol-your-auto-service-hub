@@ -26,6 +26,7 @@ required = [
     "src/main/java/br/com/launchcontrol/DiagnosticServlet.java",
     "src/main/java/br/com/launchcontrol/PartsSearchServlet.java",
     "src/main/java/br/com/launchcontrol/PartsAssistantServlet.java",
+    "src/main/java/br/com/launchcontrol/InventoryServlet.java",
     "src/main/java/br/com/launchcontrol/CheckoutServlet.java",
     "src/main/java/br/com/launchcontrol/PaymentServlet.java",
     "src/main/webapp/index.html", "src/main/webapp/css/style.css",
@@ -80,6 +81,9 @@ assert 'id="parts-search-form"' in html and 'id="parts-results"' in html, "Inter
 assert 'id="garagem-inteligente"' in html and 'id="garage-timeline"' in html, "Interface Garagem Inteligente ausente"
 assert "async function loadGarage()" in js and "api/diagnosticos" in js, "Histórico da garagem não conectado aos endpoints existentes"
 assert "solicitacaoId" in read("src/main/java/br/com/launchcontrol/OrderServlet.java") and "veiculoId" in read("src/main/java/br/com/launchcontrol/RequestServlet.java"), "Relacionamentos para o histórico da garagem ausentes"
+inventory = read("src/main/java/br/com/launchcontrol/InventoryServlet.java")
+assert "/api/estoque" in inventory and "FOR UPDATE" in inventory and "fornecedor_id" in inventory, "Controle de estoque por fornecedor ausente"
+assert "estoque" in read("src/main/webapp/index.html") and "quote-sort" in read("src/main/webapp/index.html"), "Interface de estoque ou comparação de orçamentos ausente"
 assert all(host in js for host in ["lista.mercadolivre.com.br", "shopee.com.br/search", "olx.com.br/brasil"]), "Pesquisas externas do LC Parts ausentes"
 assert "noopener noreferrer" in js and "api/pecas/busca" in js, "Busca real e segurança dos links externos ausentes"
 assert "api/assistente-pecas" in js and 'id="parts-assistant-form"' in html, "Assistente IA do LC Parts ausente"

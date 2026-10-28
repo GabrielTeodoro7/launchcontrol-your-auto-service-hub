@@ -160,6 +160,12 @@ function applyRoleUI() {
   document.querySelector("#quote-panel").hidden = !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(role);
   document.querySelector("#checkout").hidden = role !== "CLIENTE";
   document.querySelector("#diagnostico").hidden = role !== "CLIENTE";
+  document.querySelector("#estoque-inteligente").hidden = !["FORNECEDOR", "ADMINISTRADOR"].includes(role);
+  document.querySelector("#inventory-supplier-field").hidden = role !== "ADMINISTRADOR";
+  document.querySelectorAll(".nav-item[data-profiles]").forEach(link => {
+    const allowed = link.dataset.profiles.split(",");
+    link.hidden = !allowed.includes(role);
+  });
 }
 
 // Carrega os veículos do cliente e preenche a lista de seleção.
@@ -394,10 +400,37 @@ async function loadQuotes() {
     const response = await fetch("api/orcamentos");
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível consultar orçamentos.");
-    if (!result.length) {
-      const empty = document.createElement("p"); empty.className = "muted"; empty.textContent = "Nenhum orçamento encontrado para esta conta."; list.append(empty); return;
+    const searchTerm = (document.querySelector("#quote-search")?.value || "").trim().toLocaleLowerCase("pt-BR");
+    const sortMode = document.querySelector("#quote-sort")?.value || "recommended";
+    const matching = result.filter(quote => [
+      quote.oficina, quote.descricao, quote.status, quote.observacoes, String(quote.id), String(quote.solicitacaoId)
+    ].some(value => String(value || "").toLocaleLowerCase("pt-BR").includes(searchTerm)));
+    const comparablePrices = matching.map(q => Number(q.valor)).filter(Number.isFinite);
+    const deadlines = matching.map(q => Number(q.prazoDias)).filter(value => Number.isFinite(value) && value >= 0);
+    const summary = document.querySelector("#quote-comparison-summary");
+    summary.replaceChildren();
+    if (matching.length) {
+      const note = document.createElement("p");
+      const lowestPrice = comparablePrices.length ? Math.min(...comparablePrices) : null;
+      const shortest = deadlines.length ? Math.min(...deadlines) : null;
+      note.textContent = matching.length + (matching.length === 1 ? " proposta encontrada" : " propostas encontradas") +
+        (lowestPrice == null ? ". Não há preços comparáveis." : ". Menor valor informado: " + currency(lowestPrice) + ".") +
+        (shortest == null ? " Prazo não informado nas propostas." : " Menor prazo informado: " + shortest + (shortest === 1 ? " dia." : " dias."));
+      summary.append(note);
     }
-    result.forEach(quote => {
+    matching.sort((a,b) => {
+      if (sortMode === "price") return Number(a.valor) - Number(b.valor);
+      if (sortMode === "deadline") return (a.prazoDias == null ? Infinity : Number(a.prazoDias)) - (b.prazoDias == null ? Infinity : Number(b.prazoDias));
+      if (sortMode === "newest") return new Date(b.criadoEm || 0) - new Date(a.criadoEm || 0);
+      return Number(a.valor) - Number(b.valor) || (a.prazoDias == null ? Infinity : Number(a.prazoDias)) - (b.prazoDias == null ? Infinity : Number(b.prazoDias));
+    });
+    if (!matching.length) {
+      const empty = document.createElement("p"); empty.className = "muted";
+      empty.textContent = result.length ? "Nenhuma proposta corresponde à pesquisa." : "Nenhum orçamento encontrado para esta conta.";
+      list.replaceChildren(empty); return;
+    }
+    list.replaceChildren();
+    matching.forEach(quote => {
       const card = document.createElement("article"); card.className = "quote-card";
       const title = document.createElement("strong"); title.textContent = "Orçamento #" + quote.id + " · Solicitação #" + quote.solicitacaoId;
       const description = document.createElement("p"); description.textContent = quote.descricao || "Serviço automotivo";
@@ -446,6 +479,94 @@ async function loadQuotes() {
 }
 
 // Carrega a lista de solicitações que a oficina pode analisar para preparar orçamentos.
+
+async function loadInventory() {
+  if (!currentUser || !["FORNECEDOR", "ADMINISTRADOR"].includes(currentUser.perfil)) return;
+  const list = document.querySelector("#inventory-list");
+  const summary = document.querySelector("#inventory-summary");
+  list.replaceChildren();
+  summary.replaceChildren();
+  const query = new URLSearchParams({
+    q: document.querySelector("#inventory-search").value.trim(),
+    estoque: document.querySelector("#inventory-filter").value
+  });
+  try {
+    const response = await fetch("api/estoque?" + query.toString(), {headers:{"Accept":"application/json"}});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível carregar o estoque.");
+    const low = result.filter(item => item.estoque > 0 && item.estoque <= 5).length;
+    const zero = result.filter(item => item.estoque === 0).length;
+    const total = result.length;
+    const metrics = [
+      ["Itens listados", total],
+      ["Estoque baixo", low],
+      ["Sem unidades", zero]
+    ];
+    metrics.forEach(([label, value]) => {
+      const card = document.createElement("div"); card.className = "inventory-metric";
+      const name = document.createElement("span"); name.textContent = label;
+      const number = document.createElement("strong"); number.textContent = value;
+      card.append(name, number); summary.append(card);
+    });
+    if (!result.length) {
+      const empty = document.createElement("p"); empty.className = "muted";
+      empty.textContent = "Nenhuma peça encontrada para estes filtros. Cadastre uma peça ou ajuste a pesquisa.";
+      list.append(empty); return;
+    }
+    result.forEach(item => {
+      const card = document.createElement("article"); card.className = "inventory-item";
+      const top = document.createElement("div"); top.className = "inventory-item-top";
+      const title = document.createElement("strong"); title.textContent = item.nome;
+      const badge = document.createElement("span"); badge.className = "status-badge " + (item.situacao === "ZERADO" ? "aguardando_peca" : item.situacao === "BAIXO" ? "pendente" : "concluido"); badge.textContent = item.situacao === "ZERADO" ? "Sem estoque" : item.situacao === "BAIXO" ? "Estoque baixo" : "Disponível";
+      top.append(title, badge);
+      const details = document.createElement("p"); details.textContent = [item.marca, item.codigo ? "Código: " + item.codigo : "", "Quantidade: " + item.estoque, "Preço: " + currency(item.preco), item.ativo ? "Cadastro ativo" : "Cadastro inativo"].filter(Boolean).join(" · ");
+      const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar item";
+      edit.addEventListener("click", () => {
+        const form = document.querySelector("#inventory-form");
+        ["id","nome","marca","codigo","descricao","preco","estoque","fornecedorId"].forEach(key => { form.elements[key].value = item[key] ?? ""; });
+        form.elements.ativo.value = String(item.ativo);
+        document.querySelector("#inventory-form-title").textContent = "Editar peça #" + item.id;
+        document.querySelector("#inventory-status").textContent = "Atualize os dados e salve para persistir as alterações.";
+        form.scrollIntoView({behavior:"smooth",block:"center"});
+      });
+      card.append(top, details, edit); list.append(card);
+    });
+  } catch (error) {
+    const message = document.createElement("p"); message.className = "form-status"; message.textContent = error.message || "Falha ao consultar estoque."; list.append(message);
+  }
+}
+
+document.querySelector("#inventory-search").addEventListener("input", () => loadInventory());
+document.querySelector("#inventory-filter").addEventListener("change", () => loadInventory());
+document.querySelector("#inventory-refresh").addEventListener("click", loadInventory);
+document.querySelector("#inventory-cancel-edit").addEventListener("click", () => {
+  document.querySelector("#inventory-form").reset();
+  document.querySelector("#inventory-form").elements.id.value = "";
+  document.querySelector("#inventory-form-title").textContent = "Cadastrar peça no estoque";
+});
+document.querySelector("#inventory-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const values = new FormData(form);
+  const status = document.querySelector("#inventory-status");
+  status.textContent = "Salvando no estoque…";
+  const payload = {};
+  ["id","nome","marca","codigo","descricao","preco","estoque","ativo","fornecedorId"].forEach(key => payload[key] = values.get(key));
+  try {
+    const response = await fetch("api/estoque", {
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},
+      body:new URLSearchParams(payload)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível salvar a peça.");
+    status.textContent = "Peça #" + result.id + " salva no estoque.";
+    form.reset(); form.elements.id.value = "";
+    document.querySelector("#inventory-form-title").textContent = "Cadastrar peça no estoque";
+    await loadInventory();
+  } catch (error) { status.textContent = error.message; }
+});
+
 async function loadOfficeRequests() {
   if (!currentUser || currentUser.perfil !== "OFICINA") return;
   const list = document.querySelector("#office-request-list");
@@ -509,6 +630,8 @@ async function loadPayments() {
 }
 
 document.querySelector("#load-payments").addEventListener("click", loadPayments);
+document.querySelector("#quote-search").addEventListener("input", () => loadQuotes());
+document.querySelector("#quote-sort").addEventListener("change", () => loadQuotes());
 
 // Este evento envia a proposta criada pela oficina.
 document.querySelector("#quote-form").addEventListener("submit", async event => {
@@ -931,6 +1054,9 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     await loadVehicles();
     await loadRequests();
     await loadGarage();
+    await loadQuotes();
+    await loadOfficeRequests();
+    await loadInventory();
   } catch (error) { status.textContent = error.message; }
 });
 (async () => {
@@ -948,5 +1074,6 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   await loadGarage();
   loadQuotes();
   loadOfficeRequests();
+  loadInventory();
   loadPayments();
 })();
