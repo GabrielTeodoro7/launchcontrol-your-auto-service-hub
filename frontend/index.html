@@ -243,6 +243,21 @@
           <div class="action-group"><button class="button button-primary" type="submit">Salvar peça</button><button class="mini-button" id="inventory-cancel-edit" type="button">Limpar formulário</button></div>
           <p class="form-status" id="inventory-status" role="status">Os dados serão salvos no estoque existente no MySQL.</p>
         </form>
+        <section id="fitment-admin-tools" class="garage-subsection" hidden>
+          <h3>Catálogo de compatibilidade · administração</h3>
+          <p class="muted">Cadastre somente referências com fonte identificável. Marque como confirmada ou incompatível apenas quando houver evidência técnica verificável.</p>
+          <form id="fitment-admin-form" class="stack-form">
+            <div class="parts-fields"><label>ID da peça ativa<input name="pecaId" type="number" min="1" required></label><label>Marca do veículo<input name="marcaVeiculo" maxlength="80" required></label><label>Modelo do veículo<input name="modeloVeiculo" maxlength="100" required></label></div>
+            <div class="parts-fields"><label>Ano inicial (opcional)<input name="anoInicio" type="number" min="1950" max="2100"></label><label>Ano final (opcional)<input name="anoFim" type="number" min="1950" max="2100"></label><label>Motorização (opcional)<input name="motorizacao" maxlength="80"></label></div>
+            <label>Código OEM (opcional)<input name="codigoOem" maxlength="80"></label>
+            <label>Estado de verificação<select name="status"><option value="NAO_VERIFICADA">Não verificada</option><option value="CONFIRMADA">Confirmada por fonte</option><option value="INCOMPATIVEL">Incompatível segundo fonte</option></select></label>
+            <label>Fonte técnica / fornecedor<input name="fonte" maxlength="180" placeholder="Ex.: catálogo do fabricante" required></label>
+            <label>Referência / URL / identificador<input name="referencia" maxlength="500" placeholder="Identificador verificável da fonte" required></label>
+            <label>Observações<textarea name="observacoes" maxlength="500" rows="2"></textarea></label>
+            <button class="button button-primary" type="submit">Registrar referência</button>
+            <p id="fitment-admin-status" class="form-status" role="status">Somente administradores podem registrar referências.</p>
+          </form>
+        </section>
       </section>
       <section class="panel" id="servicos">
         <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO</p><h2>Ordens de serviço</h2><p class="muted">Ações são controladas pelo status real retornado pelo backend.</p></div><label class="search-box"><span class="sr-only">Pesquisar serviços</span><input id="service-search" type="search" placeholder="Pesquisar cliente, veículo ou serviço"></label></div>
