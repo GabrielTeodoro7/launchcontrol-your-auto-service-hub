@@ -105,7 +105,7 @@ public class QuoteDecisionServlet extends HttpServlet {
                             "ORDEM_SERVICO", requestId);
                 }
                 try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)"))
+                    "INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)")) {
                     ps.setLong(1, userId); ps.setString(2, "DECISAO_ORCAMENTO"); ps.setString(3, "orcamentos");
                     ps.setLong(4, quoteId); ps.setString(5, "Decisão do cliente: " + decision); ps.executeUpdate();
                 }
