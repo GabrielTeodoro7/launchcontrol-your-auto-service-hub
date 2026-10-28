@@ -118,3 +118,12 @@ Os comentários no código explicam as responsabilidades de cada arquivo e os tr
 A área LC Parts permite informar marca, modelo, ano, versão, motorização, peça, código OEM, cor opcional e condição. Quando a pessoa está autenticada como cliente, também pode preencher os dados a partir de um veículo cadastrado.
 
 Nesta etapa, a pesquisa abre páginas de busca do Mercado Livre, Shopee, OLX e uma busca geral na web para localizar lojas e fabricantes. **Não há integração de API com esses serviços**: o LaunchControl não recupera os anúncios, preços, frete, avaliações, estoque ou compatibilidade, e não deve ser apresentado como se fizesse isso. A conferência acontece na fonte externa. Nenhuma tabela, coluna, dependência ou endpoint foi adicionado para esta área.
+
+
+## Garagem Inteligente — estado desta implementação
+
+A Garagem Inteligente reúne, por veículo cadastrado, solicitações, orçamentos e ordens de serviço que podem ser relacionados pelos identificadores já existentes. Também lista os relatos de diagnóstico do próprio cliente e exibe o laudo técnico somente quando há um texto registrado no banco.
+
+Para isso, os endpoints existentes passaram a devolver campos adicionais de relacionamento e data; não foram criadas tabelas, colunas, dependências ou novas rotas. A consulta de diagnósticos por GET é restrita ao cliente autenticado e filtra pelo identificador da própria conta.
+
+A tela informa que o histórico é limitado aos registros existentes no LaunchControl e não representa necessariamente o histórico completo ou oficial do veículo. A validação ponta a ponta ainda depende de executar a aplicação em um contêiner Jakarta Servlet conectado ao MySQL e testar com contas e registros de homologação.
