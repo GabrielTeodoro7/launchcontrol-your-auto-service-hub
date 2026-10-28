@@ -19,7 +19,8 @@ import java.sql.SQLException;
  */
 public class QuoteServlet extends HttpServlet {
     // Executado quando o navegador envia dados para criar ou alterar alguma informação.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         if (!"OFICINA".equals(request.getSession(false).getAttribute("userRole"))
                 && !"ADMINISTRADOR".equals(request.getSession(false).getAttribute("userRole"))) {
