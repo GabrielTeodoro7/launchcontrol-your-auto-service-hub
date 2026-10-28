@@ -23,9 +23,9 @@ public class ReviewServlet extends HttpServlet {
             Json.error(response, 403, "Somente clientes podem consultar suas avaliações.");
             return;
         }
-        String sql = "SELECT a.id,a.ordem_servico_id,a.nota,a.comentario,a.criado_em,os.codigo,of.nome_fantasia " +
+        String sql = "SELECT a.id,a.ordem_servico_id,a.nota,a.comentario,a.criado_em,os.codigo,oficina.nome_fantasia " +
                 "FROM avaliacoes_servico a JOIN ordens_servico os ON os.id=a.ordem_servico_id " +
-                "JOIN oficinas of ON of.id=a.oficina_id WHERE a.cliente_id=? ORDER BY a.criado_em DESC LIMIT 100";
+                "JOIN oficinas oficina ON oficina.id=a.oficina_id WHERE a.cliente_id=? ORDER BY a.criado_em DESC LIMIT 100";
         try (Connection connection = Database.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, (Long) session.getAttribute("userId"));
