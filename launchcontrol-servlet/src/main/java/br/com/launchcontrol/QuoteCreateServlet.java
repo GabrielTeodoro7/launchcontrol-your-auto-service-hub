@@ -19,7 +19,8 @@ import java.sql.SQLException;
  */
 public class QuoteCreateServlet extends HttpServlet {
     // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         String role = (String)session.getAttribute("userRole");
         long userId = (Long)session.getAttribute("userId");
@@ -59,7 +60,8 @@ $2HttpServletRequest request, HttpServletResponse response) throws IOException {
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar orçamentos."); }
     }
     // Executado quando o navegador envia dados para criar ou alterar alguma informação.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         if (!"OFICINA".equals(session.getAttribute("userRole"))) {
             Json.error(response, 403, "Somente uma conta de oficina pode enviar orçamento.");
