@@ -170,7 +170,7 @@ A base foi atualizada de forma incremental, mantendo o WAR, JDBC, MySQL e o fron
 | Descritor web.xml | Servlet 6.0 | Servlet 6.1 |
 | MySQL Connector/J | 9.3.0 | 9.7.0 |
 | Maven | requisito 3.9+ sem versão fixada | Maven 3.10.0 na CI |
-| Maven Compiler Plugin | não declarado explicitamente | 3.14.1 |
+| Maven Compiler Plugin | não declarado explicitamente | 3.16.0 |
 | Maven WAR Plugin | versão herdada do Maven | 3.5.1 |
 | Servidor recomendado | Tomcat 10.1+ | Tomcat 11.x |
 
