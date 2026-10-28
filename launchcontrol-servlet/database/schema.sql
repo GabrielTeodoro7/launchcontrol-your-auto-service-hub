@@ -1,7 +1,11 @@
+-- Banco de dados do LaunchControl. SQL cria tabelas e permite consultar ou alterar registros.
+-- IF NOT EXISTS evita erro se o banco já tiver sido criado.
 CREATE DATABASE IF NOT EXISTS launchcontrol
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Define qual banco receberá as tabelas criadas abaixo.
 USE launchcontrol;
 
+-- Guarda contas de acesso. senha_hash guarda o resumo seguro da senha, nunca a senha original.
 CREATE TABLE IF NOT EXISTS usuarios (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   nome VARCHAR(120) NOT NULL,
@@ -12,6 +16,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Guarda informações complementares das oficinas ligadas a uma conta.
 CREATE TABLE IF NOT EXISTS oficinas (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   usuario_id BIGINT NOT NULL UNIQUE,
@@ -25,6 +30,7 @@ CREATE TABLE IF NOT EXISTS oficinas (
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
+-- Dados dos fornecedores que podem disponibilizar peças.
 CREATE TABLE IF NOT EXISTS fornecedores (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   usuario_id BIGINT NOT NULL UNIQUE,
@@ -36,6 +42,7 @@ CREATE TABLE IF NOT EXISTS fornecedores (
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
+-- Catálogo de serviços automotivos consultados pelos clientes.
 CREATE TABLE IF NOT EXISTS servicos (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   oficina_id BIGINT,
@@ -48,6 +55,7 @@ CREATE TABLE IF NOT EXISTS servicos (
   FOREIGN KEY (oficina_id) REFERENCES oficinas(id)
 );
 
+-- Catálogo de peças, com preço, estoque e fornecedor.
 CREATE TABLE IF NOT EXISTS pecas (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   fornecedor_id BIGINT,
@@ -61,6 +69,7 @@ CREATE TABLE IF NOT EXISTS pecas (
   FOREIGN KEY (fornecedor_id) REFERENCES fornecedores(id)
 );
 
+-- Veículos cadastrados por clientes; cliente_id identifica o proprietário.
 CREATE TABLE IF NOT EXISTS veiculos (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   cliente_id BIGINT NOT NULL,
@@ -74,6 +83,7 @@ CREATE TABLE IF NOT EXISTS veiculos (
   FOREIGN KEY (cliente_id) REFERENCES usuarios(id)
 );
 
+-- Pedidos enviados por clientes com veículo e serviço desejado.
 CREATE TABLE IF NOT EXISTS solicitacoes_orcamento (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   cliente_id BIGINT NOT NULL,
@@ -88,6 +98,7 @@ CREATE TABLE IF NOT EXISTS solicitacoes_orcamento (
   INDEX idx_solicitacoes_cliente (cliente_id, criada_em)
 );
 
+-- Propostas de preço e prazo enviadas por oficinas para responder a solicitações.
 CREATE TABLE IF NOT EXISTS orcamentos (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   solicitacao_id BIGINT NOT NULL,
@@ -103,6 +114,7 @@ CREATE TABLE IF NOT EXISTS orcamentos (
   INDEX idx_orcamentos_solicitacao (solicitacao_id)
 );
 
+-- Serviços contratados após a decisão sobre um orçamento, com status de andamento.
 CREATE TABLE IF NOT EXISTS ordens_servico (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   codigo VARCHAR(30) NOT NULL UNIQUE,
@@ -118,6 +130,7 @@ CREATE TABLE IF NOT EXISTS ordens_servico (
   INDEX idx_ordens_status (status, criado_em)
 );
 
+-- Relatos iniciais de sintomas; não são laudos técnicos validados.
 CREATE TABLE IF NOT EXISTS diagnosticos (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   cliente_id BIGINT NOT NULL,
@@ -135,6 +148,7 @@ CREATE TABLE IF NOT EXISTS diagnosticos (
   INDEX idx_diagnosticos_cliente (cliente_id, criado_em)
 );
 
+-- Registros auxiliares do fluxo de contratação, conforme definido neste schema.
 CREATE TABLE IF NOT EXISTS pedidos (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   cliente_id BIGINT NOT NULL,
@@ -147,6 +161,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
   UNIQUE KEY uq_pedido_orcamento_cliente (cliente_id, orcamento_id)
 );
 
+-- Estados de pagamento; nesta versão o checkout é demonstrativo e não cobra dinheiro.
 CREATE TABLE IF NOT EXISTS pagamentos (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   pedido_id BIGINT NOT NULL,
@@ -164,6 +179,7 @@ CREATE TABLE IF NOT EXISTS pagamentos (
   INDEX idx_pagamentos_cliente (cliente_id, criado_em)
 );
 
+-- Eventos importantes que ajudam a rastrear ações realizadas no sistema.
 CREATE TABLE IF NOT EXISTS auditoria (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   usuario_id BIGINT,
