@@ -26,13 +26,18 @@ required = [
     "backend/src/main/java/br/com/launchcontrol/PartsAssistantServlet.java",
     "backend/src/main/java/br/com/launchcontrol/FitmentServlet.java",
     "backend/src/main/java/br/com/launchcontrol/MaintenanceServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/MaintenanceAttachmentServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/AdditionalServiceServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/NotificationServlet.java",
     "backend/src/main/java/br/com/launchcontrol/ReviewServlet.java",
     "backend/src/main/java/br/com/launchcontrol/InventoryServlet.java",
     "backend/src/main/java/br/com/launchcontrol/CheckoutServlet.java",
     "backend/src/main/java/br/com/launchcontrol/PaymentServlet.java",
     "frontend/index.html", "frontend/css/estilo-principal.css",
-    "frontend/js/interacoes.js", "backend/src/main/webapp/WEB-INF/web.xml",
+    "frontend/js/interacoes.js", "frontend/js/recursos-complementares.js",
+    "backend/src/main/webapp/WEB-INF/web.xml",
     "banco-de-dados/migracoes/001_ecossistema_automotivo.sql",
+    "banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql",
     "docs/PLANO-EVOLUCAO-LAUNCHCONTROL.md",
 ]
 missing = [item for item in required if not (ROOT / item).is_file()]
@@ -52,7 +57,9 @@ password = read("backend/src/main/java/br/com/launchcontrol/PasswordUtil.java")
 auth_filter = read("backend/src/main/java/br/com/launchcontrol/AuthFilter.java")
 html = read("frontend/index.html")
 js = read("frontend/js/interacoes.js")
+supplemental_js = read("frontend/js/recursos-complementares.js")
 css = read("frontend/css/estilo-principal.css")
+migration_two = read("banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql")
 
 assert "<maven.compiler.release>25</maven.compiler.release>" in pom, "Compilação precisa usar Java 25"
 assert "<version>6.1.0</version>" in pom and "web-app_6_1.xsd" in read("backend/src/main/webapp/WEB-INF/web.xml"), "Servlet 6.1 não está configurado"
@@ -95,6 +102,14 @@ assert "noopener noreferrer" in js and "api/pecas/busca" in js, "Busca real e se
 assert "api/assistente-pecas" in js and 'id="parts-assistant-form"' in html, "Assistente IA do LC Parts ausente"
 assert '"/api/pecas/busca".equals(path)' in read("backend/src/main/java/br/com/launchcontrol/AuthFilter.java"), "Consulta pública de peças não liberada no filtro de autenticação"
 assert "A solicitação já foi aceita" in read("backend/src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Proteção contra aceitar múltiplos orçamentos ausente"
+assert 'src="js/recursos-complementares.js"' in html, "Interface complementar não está carregada"
+assert "@WebServlet(\"/api/servicos-adicionais\")" in read("backend/src/main/java/br/com/launchcontrol/AdditionalServiceServlet.java"), "Aprovação de serviços adicionais ausente"
+assert "@WebServlet(\"/api/notificacoes\")" in read("backend/src/main/java/br/com/launchcontrol/NotificationServlet.java"), "API de notificações ausente"
+assert "@WebServlet(\"/api/anexos-manutencao\")" in read("backend/src/main/java/br/com/launchcontrol/MaintenanceAttachmentServlet.java"), "API de anexos do passaporte ausente"
+assert "LC_UPLOAD_DIR" in read("backend/src/main/java/br/com/launchcontrol/MaintenanceAttachmentServlet.java"), "Diretório seguro para anexos não configurável"
+assert all("CREATE TABLE IF NOT EXISTS " + table in migration_two for table in ["servicos_adicionais", "notificacoes", "anexos_manutencao"]), "Migração de aprovações/anexos incompleta"
+assert "api/anexos-manutencao" in supplemental_js and "Salvar como PDF" in supplemental_js, "Anexos ou exportação do passaporte não conectados"
+assert "servicos-adicionais" in supplemental_js and "api/notificacoes" in supplemental_js, "Aprovações/notificações não conectadas à interface"
 
 
 feature_tables = ["historico_manutencao", "avaliacoes_servico", "ordem_status_historico",
