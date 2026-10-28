@@ -850,7 +850,7 @@ async function searchParts(query) {
   results.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
-document.querySelector("#parts-search-form").addEventListener("submit", event => {
+document.querySelector("#parts-search-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const values = [
@@ -864,6 +864,7 @@ document.querySelector("#parts-search-form").addEventListener("submit", event =>
     document.querySelector("#parts-search-status").textContent = "Informe o veículo e a peça para montar a pesquisa.";
     return;
   }
+  await loadFitmentStatus(form);
   searchParts(query);
 });
 
@@ -1254,5 +1255,66 @@ async function loadRepairTimeline() {
   } catch (error) {
     timeline.textContent = error.message || "Não foi possível consultar a linha do tempo.";
     status.textContent = error.message || "Falha ao consultar os eventos.";
+  }
+}
+
+
+// Fitment Engine: mostra apenas evidências do catálogo local, sem inferir compatibilidade a partir do anúncio.
+async function loadFitmentStatus(form) {
+  const panel = document.querySelector("#fitment-status");
+  const results = document.querySelector("#fitment-results");
+  panel.hidden = false;
+  results.textContent = "Consultando referências de aplicação cadastradas…";
+  const params = new URLSearchParams({
+    marca: String(form.get("marca") || ""),
+    modelo: String(form.get("modelo") || ""),
+    ano: String(form.get("ano") || ""),
+    motorizacao: String(form.get("motorizacao") || ""),
+    oem: String(form.get("oem") || "")
+  });
+  try {
+    const response = await fetch("api/compatibilidade-pecas?" + params.toString(), {
+      headers: {"Accept":"application/json"}
+    });
+    const items = await response.json();
+    if (!response.ok) throw new Error(items.erro || "Não foi possível consultar o catálogo de compatibilidade.");
+    results.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Não há referência cadastrada para essa combinação no catálogo local. Isso não significa que a peça seja incompatível; confirme o código OEM com uma fonte confiável ou com o fornecedor.";
+      results.append(empty);
+      return;
+    }
+    items.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "fitment-result";
+      const title = document.createElement("strong");
+      title.textContent = item.peca || "Peça sem nome";
+      const state = document.createElement("p");
+      if (item.status === "CONFIRMADA") {
+        state.textContent = "Compatibilidade registrada como confirmada pela fonte informada.";
+      } else if (item.status === "INCOMPATIVEL") {
+        state.textContent = "A referência consultada indica incompatibilidade para esta aplicação.";
+      } else {
+        state.textContent = "Compatibilidade não verificada. Não use esta referência como confirmação técnica.";
+      }
+      const details = document.createElement("p");
+      details.textContent = [
+        item.codigoOem ? "OEM: " + item.codigoOem : "",
+        item.codigoPeca ? "Código cadastrado: " + item.codigoPeca : "",
+        item.fonte ? "Fonte: " + item.fonte : "Fonte não informada",
+        item.verificadoEm ? "Verificado em: " + formatMaintenanceDate(item.verificadoEm) : "Data de verificação não informada",
+        item.observacoes || ""
+      ].filter(Boolean).join(" · ");
+      card.append(title, state, details);
+      if (item.referencia) {
+        const reference = document.createElement("p");
+        reference.textContent = "Referência: " + item.referencia;
+        card.append(reference);
+      }
+      results.append(card);
+    });
+  } catch (error) {
+    results.textContent = (error.message || "Falha ao consultar compatibilidade.") + " A pesquisa comercial continua disponível, mas não confirma aplicação técnica.";
   }
 }
