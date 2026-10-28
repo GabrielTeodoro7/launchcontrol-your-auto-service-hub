@@ -141,6 +141,8 @@ function applyRoleUI() {
   document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
   document.querySelector("#office-tools").hidden = role !== "OFICINA";
   document.querySelector("#quote-panel").hidden = !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(role);
+  document.querySelector("#checkout").hidden = role !== "CLIENTE";
+  document.querySelector("#diagnostico").hidden = role !== "CLIENTE";
 }
 
 async function loadVehicles() {
