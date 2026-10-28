@@ -18,7 +18,8 @@ import java.sql.SQLException;
  */
 public class RequestServlet extends HttpServlet {
     // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         long userId = (Long)session.getAttribute("userId");
         String role = (String)session.getAttribute("userRole");
@@ -56,7 +57,8 @@ $2HttpServletRequest request, HttpServletResponse response) throws IOException {
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar solicitações."); }
     }
     // Executado quando o navegador envia dados para criar ou alterar alguma informação.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         var session = request.getSession(false);
         if (!"CLIENTE".equals(session.getAttribute("userRole"))) {
