@@ -116,3 +116,18 @@
 .inventory-form h3{margin:0;font-size:14px}
 .nav-item[hidden]{display:none!important}
 @media(max-width:720px){.quote-comparison-tools,.inventory-controls{grid-template-columns:1fr}.inventory-summary{grid-template-columns:1fr}.inventory-list{grid-template-columns:1fr}}
+
+
+/* Passaporte digital: componentes alinhados aos cartões e formulários já existentes. */
+.maintenance-passport{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.maintenance-passport h4{margin:0 0 10px;font-size:13px}
+.maintenance-passport .garage-columns{align-items:start}
+.maintenance-passport .garage-summary-item{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);min-width:0}
+.maintenance-passport .garage-summary-item span{font-size:11px;color:var(--muted)}
+.maintenance-passport .garage-summary-item strong{font-size:17px;color:var(--orange);overflow-wrap:anywhere}
+.maintenance-passport .garage-timeline-item{padding:13px 0;border-bottom:1px solid var(--line)}
+.maintenance-passport .garage-timeline-item:last-child{border-bottom:0}
+.maintenance-passport .garage-timeline-item strong{display:block;font-size:13px}
+.maintenance-passport .garage-timeline-item p{margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.maintenance-passport .garage-timeline-item small{display:block;margin-top:7px;color:var(--muted);font-size:11px;line-height:1.5}
+.maintenance-passport .stack-form{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
