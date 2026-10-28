@@ -11,9 +11,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @WebServlet("/api/servicos")
+/**
+ * Recebe pedidos do navegador para consultar os serviços cadastrados no banco.
+ *
+ * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
+ */
 public class ServiceServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
+$2HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         String search = request.getParameter("q");
         if (search == null) search = "";
@@ -28,6 +33,7 @@ public class ServiceServlet extends HttpServlet {
                      "ORDER BY nome LIMIT 100";
 
         try (Connection connection = Database.getConnection();
+             // PreparedStatement separa o comando SQL dos valores recebidos, reduzindo o risco de injeção de SQL.
              PreparedStatement statement = connection.prepareStatement(sql)) {
             String term = "%" + search + "%";
             statement.setString(1, term);
