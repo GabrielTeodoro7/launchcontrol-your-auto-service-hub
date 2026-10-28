@@ -60,6 +60,11 @@ Endpoints implementados nesta etapa:
 - GET /api/auth — informa a sessão atual.
 - GET /api/servicos?q=... — pesquisa serviços ativos.
 - GET /api/ordens-servico — lista ordens permitidas ao perfil autenticado.
+- POST /api/ordens-servico — atualiza andamento e registra conclusão, com bloqueio para reabrir ordem concluída.
+- GET/POST /api/veiculos — lista/cadastra veículos do cliente autenticado.
+- GET/POST /api/solicitacoes — lista e abre solicitações de orçamento.
+- POST /api/orcamentos — cria orçamento pela oficina vinculada.
+- POST /api/orcamentos/decisao — permite ao cliente aceitar ou recusar orçamento; a aceitação gera uma ordem de serviço.
 - POST /api/orcamentos/editar — altera orçamento quando permitido e bloqueia ordens concluídas.
 - POST /api/diagnosticos — registra relato inicial de cliente.
 - POST /api/checkout — cria pagamento demonstrativo pendente para orçamento aceito.
