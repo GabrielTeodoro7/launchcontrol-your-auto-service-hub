@@ -110,7 +110,10 @@ async function loadOrders() {
 
 
 function applyRoleUI() {
-  document.querySelector("#customer-tools").hidden = !currentUser || currentUser.perfil !== "CLIENTE";
+  const role = currentUser?.perfil;
+  document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
+  document.querySelector("#office-tools").hidden = role !== "OFICINA";
+  document.querySelector("#quote-panel").hidden = !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(role);
 }
 
 async function loadVehicles() {
@@ -159,6 +162,94 @@ async function loadRequests() {
   }
 }
 
+
+async function loadQuotes() {
+  const list = document.querySelector("#quote-list");
+  if (!currentUser || !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(currentUser.perfil)) {
+    list.replaceChildren(); return;
+  }
+  list.replaceChildren();
+  try {
+    const response = await fetch("api/orcamentos");
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível consultar orçamentos.");
+    if (!result.length) {
+      const empty = document.createElement("p"); empty.className = "muted"; empty.textContent = "Nenhum orçamento encontrado para esta conta."; list.append(empty); return;
+    }
+    result.forEach(quote => {
+      const card = document.createElement("article"); card.className = "quote-card";
+      const title = document.createElement("strong"); title.textContent = "Orçamento #" + quote.id + " · Solicitação #" + quote.solicitacaoId;
+      const description = document.createElement("p"); description.textContent = quote.descricao || "Serviço automotivo";
+      const meta = document.createElement("p"); meta.textContent = (quote.oficina || "Oficina") + " · " + currency(quote.valor) + " · Prazo: " + (quote.prazoDias == null ? "a combinar" : quote.prazoDias + " dia(s)");
+      const badge = document.createElement("span"); badge.className = "status-badge " + String(quote.status).toLowerCase(); badge.textContent = quote.status;
+      card.append(title, description, meta, badge);
+      const canDecide = currentUser.perfil === "CLIENTE" && ["ENVIADO", "PENDENTE"].includes(quote.status) && !["ACEITA", "CONCLUIDA", "CANCELADA"].includes(quote.solicitacaoStatus);
+      if (canDecide) {
+        const actions = document.createElement("div"); actions.className = "action-group quote-actions";
+        for (const decision of ["ACEITAR", "RECUSAR"]) {
+          const button = document.createElement("button"); button.type = "button"; button.className = decision === "ACEITAR" ? "button button-primary" : "mini-button";
+          button.textContent = decision === "ACEITAR" ? "Aceitar orçamento" : "Recusar";
+          button.addEventListener("click", async () => {
+            button.disabled = true;
+            try {
+              const res = await fetch("api/orcamentos/decisao", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({orcamentoId:quote.id,decisao:decision})});
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.erro || "Não foi possível registrar a decisão.");
+              await loadQuotes(); await loadOrders();
+              const formStatus = document.querySelector("#checkout-status");
+              if (decision === "ACEITAR") formStatus.textContent = "Orçamento aceito. Use o ID #" + quote.id + " no checkout demonstrativo; nenhum pagamento será cobrado.";
+            } catch (error) { alert(error.message); button.disabled = false; }
+          });
+          actions.append(button);
+        }
+        card.append(actions);
+      }
+      list.append(card);
+    });
+  } catch (error) {
+    const message = document.createElement("p"); message.className = "form-status"; message.textContent = error.message; list.append(message);
+  }
+}
+
+async function loadOfficeRequests() {
+  if (!currentUser || currentUser.perfil !== "OFICINA") return;
+  const list = document.querySelector("#office-request-list");
+  list.replaceChildren();
+  try {
+    const response = await fetch("api/solicitacoes");
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível consultar solicitações.");
+    if (!result.length) {
+      const empty = document.createElement("p"); empty.className = "muted"; empty.textContent = "Não há solicitações abertas no momento."; list.append(empty); return;
+    }
+    result.forEach(item => {
+      const card = document.createElement("div"); card.className = "request-item";
+      const title = document.createElement("strong"); title.textContent = "Solicitação #" + item.id + " · " + (item.cliente || "Cliente");
+      const desc = document.createElement("p"); desc.textContent = (item.veiculo || "Veículo não informado") + " — " + item.descricao;
+      const use = document.createElement("button"); use.type = "button"; use.className = "mini-button"; use.textContent = "Usar esta solicitação";
+      use.addEventListener("click", () => { document.querySelector("#quote-form [name=solicitacaoId]").value = item.id; document.querySelector("#quote-form [name=valor]").focus(); });
+      card.append(title, desc, use); list.append(card);
+    });
+  } catch (error) {
+    const message = document.createElement("p"); message.className = "form-status"; message.textContent = error.message; list.append(message);
+  }
+}
+
+document.querySelector("#quote-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#quote-form-status");
+  status.textContent = "Enviando orçamento…";
+  try {
+    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valor:form.get("valor"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível enviar orçamento.");
+    status.textContent = "Orçamento #" + result.id + " enviado.";
+    event.currentTarget.reset();
+    await loadQuotes(); await loadOfficeRequests();
+  } catch (error) { status.textContent = error.message; }
+});
+
 document.querySelector("#vehicle-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -194,6 +285,8 @@ document.querySelector("#request-form").addEventListener("submit", async event =
     status.textContent = "Solicitação #" + result.id + " enviada com status " + result.status + ".";
     event.currentTarget.reset();
     await loadRequests();
+    await loadQuotes();
+    await loadOfficeRequests();
   } catch (error) { status.textContent = error.message; }
 });
 
@@ -285,4 +378,6 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   loadOrders();
   loadVehicles();
   loadRequests();
+  loadQuotes();
+  loadOfficeRequests();
 })();
