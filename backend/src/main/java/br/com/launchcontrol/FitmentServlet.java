@@ -75,6 +75,7 @@ public class FitmentServlet extends HttpServlet {
             statement.setString(12, partPattern);
             statement.setString(13, partPattern);
             statement.setString(14, partPattern);
+            statement.setString(15, partPattern);
 
             try (ResultSet result = statement.executeQuery()) {
                 StringBuilder json = new StringBuilder("[");
