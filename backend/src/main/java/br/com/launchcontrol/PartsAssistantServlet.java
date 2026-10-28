@@ -65,14 +65,26 @@ public class PartsAssistantServlet extends HttpServlet {
             return;
         }
 
-        String apiKey = System.getenv("OPENAI_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            Json.error(response, 503, "O Launch AI ainda não está configurado no servidor. Configure OPENAI_API_KEY; os formulários e a pesquisa manual continuam disponíveis.");
-            return;
-        }
-
         String mode = value(request.getParameter("modo"), 20).toLowerCase(Locale.ROOT);
         if (!"pecas".equals(mode) && !"sintomas".equals(mode)) mode = "pecas";
+
+        long now = System.currentTimeMillis();
+        Object previousRequest = session.getAttribute("launchAiLastRequestAt");
+        if (previousRequest instanceof Long lastRequest && now - lastRequest < 1_500) {
+            Json.error(response, 429, "Aguarde um instante antes de enviar outra pergunta.");
+            return;
+        }
+        session.setAttribute("launchAiLastRequestAt", now);
+
+        String apiKey = System.getenv("OPENAI_API_KEY");
+        if (apiKey == null || apiKey.isBlank()) {
+            if ("sintomas".equals(mode)) {
+                writeGuidedFallback(response, messageOrEmpty(request.getParameter("mensagem")), "O provedor de IA não está configurado; esta é uma orientação guiada, não uma resposta gerada por IA.");
+            } else {
+                Json.error(response, 503, "O Launch AI ainda não está configurado no servidor. Configure OPENAI_API_KEY; a pesquisa manual continua disponível.");
+            }
+            return;
+        }
 
         String message = value(request.getParameter("mensagem"), 1_000);
         if (message.isBlank()) {
@@ -121,11 +133,14 @@ public class PartsAssistantServlet extends HttpServlet {
                     HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (upstream.statusCode() != 200) {
                 if (upstream.statusCode() == 429) {
-                    Json.error(response, 503, "O limite de uso da IA foi atingido. Tente novamente mais tarde.");
+                    if ("sintomas".equals(mode)) writeGuidedFallback(response, message, "O provedor de IA atingiu o limite de uso; exibindo orientação guiada sem IA.");
+                    else Json.error(response, 503, "O limite de uso da IA foi atingido. Tente novamente mais tarde.");
                 } else if (upstream.statusCode() == 401 || upstream.statusCode() == 403) {
-                    Json.error(response, 503, "A integração de IA não foi autorizada. Confira a chave e o acesso ao modelo no servidor.");
+                    if ("sintomas".equals(mode)) writeGuidedFallback(response, message, "O provedor de IA não autorizou a solicitação; exibindo orientação guiada sem IA.");
+                    else Json.error(response, 503, "A integração de IA não foi autorizada. Confira a chave e o acesso ao modelo no servidor.");
                 } else {
-                    Json.error(response, 502, "O Launch AI não conseguiu responder nesta tentativa.");
+                    if ("sintomas".equals(mode)) writeGuidedFallback(response, message, "O provedor de IA está indisponível; exibindo orientação guiada sem IA.");
+                    else Json.error(response, 502, "O Launch AI não conseguiu responder nesta tentativa.");
                 }
                 return;
             }
@@ -145,16 +160,40 @@ public class PartsAssistantServlet extends HttpServlet {
                     + ",\"modo\":" + Json.quote(mode)
                     + ",\"alertaSeguranca\":" + safetySignal + "}");
         } catch (java.net.http.HttpTimeoutException ex) {
-            Json.error(response, 504, "O Launch AI demorou demais para responder. Tente novamente.");
+            if ("sintomas".equals(mode)) writeGuidedFallback(response, message, "O provedor de IA demorou para responder; exibindo orientação guiada sem IA.");
+            else Json.error(response, 504, "O Launch AI demorou demais para responder. Tente novamente.");
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             Json.error(response, 503, "A solicitação ao Launch AI foi interrompida.");
         } catch (IOException ex) {
-            Json.error(response, 502, "Não foi possível acessar o Launch AI agora.");
+            if ("sintomas".equals(mode)) writeGuidedFallback(response, message, "Não foi possível acessar o provedor; exibindo orientação guiada sem IA.");
+            else Json.error(response, 502, "Não foi possível acessar o Launch AI agora.");
         }
     }
 
-    private static boolean hasSafetyCriticalSignal(String message) {
+
+    private static String messageOrEmpty(String message) {
+        if (message == null) return "";
+        String clean = message.trim();
+        return clean.length() > 1_000 ? clean.substring(0, 1_000) : clean;
+    }
+
+    private static void writeGuidedFallback(HttpServletResponse response, String message, String notice) throws IOException {
+        boolean urgent = hasSafetyCriticalSignal(message);
+        String guidance = urgent
+                ? "Há um relato que pode indicar risco de segurança. Não continue dirigindo se o veículo parecer inseguro. Pare em local seguro, desligue o motor se for seguro e procure assistência profissional ou guincho. Esta triagem não confirma a causa."
+                : "Ainda não é possível apontar uma causa. Para organizar o relato, informe quando o sintoma começou, em que situação acontece, se há luzes no painel e se há ruído, cheiro, fumaça ou vazamento. Não substitui uma avaliação profissional.";
+        String answer = "ORIENTACAO: " + guidance
+                + "\\nCONSULTA: VAZIO"
+                + "\\nFALTA: quando ocorre; luzes no painel; ruídos, cheiros ou vazamentos observados"
+                + "\\nALERTA: " + (urgent ? "URGENTE" : "NORMAL");
+        response.setContentType("application/json;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-store");
+        response.getWriter().write("{\\"resposta\\":" + Json.quote(answer)
+                + ",\\"modo\\":\\"sintomas\\",\\"alertaSeguranca\\":" + urgent
+                + ",\\"fallback\\":true,\\"aviso\\":" + Json.quote(notice) + "}");
+    }
+\n    private static boolean hasSafetyCriticalSignal(String message) {
         String normalized = Normalizer.normalize(message, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
         String[] signals = {
