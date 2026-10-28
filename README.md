@@ -41,7 +41,7 @@ code .
 3. Abra `banco-de-dados/modelo.sql` no MySQL Workbench e execute o script para criar o esquema-base.
 4. Execute `banco-de-dados/migracoes/001_ecossistema_automotivo.sql` no mesmo banco. A migração é aditiva e usa `CREATE TABLE IF NOT EXISTS`; faça backup antes de aplicá-la em um ambiente com dados importantes.
 5. Execute `banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql` para habilitar aprovações de serviços adicionais e notificações internas. Faça backup antes de executar migrações em bancos com dados importantes.
-6. Configure no ambiente em que o Tomcat será iniciado as variáveis `LC_DB_URL`, `LC_DB_USER` e `LC_DB_PASSWORD`. Não publique senhas no GitHub.
+6. Configure no ambiente em que o Tomcat será iniciado as variáveis `LC_DB_URL`, `LC_DB_USER` e `LC_DB_PASSWORD`. Não publique senhas no GitHub. Para anexos do passaporte, configure também `LC_UPLOAD_DIR` com um caminho absoluto gravável fora da pasta pública do Tomcat. O upload aceita PDF, PNG e JPEG de até 5 MB; sem essa variável, o endpoint de anexos permanece desabilitado.
 7. Para habilitar a resposta de IA real, configure `OPENAI_API_KEY` no ambiente do Tomcat. `OPENAI_MODEL` é opcional e usa `gpt-5-mini` como padrão no código atual. Sem a chave, o modo de sintomas oferece orientação guiada explicitamente identificada como sem IA; o modo de pesquisa de peças depende do provedor. Não coloque a chave no frontend ou no repositório.
 8. Na raiz do projeto, compile:
 
