@@ -160,6 +160,30 @@
             <div id="garage-diagnostics" class="garage-diagnostics" aria-live="polite"></div>
           </section>
         </div>
+        <section class="garage-subsection maintenance-passport">
+          <h3>Passaporte digital de manutenção</h3>
+          <p class="muted">Registre serviços e próximas manutenções. Os dados informados pelo proprietário são identificados como registros declarados, não como laudos oficiais.</p>
+          <div id="maintenance-summary" class="garage-vehicle-summary" aria-live="polite"></div>
+          <div class="garage-columns">
+            <div>
+              <h4>Histórico registrado</h4>
+              <div id="maintenance-timeline" class="garage-timeline" aria-live="polite"><p class="muted">Selecione um veículo para consultar manutenções.</p></div>
+            </div>
+            <form id="maintenance-form" class="stack-form">
+              <h4>Adicionar manutenção</h4>
+              <label>Categoria<input name="categoria" required maxlength="100" placeholder="Ex.: troca de óleo"></label>
+              <label>Descrição<textarea name="descricao" required minlength="3" maxlength="2000" rows="3" placeholder="Serviço realizado e observações"></textarea></label>
+              <label>Data do serviço<input name="dataServico" type="date" required></label>
+              <label>Quilometragem no serviço<input name="quilometragem" type="number" min="0" max="2000000" required></label>
+              <label>Custo total (R$)<input name="custo" type="number" min="0" max="99999999.99" step="0.01" required></label>
+              <label>Oficina (opcional)<input name="oficina" maxlength="160" placeholder="Nome informado pelo proprietário"></label>
+              <label>Próxima data (opcional)<input name="proximaData" type="date"></label>
+              <label>Próxima quilometragem (opcional)<input name="proximaQuilometragem" type="number" min="0" max="2000000"></label>
+              <button class="button button-primary" type="submit">Salvar manutenção</button>
+              <p id="maintenance-status" class="form-status" role="status">Selecione um veículo para começar.</p>
+            </form>
+          </div>
+        </section>
       </section>
       <section class="panel quote-panel" id="quote-panel" hidden>
         <div class="panel-heading"><div><p class="eyebrow">PROPOSTAS</p><h2>Orçamentos</h2><p class="muted">Compare as propostas recebidas. Ao aceitar, uma ordem de serviço é criada.</p></div></div>
