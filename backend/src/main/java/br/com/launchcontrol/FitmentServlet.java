@@ -25,6 +25,7 @@ public class FitmentServlet extends HttpServlet {
         String model = value(request.getParameter("modelo"), 100);
         String engine = value(request.getParameter("motorizacao"), 80);
         String oem = value(request.getParameter("oem"), 80);
+        String partQuery = value(request.getParameter("peca"), 140);
         Integer year = null;
 
         try {
@@ -51,6 +52,8 @@ public class FitmentServlet extends HttpServlet {
                 "AND (? IS NULL OR c.ano_fim IS NULL OR ? <= c.ano_fim) " +
                 "AND (c.motorizacao IS NULL OR c.motorizacao='' OR (? IS NOT NULL AND LOWER(c.motorizacao)=LOWER(?))) " +
                 "AND (? IS NULL OR LOWER(COALESCE(c.codigo_oem,''))=LOWER(?) OR LOWER(COALESCE(p.codigo,''))=LOWER(?)) " +
+                "AND (? IS NULL OR LOWER(p.nome) LIKE LOWER(?) OR LOWER(COALESCE(p.codigo,'')) LIKE LOWER(?) " +
+                "OR LOWER(COALESCE(c.codigo_oem,'')) LIKE LOWER(?)) " +
                 "ORDER BY CASE WHEN c.status='CONFIRMADA' AND c.fonte IS NOT NULL AND c.verificado_em IS NOT NULL THEN 0 " +
                 "WHEN c.status='INCOMPATIVEL' AND c.fonte IS NOT NULL AND c.verificado_em IS NOT NULL THEN 1 ELSE 2 END, p.nome " +
                 "LIMIT 100";
@@ -68,6 +71,10 @@ public class FitmentServlet extends HttpServlet {
             statement.setString(9, oem.isBlank() ? null : oem);
             statement.setString(10, oem.isBlank() ? null : oem);
             statement.setString(11, oem.isBlank() ? null : oem);
+            String partPattern = partQuery.isBlank() ? null : "%" + partQuery + "%";
+            statement.setString(12, partPattern);
+            statement.setString(13, partPattern);
+            statement.setString(14, partPattern);
 
             try (ResultSet result = statement.executeQuery()) {
                 StringBuilder json = new StringBuilder("[");
