@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
+// Esta rota inicial herda os metadados definidos na rota principal.
 // __root.tsx, and ships no og:image so serve-time hosting can inject the
 // project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
@@ -15,7 +15,7 @@ function Index() {
       style={{ backgroundColor: "#fcfbf8" }}
     >
       <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
+        data-LaunchControl-blank-page-placeholder="REMOVE_THIS"
         src="https://cdn.gpteng.co/blank-app-v1.svg"
         alt="Your app will live here!"
       />
