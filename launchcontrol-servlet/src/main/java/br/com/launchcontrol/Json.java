@@ -1,5 +1,10 @@
 package br.com.launchcontrol;
 
+/**
+ * Reúne funções simples para montar respostas JSON com segurança. JSON é um formato de texto usado para trocar dados entre o navegador e o servidor.
+ *
+ * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
+ */
 public final class Json {
     private Json() {}
     public static String quote(String value) {
