@@ -4,6 +4,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,7 +18,7 @@ import java.sql.SQLException;
 public class PaymentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         long userId = (Long) session.getAttribute("userId");
         String role = (String) session.getAttribute("userRole");
         if (!"CLIENTE".equals(role) && !"ADMINISTRADOR".equals(role)) {
@@ -50,7 +51,7 @@ public class PaymentServlet extends HttpServlet {
     }
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (!"CLIENTE".equals(session.getAttribute("userRole"))) {
             Json.error(response, 403, "Somente o cliente pode cancelar o próprio pagamento pendente.");
             return;
