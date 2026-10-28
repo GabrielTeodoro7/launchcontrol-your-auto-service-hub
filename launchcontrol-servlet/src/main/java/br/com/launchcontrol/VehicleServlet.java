@@ -18,7 +18,8 @@ import java.sql.SQLException;
  */
 public class VehicleServlet extends HttpServlet {
     // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         String role = (String) session.getAttribute("userRole");
         if (!"CLIENTE".equals(role) && !"ADMINISTRADOR".equals(role)) {
@@ -50,7 +51,8 @@ $2HttpServletRequest request, HttpServletResponse response) throws IOException {
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar veículos."); }
     }
     // Executado quando o navegador envia dados para criar ou alterar alguma informação.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         var session = request.getSession(false);
         if (!"CLIENTE".equals(session.getAttribute("userRole"))) {
