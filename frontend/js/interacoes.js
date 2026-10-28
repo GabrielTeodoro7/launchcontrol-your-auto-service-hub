@@ -7,6 +7,18 @@ const detailsTitle = document.querySelector("#detail-title");
 const detailsContent = document.querySelector("#detail-content");
 const authDialog = document.querySelector("#auth-dialog");
 const quoteEditDialog = document.querySelector("#quote-edit-dialog");
+
+const sidebarLinks = [...document.querySelectorAll(".side-nav .nav-item")];
+sidebarLinks.forEach(link => {
+  link.addEventListener("click", () => {
+    sidebarLinks.forEach(item => {
+      const active = item === link;
+      item.classList.toggle("active", active);
+      if (active) item.setAttribute("aria-current", "page");
+      else item.removeAttribute("aria-current");
+    });
+  });
+});
 let authMode = "login";
 let currentUser = null;
 let orders = [];
