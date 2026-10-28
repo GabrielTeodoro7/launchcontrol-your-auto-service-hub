@@ -604,10 +604,14 @@ function renderExternalPartSources(query, container) {
   const encoded = encodeURIComponent(query);
   const slug = query.trim().split(/\s+/).map(encodeURIComponent).join("-");
   const sources = [
-    {name:"Mercado Livre",detail:"Abrir todos os resultados da pesquisa",url:"https://lista.mercadolivre.com.br/" + slug},
-    {name:"Shopee",detail:"Pesquisa diretamente na Shopee",url:"https://shopee.com.br/search?keyword=" + encoded},
-    {name:"OLX",detail:"Pesquisar anúncios na OLX",url:"https://www.olx.com.br/brasil?q=" + encoded},
-    {name:"Lojas oficiais",detail:"Busca na web; o LaunchControl não verifica quais resultados são oficiais",url:"https://www.google.com/search?q=" + encodeURIComponent(query + " autopeças loja oficial fabricante")}
+    {name:"Mercado Livre",detail:"Anúncios consultados pela integração quando disponível",url:"https://lista.mercadolivre.com.br/" + slug},
+    {name:"Shopee",detail:"Resultados abertos na plataforma original",url:"https://shopee.com.br/search?keyword=" + encoded},
+    {name:"Amazon Brasil",detail:"Pesquisar peças e acessórios automotivos",url:"https://www.amazon.com.br/s?k=" + encodeURIComponent(query + " autopeças")},
+    {name:"OLX",detail:"Anúncios novos e usados publicados na OLX",url:"https://www.olx.com.br/brasil?q=" + encoded},
+    {name:"Connect Parts",detail:"Busca em varejista especializado; resultados devem ser conferidos",url:"https://www.google.com/search?q=" + encodeURIComponent("site:connectparts.com.br " + query)},
+    {name:"Jocar",detail:"Pesquisar catálogo de peças automotivas",url:"https://www.google.com/search?q=" + encodeURIComponent("site:jocar.com.br " + query)},
+    {name:"AutoZ",detail:"Pesquisar peças e acessórios na loja",url:"https://www.google.com/search?q=" + encodeURIComponent("AutoZ autopeças " + query)},
+    {name:"Lojas oficiais",detail:"Busca na web; confirme se o vendedor é realmente oficial",url:"https://www.google.com/search?q=" + encodeURIComponent(query + " autopeças loja oficial fabricante")}
   ];
   const heading = document.createElement("h3");
   heading.className = "parts-external-heading";
