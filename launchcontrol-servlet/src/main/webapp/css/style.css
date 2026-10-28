@@ -3,3 +3,17 @@
 [hidden]{display:none!important}.customer-tools h3{margin:0 0 4px;font-size:15px}.compact-fields{gap:10px}.request-list{display:grid;gap:9px;margin-top:8px}.request-item{border:1px solid var(--line);border-radius:8px;padding:10px;background:#101720}.request-item strong{font-size:12px}.request-item p{font-size:11px;color:var(--muted);margin:5px 0 8px;overflow-wrap:anywhere}.customer-tools .two-columns{align-items:start}
 .quote-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.quote-card{min-width:0;border:1px solid var(--line);border-radius:10px;padding:14px;background:#101720}.quote-card strong{display:block;font-size:12px}.quote-card p{font-size:11px;color:var(--muted);margin:7px 0;overflow-wrap:anywhere}.quote-actions{margin-top:12px;flex-wrap:wrap}.quote-actions .button{font-size:11px;padding:8px 10px}.office-tools h3{font-size:14px;margin:0 0 8px}.quote-panel,.office-tools{scroll-margin-top:20px}
 .payment-history-block{grid-column:1/-1;display:grid;gap:12px}.payment-history{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.payment-item{background:#101720;border:1px solid var(--line);border-radius:9px;padding:12px}.payment-item strong{font-size:12px}.payment-item p{font-size:11px;color:var(--muted);margin:6px 0}.payment-item .mini-button{display:block;margin-top:10px}
+[hidden]{display:none!important}
+.customer-tools h3,.office-tools h3{margin:0 0 8px;font-size:14px}
+.compact-fields{gap:10px}
+.request-list{display:grid;gap:9px;margin-top:10px}
+.request-item,.quote-card,.payment-item{min-width:0;border:1px solid var(--line);border-radius:9px;padding:12px;background:#101720}
+.request-item strong,.quote-card strong,.payment-item strong{display:block;font-size:12px}
+.request-item p,.quote-card p,.payment-item p{font-size:11px;color:var(--muted);margin:7px 0;overflow-wrap:anywhere}
+.quote-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.quote-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.quote-actions .button{font-size:11px;padding:8px 10px}
+.payment-history-block{display:grid;gap:12px;margin-top:14px}
+.payment-history{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.payment-item .mini-button{display:block;margin-top:10px}
+.customer-tools,.quote-panel,.office-tools{scroll-margin-top:20px}
