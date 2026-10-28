@@ -28,7 +28,7 @@ public class QuoteServlet extends HttpServlet {
             quoteId = Long.parseLong(request.getParameter("id"));
             amount = new BigDecimal(request.getParameter("valor"));
             days = Integer.parseInt(request.getParameter("prazoDias"));
-            if (quoteId < 1 || amount.signum() < 0 || amount.scale() > 2 || days < 0 || days > 365) throw new IllegalArgumentException();
+            if (quoteId < 1 || amount.signum() < 0 || amount.scale() > 2 || amount.compareTo(new BigDecimal("99999999.99")) > 0 || days < 0 || days > 365) throw new IllegalArgumentException();
         } catch (Exception ex) {
             Json.error(response, 400, "Informe orçamento, valor e prazo válidos.");
             return;
@@ -50,8 +50,8 @@ public class QuoteServlet extends HttpServlet {
                         if ("OFICINA".equals(role) && rs.getLong("usuario_id") != userId) {
                             c.rollback(); Json.error(response, 403, "Este orçamento não pertence à sua oficina."); return;
                         }
-                        if ("CANCELADO".equals(rs.getString("status")) || "RECUSADO".equals(rs.getString("status"))) {
-                            c.rollback(); Json.error(response, 409, "Este orçamento não está disponível para edição."); return;
+                        if (!java.util.Set.of("PENDENTE", "ENVIADO").contains(rs.getString("status"))) {
+                            c.rollback(); Json.error(response, 409, "Este orçamento não está disponível para edição; orçamentos aceitos não podem ser alterados."); return;
                         }
                     }
                 }
