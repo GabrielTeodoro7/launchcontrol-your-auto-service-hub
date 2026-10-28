@@ -24,6 +24,8 @@ required = [
     "src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java",
     "src/main/java/br/com/launchcontrol/QuoteServlet.java",
     "src/main/java/br/com/launchcontrol/DiagnosticServlet.java",
+    "src/main/java/br/com/launchcontrol/PartsSearchServlet.java",
+    "src/main/java/br/com/launchcontrol/PartsAssistantServlet.java",
     "src/main/java/br/com/launchcontrol/CheckoutServlet.java",
     "src/main/java/br/com/launchcontrol/PaymentServlet.java",
     "src/main/webapp/index.html", "src/main/webapp/css/style.css",
