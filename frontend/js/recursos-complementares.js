@@ -47,6 +47,7 @@
         <p class="muted">Gera uma versão para impressão do histórico de manutenção registrado. Na janela de impressão, escolha “Salvar como PDF”.</p>
         <button type="button" class="button button-secondary" id="maintenance-export">Exportar histórico para PDF</button>
         <p class="form-status" id="maintenance-export-status" role="status"></p>
+        <div class="supplemental-section"><h3>Lembretes de manutenção</h3><p class="muted">Estimativas baseadas apenas nas próximas datas e quilometragens informadas por você; não substituem o manual do fabricante.</p><div id="maintenance-reminders" class="supplemental-list"><p class="muted">Selecione um veículo para consultar.</p></div></div>
         <form id="maintenance-attachment-form" class="stack-form">
           <h3>Anexar comprovante ou foto</h3>
           <label>Veículo<select id="attachment-vehicle" required><option value="">Carregando veículos…</option></select></label>
@@ -307,12 +308,16 @@
     const list = document.querySelector("#maintenance-attachment-list");
     historySelect.replaceChildren(new Option(vehicleId ? "Selecione um registro" : "Selecione um veículo primeiro", ""));
     list.replaceChildren();
-    if (!vehicleId) return;
+    if (!vehicleId) {
+      document.querySelector("#maintenance-reminders").textContent = "Selecione um veículo para consultar.";
+      return;
+    }
     try {
       const [records, attachments] = await Promise.all([
         fetchJson("api/manutencoes?veiculoId=" + encodeURIComponent(vehicleId)),
         fetchJson("api/anexos-manutencao?veiculoId=" + encodeURIComponent(vehicleId))
       ]);
+      renderMaintenanceReminders(records);
       records.forEach(record => historySelect.append(new Option(
         dateLabel(record.dataServico) + " · " + record.categoria + " · " + record.descricao,
         record.id
@@ -339,6 +344,47 @@
     } catch (error) {
       list.textContent = error.message;
     }
+  }
+
+  function renderMaintenanceReminders(records) {
+    const container = document.querySelector("#maintenance-reminders");
+    container.replaceChildren();
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const alerts = [];
+    records.forEach(record => {
+      const dueDate = record.proximaData ? new Date(String(record.proximaData).slice(0, 10) + "T00:00:00") : null;
+      const currentMileage = Number(record.quilometragemAtual || 0);
+      const dueMileage = record.proximaQuilometragem == null ? null : Number(record.proximaQuilometragem);
+      const label = record.categoria || record.descricao || "Manutenção";
+      if (dueDate && !Number.isNaN(dueDate.getTime())) {
+        const days = Math.ceil((dueDate.getTime() - now.getTime()) / 86400000);
+        if (days < 0) alerts.push({priority:0, text:label + " — prazo informado vencido em " + dateLabel(record.proximaData) + "."});
+        else if (days <= 30) alerts.push({priority:1, text:label + " — próxima data informada: " + dateLabel(record.proximaData) + (days === 0 ? " (hoje)." : " (em " + days + " dia(s)).")});
+      }
+      if (dueMileage != null && currentMileage > 0) {
+        const remaining = dueMileage - currentMileage;
+        if (remaining <= 0) alerts.push({priority:0, text:label + " — quilometragem registrada atingiu " + dueMileage.toLocaleString("pt-BR") + " km."});
+        else if (remaining <= 1000) alerts.push({priority:1, text:label + " — revisão informada próxima, em " + remaining.toLocaleString("pt-BR") + " km."});
+      }
+    });
+    alerts.sort((a, b) => a.priority - b.priority);
+    const unique = [...new Map(alerts.map(alert => [alert.text, alert])).values()].slice(0, 8);
+    if (!unique.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = records.length
+        ? "Nenhuma próxima manutenção cadastrada está vencida ou próxima pelos critérios informados."
+        : "Adicione um registro de manutenção com próxima data ou quilometragem para ativar lembretes.";
+      container.append(empty);
+      return;
+    }
+    unique.forEach(alert => {
+      const item = document.createElement("p");
+      item.className = alert.priority === 0 ? "form-status" : "muted";
+      item.textContent = alert.text;
+      container.append(item);
+    });
   }
 
   async function submitMaintenanceAttachment(event) {
