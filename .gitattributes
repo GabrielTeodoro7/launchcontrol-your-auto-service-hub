@@ -1,0 +1,6 @@
+# Mantém os arquivos do projeto visíveis nas estatísticas de linguagens do GitHub.
+*.css linguist-detectable=true
+*.sql linguist-detectable=true
+*.java linguist-detectable=true
+*.js linguist-detectable=true
+*.html linguist-detectable=true
