@@ -67,10 +67,16 @@ function renderOrders() {
       edit.addEventListener("click", () => {
         const form = document.querySelector("#quote-edit-form");
         form.elements.id.value = order.orcamentoId;
-        form.elements.valor.value = order.valor ?? "";
+        form.elements.valorPecas.value = 0;
+        form.elements.valorMaoObra.value = 0;
+        form.elements.valorOutro.value = order.valor ?? 0;
+        form.elements.garantiaDias.value = "";
+        form.elements.validadeDias.value = "";
+        form.elements.condicaoPecas.value = "NAO_INFORMADA";
+        updateQuoteTotalPreview(form, "#quote-edit-total-preview");
         form.elements.prazoDias.value = order.prazoDias ?? 0;
         form.elements.observacoes.value = order.observacoes ?? "";
-        document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + order.orcamentoId + ".";
+        document.querySelector("#quote-edit-status").textContent = "A ordem não inclui o detalhamento original; o valor será mantido em Outros custos. Confira a proposta no painel Orçamentos.";
         quoteEditDialog.showModal();
       });
       group.append(edit);
@@ -78,7 +84,8 @@ function renderOrders() {
     if (!completed && ["OFICINA", "ADMINISTRADOR"].includes(currentUser?.perfil)) {
       const statusSelect = document.createElement("select"); statusSelect.className = "mini-button"; statusSelect.setAttribute("aria-label", "Novo status da ordem");
       const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Status…"; statusSelect.append(placeholder);
-      for (const statusValue of ["EM_ANDAMENTO", "AGUARDANDO_PECA", "CONCLUIDO"]) {
+      const allowedTransitions = {PENDENTE:["EM_ANDAMENTO","AGUARDANDO_PECA"],EM_ANDAMENTO:["AGUARDANDO_PECA","CONCLUIDO"],AGUARDANDO_PECA:["EM_ANDAMENTO","CONCLUIDO"]};
+      for (const statusValue of (allowedTransitions[order.status] || [])) {
         const option = document.createElement("option"); option.value = statusValue; option.textContent = statusLabels[statusValue] || statusValue; statusSelect.append(option);
       }
       const updateStatus = document.createElement("button"); updateStatus.type = "button"; updateStatus.className = "mini-button"; updateStatus.textContent = "Atualizar";
