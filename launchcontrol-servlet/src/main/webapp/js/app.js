@@ -191,6 +191,19 @@ async function loadQuotes() {
       const meta = document.createElement("p"); meta.textContent = (quote.oficina || "Oficina") + " · " + currency(quote.valor) + " · Prazo: " + (quote.prazoDias == null ? "a combinar" : quote.prazoDias + " dia(s)");
       const badge = document.createElement("span"); badge.className = "status-badge " + String(quote.status).toLowerCase(); badge.textContent = quote.status;
       card.append(title, description, meta, badge);
+      if (currentUser.perfil === "OFICINA" && ["PENDENTE", "ENVIADO"].includes(quote.status)) {
+        const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
+        edit.addEventListener("click", () => {
+          const form = document.querySelector("#quote-edit-form");
+          form.elements.id.value = quote.id;
+          form.elements.valor.value = quote.valor;
+          form.elements.prazoDias.value = quote.prazoDias ?? 0;
+          form.elements.observacoes.value = quote.observacoes ?? "";
+          document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + quote.id + ".";
+          quoteEditDialog.showModal();
+        });
+        const editRow = document.createElement("div"); editRow.className = "quote-actions"; editRow.append(edit); card.append(editRow);
+      }
       const canDecide = currentUser.perfil === "CLIENTE" && ["ENVIADO", "PENDENTE"].includes(quote.status) && !["ACEITA", "CONCLUIDA", "CANCELADA"].includes(quote.solicitacaoStatus);
       if (canDecide) {
         const actions = document.createElement("div"); actions.className = "action-group quote-actions";
