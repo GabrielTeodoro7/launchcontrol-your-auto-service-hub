@@ -1,3 +1,9 @@
+/*
+ * JavaScript executado no navegador. Ele conecta formulários e botões aos endpoints Java.
+ * const guarda uma referência que não será reatribuída; let é usado quando o valor muda.
+ * fetch() envia uma requisição HTTP; a resposta JSON traz os dados retornados pelo servidor.
+ */
+// Os seletores encontram elementos HTML que o JavaScript precisa atualizar.
 const rows = document.querySelector("#service-rows");
 const serviceStatus = document.querySelector("#service-status");
 const apiStatus = document.querySelector("#api-status");
@@ -20,6 +26,7 @@ const statusLabels = {
 };
 const currency = value => value == null ? "—" : Number(value).toLocaleString("pt-BR", {style:"currency",currency:"BRL"});
 
+// Desenha a tabela de ordens usando os dados carregados e aplica o filtro de pesquisa.
 function renderOrders() {
   const term = searchInput.value.trim().toLocaleLowerCase("pt-BR");
   const filtered = orders.filter(order =>
@@ -98,6 +105,7 @@ function renderOrders() {
   }
 }
 
+// Abre uma janela com os principais dados da ordem selecionada.
 function showDetails(order) {
   detailsTitle.textContent = order.codigo || "Ordem #" + order.id;
   detailsContent.textContent = JSON.stringify({
@@ -108,6 +116,7 @@ function showDetails(order) {
   dialog.showModal();
 }
 
+// Pede ao servidor a lista de ordens e atualiza os indicadores e a tabela.
 async function loadOrders() {
   serviceStatus.textContent = "Consultando endpoint Java Servlet…";
   try {
@@ -136,6 +145,7 @@ async function loadOrders() {
 }
 
 
+// Mostra ou esconde áreas da página de acordo com o perfil autenticado.
 function applyRoleUI() {
   const role = currentUser?.perfil;
   document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
@@ -145,6 +155,7 @@ function applyRoleUI() {
   document.querySelector("#diagnostico").hidden = role !== "CLIENTE";
 }
 
+// Carrega os veículos do cliente e preenche a lista de seleção.
 async function loadVehicles() {
   if (!currentUser || currentUser.perfil !== "CLIENTE") return;
   const select = document.querySelector("#vehicle-select");
@@ -168,6 +179,7 @@ async function loadVehicles() {
   }
 }
 
+// Consulta solicitações do cliente ou da oficina e atualiza a área correspondente.
 async function loadRequests() {
   if (!currentUser || currentUser.perfil !== "CLIENTE") return;
   const list = document.querySelector("#request-list");
@@ -192,6 +204,7 @@ async function loadRequests() {
 }
 
 
+// Busca os orçamentos que o usuário atual pode visualizar.
 async function loadQuotes() {
   const list = document.querySelector("#quote-list");
   if (!currentUser || !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(currentUser.perfil)) {
@@ -278,6 +291,7 @@ async function loadOfficeRequests() {
 }
 
 
+// Consulta e exibe o histórico de pagamentos demonstrativos.
 async function loadPayments() {
   const list = document.querySelector("#payment-history");
   if (!currentUser || currentUser.perfil !== "CLIENTE") {
