@@ -1053,6 +1053,9 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     await loadVehicles();
     await loadRequests();
     await loadGarage();
+    await loadQuotes();
+    await loadOfficeRequests();
+    await loadInventory();
   } catch (error) { status.textContent = error.message; }
 });
 (async () => {
@@ -1070,5 +1073,6 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   await loadGarage();
   loadQuotes();
   loadOfficeRequests();
+  loadInventory();
   loadPayments();
 })();
