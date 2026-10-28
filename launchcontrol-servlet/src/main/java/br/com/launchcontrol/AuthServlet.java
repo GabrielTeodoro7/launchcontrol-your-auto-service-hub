@@ -13,6 +13,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
 import java.security.SecureRandom;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @WebServlet("/api/auth")
@@ -40,7 +42,13 @@ public class AuthServlet extends HttpServlet {
         String action = value(request.getParameter("action"));
         if ("logout".equals(action)) {
             HttpSession session = request.getSession(false);
-            if (session != null) session.invalidate();
+            String expected = session == null ? null : (String) session.getAttribute("csrfToken");
+            String supplied = request.getHeader("X-CSRF-Token");
+            if (expected == null || supplied == null || !MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8), supplied.getBytes(StandardCharsets.UTF_8))) {
+                Json.error(response, 403, "Token CSRF ausente ou inválido.");
+                return;
+            }
+            session.invalidate();
             response.getWriter().write("{\"ok\":true}");
             return;
         }
