@@ -266,3 +266,31 @@ CREATE TABLE IF NOT EXISTS compatibilidade_pecas (
   INDEX idx_fitment_oem (codigo_oem),
   INDEX idx_fitment_part (peca_id, status)
 );
+
+-- Detalhes adicionais de proposta comercial sem alterar a tabela base de orçamentos.
+CREATE TABLE IF NOT EXISTS orcamento_detalhes (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  orcamento_id BIGINT NOT NULL UNIQUE,
+  garantia_dias INT,
+  validade_dias INT,
+  condicao_pecas ENUM('NOVAS','USADAS','RECONDICIONADAS','MISTAS','NAO_INFORMADA') NOT NULL DEFAULT 'NAO_INFORMADA',
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (orcamento_id) REFERENCES orcamentos(id),
+  CONSTRAINT chk_orcamento_garantia CHECK (garantia_dias IS NULL OR garantia_dias BETWEEN 0 AND 3650),
+  CONSTRAINT chk_orcamento_validade CHECK (validade_dias IS NULL OR validade_dias BETWEEN 0 AND 365)
+);
+
+-- Itens normalizados para comparação de peças, mão de obra e outros custos.
+CREATE TABLE IF NOT EXISTS orcamento_itens (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  orcamento_id BIGINT NOT NULL,
+  tipo ENUM('PECA','MAO_DE_OBRA','OUTRO') NOT NULL,
+  descricao VARCHAR(180) NOT NULL,
+  quantidade DECIMAL(10,2) NOT NULL DEFAULT 1,
+  valor_unitario DECIMAL(10,2) NOT NULL,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (orcamento_id) REFERENCES orcamentos(id),
+  CONSTRAINT chk_orcamento_item_quantidade CHECK (quantidade > 0),
+  CONSTRAINT chk_orcamento_item_valor CHECK (valor_unitario >= 0),
+  INDEX idx_orcamento_itens_quote (orcamento_id, tipo)
+);
