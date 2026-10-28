@@ -24,7 +24,7 @@ function Index() {
         <section className="mt-12 grid gap-4 sm:grid-cols-2">
           <a
             className="rounded-xl border border-slate-700 bg-slate-900 p-6 transition hover:border-orange-400"
-            href="https://github.com/GabrielTeodoro7/launchcontrol-your-auto-service-hub/tree/work/launchcontrol-java-servlet/launchcontrol-servlet"
+            href="https://github.com/GabrielTeodoro7/launchcontrol-your-auto-service-hub/tree/main/launchcontrol-servlet"
           >
             <h2 className="text-xl font-semibold">Código da aplicação Java</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -37,7 +37,7 @@ function Index() {
 
           <a
             className="rounded-xl border border-slate-700 bg-slate-900 p-6 transition hover:border-orange-400"
-            href="https://github.com/GabrielTeodoro7/launchcontrol-your-auto-service-hub/blob/work/launchcontrol-java-servlet/launchcontrol-servlet/README.md"
+            href="https://github.com/GabrielTeodoro7/launchcontrol-your-auto-service-hub/blob/main/launchcontrol-servlet/README.md"
           >
             <h2 className="text-xl font-semibold">Como executar</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
