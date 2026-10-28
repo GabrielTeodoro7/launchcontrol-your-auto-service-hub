@@ -163,6 +163,7 @@ function applyRoleUI() {
     const allowed = link.dataset.profiles.split(",");
     link.hidden = !allowed.includes(role);
   });
+  if (typeof window.refreshSupplementalFeatures === "function") window.refreshSupplementalFeatures();
 }
 
 async function loadVehicles() {
