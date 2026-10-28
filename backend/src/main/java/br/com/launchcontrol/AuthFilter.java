@@ -25,7 +25,7 @@ public class AuthFilter implements Filter {
 
         // Rotas públicas que não exigem sessão autenticada.
         if ("/api/auth".equals(path) || "/api/servicos".equals(path) || "/api/health".equals(path)
-                || ("/api/pecas/busca".equals(path) && "GET".equalsIgnoreCase(request.getMethod()))) {
+                || (("/api/pecas/busca".equals(path) || "/api/compatibilidade-pecas".equals(path)) && "GET".equalsIgnoreCase(request.getMethod()))) {
             chain.doFilter(request, response);
             return;
         }
