@@ -36,10 +36,10 @@ Não considere a lista acima como prova de que os itens pendentes estão conclu�
 
 ## Requisitos para executar
 
-- Java 17 ou superior.
-- Maven 3.9+.
-- MySQL 8.0+.
-- Contêiner compatível com Jakarta Servlet 6.0, por exemplo Tomcat 10.1+.
+- JDK 25 LTS para compilar e executar a configuração recomendada.
+- Apache Maven 3.10.0 (Maven 3.9.16 também pode ser usado como alternativa estável).
+- MySQL Server 8.0 ou superior; esta atualização não altera o esquema nem os dados.
+- Apache Tomcat 11.x, que implementa Jakarta Servlet 6.1 e exige Java 17 ou superior. A configuração recomendada usa JDK 25 LTS.
 - Navegador moderno.
 
 ## Configuração do banco
@@ -58,7 +58,7 @@ O schema não cria usuários fictícios nem credenciais de administrador padrão
 
 Na pasta launchcontrol-servlet/, com Maven disponível, execute: mvn clean package
 
-O WAR será gerado em target/launchcontrol.war. Implante-o em um contêiner compatível com Jakarta Servlet 6.0 e abra o contexto disponibilizado pelo servidor.
+O WAR será gerado em target/launchcontrol.war. Implante-o em Apache Tomcat 11.x (Jakarta Servlet 6.1) executado com JDK 25 e abra o contexto disponibilizado pelo servidor.
 
 Endpoints implementados nesta etapa:
 - GET /api/health — verifica conexão JDBC.
@@ -157,3 +157,38 @@ O assistente ajuda a formular a pesquisa e pode pedir detalhes como versão, mot
 - **Experiência por perfil:** mostra as áreas existentes conforme a sessão. Fornecedores e administradores têm acesso à área de estoque.
 
 A área de estoque reutiliza as tabelas `pecas`, `fornecedores` e `auditoria`; não exige migração ou novas colunas. Para um fornecedor cadastrar itens, sua conta precisa estar previamente vinculada a um registro ativo em `fornecedores`. A aplicação usa limites simples de alerta (1–5 unidades como baixo, zero como zerado), não previsão de demanda.
+
+
+## Modernização tecnológica — Java 25 LTS
+
+A base foi atualizada de forma incremental, mantendo o WAR, JDBC, MySQL e o frontend HTML/CSS/JavaScript sem frameworks na aplicação Servlet.
+
+| Componente | Antes identificado | Versão recomendada nesta branch |
+|---|---|---|
+| Java | release 17 | Java 25 LTS |
+| Jakarta Servlet API | 6.0.0 | 6.1.0 (`provided`) |
+| Descritor web.xml | Servlet 6.0 | Servlet 6.1 |
+| MySQL Connector/J | 9.3.0 | 9.7.0 |
+| Maven | requisito 3.9+ sem versão fixada | Maven 3.10.0 na CI |
+| Maven Compiler Plugin | não declarado explicitamente | 3.14.1 |
+| Maven WAR Plugin | versão herdada do Maven | 3.5.1 |
+| Servidor recomendado | Tomcat 10.1+ | Tomcat 11.x |
+
+As versões do driver e da API foram escolhidas para manter compatibilidade com MySQL Server 8.0+ e Jakarta Servlet 6.1. O Tomcat 11 implementa Servlet 6.1 e suporta Java 17 ou superior, incluindo a linha Java 25. Não se atualizou o esquema SQL nem se adicionaram dependências de frontend.
+
+### Construção
+
+Na pasta `launchcontrol-servlet/`:
+
+```bash
+java -version
+mvn -version
+python scripts/check_project.py
+mvn clean package
+```
+
+O WAR esperado é `target/launchcontrol.war`. Para executar, configure `LC_DB_URL`, `LC_DB_USER` e `LC_DB_PASSWORD` no ambiente do processo Tomcat e implante o WAR no Tomcat 11.
+
+### Escopo e validação
+
+A compilação em CI verifica a compatibilidade de compilação com JDK 25, a estrutura do projeto e a sintaxe do JavaScript. Ela não prova uma conexão com uma instância real do MySQL nem substitui testes de login, autorização, CRUD ou implantação no Tomcat. Esses testes de integração precisam ser executados em ambiente de homologação com dados não produtivos. Não execute `database/schema.sql` sobre uma base existente sem revisar o impacto; esta modernização não requer migração de esquema.
