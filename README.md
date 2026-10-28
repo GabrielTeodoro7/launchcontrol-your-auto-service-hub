@@ -396,7 +396,7 @@ Depois de implantar em um Tomcat ligado a um MySQL preparado, rode o smoke test 
 python scripts/smoke_test_http.py
 ```
 
-O smoke test cobre a página inicial, health check com banco, bloqueio de API sem sessão, cadastro, consulta de sessão, CSRF inválido, e-mail duplicado, logout, rejeição de senha incorreta e login válido. Ele cria um usuário de teste no banco; use somente um banco descartável de teste.
+O smoke test cobre a página inicial, health check e conexão real com MySQL, cabeçalhos HTTP, bloqueio de API sem sessão, cadastro/login/logout, senha incorreta, e-mail duplicado, CSRF em POST/PUT, cadastro de veículo, manutenção, relato de diagnóstico, solicitações, orçamento discriminado, isolamento entre oficinas, aceite de orçamento, ordem de serviço, adicionais, transições de status, avaliação e bloqueio de duplicidade, checkout demonstrativo idempotente, cancelamento de pagamento, agenda e cancelamento, dashboard, auditoria, preferências/notificações, importação CSV e rollback de linha inválida, compatibilidade e consulta de estoque por fornecedor. O CI usa contas e registros sintéticos de `scripts/seed_smoke_test.sql`; o script também cria uma conta de cliente. **Nunca execute as fixtures em produção.**
 
 ### GitHub Actions
 
@@ -406,7 +406,7 @@ O workflow `.github/workflows/launchcontrol-validation.yml` verifica a estrutura
 - **Build verde:** o código compila e o WAR foi empacotado.
 - **Migrações verdes:** os scripts SQL executaram em uma base limpa da versão configurada no CI.
 - **Smoke test verde:** os cenários HTTP listados acima passaram no ambiente de CI.
-- **Não comprovado automaticamente:** todos os fluxos de negócio, compatibilidade real de peças, entregas externas, experiência em todos os navegadores, segurança de produção, carga e recuperação de desastre.
+- **Não comprovado automaticamente:** uploads multipart de anexos em todos os navegadores, compatibilidade real de peças, entrega real de e-mail/WhatsApp/IA, experiência em todos os navegadores, segurança de produção, carga e recuperação de desastre.
 
 Não marque uma release como 100% pronta apenas por ter um build verde.
 
