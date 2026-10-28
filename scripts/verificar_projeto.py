@@ -24,11 +24,16 @@ required = [
     "backend/src/main/java/br/com/launchcontrol/DiagnosticServlet.java",
     "backend/src/main/java/br/com/launchcontrol/PartsSearchServlet.java",
     "backend/src/main/java/br/com/launchcontrol/PartsAssistantServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/FitmentServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/MaintenanceServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/ReviewServlet.java",
     "backend/src/main/java/br/com/launchcontrol/InventoryServlet.java",
     "backend/src/main/java/br/com/launchcontrol/CheckoutServlet.java",
     "backend/src/main/java/br/com/launchcontrol/PaymentServlet.java",
     "frontend/index.html", "frontend/css/estilo-principal.css",
     "frontend/js/interacoes.js", "backend/src/main/webapp/WEB-INF/web.xml",
+    "banco-de-dados/migracoes/001_ecossistema_automotivo.sql",
+    "docs/PLANO-EVOLUCAO-LAUNCHCONTROL.md",
 ]
 missing = [item for item in required if not (ROOT / item).is_file()]
 if missing:
@@ -38,6 +43,8 @@ if missing:
 read = lambda item: (ROOT / item).read_text(encoding="utf-8")
 pom = read("backend/pom.xml")
 schema = read("banco-de-dados/modelo.sql")
+migration = read("banco-de-dados/migracoes/001_ecossistema_automotivo.sql")
+plan = read("docs/PLANO-EVOLUCAO-LAUNCHCONTROL.md")
 quote = read("backend/src/main/java/br/com/launchcontrol/QuoteServlet.java")
 checkout = read("backend/src/main/java/br/com/launchcontrol/CheckoutServlet.java")
 payments = read("backend/src/main/java/br/com/launchcontrol/PaymentServlet.java")
@@ -88,6 +95,21 @@ assert "noopener noreferrer" in js and "api/pecas/busca" in js, "Busca real e se
 assert "api/assistente-pecas" in js and 'id="parts-assistant-form"' in html, "Assistente IA do LC Parts ausente"
 assert '"/api/pecas/busca".equals(path)' in read("backend/src/main/java/br/com/launchcontrol/AuthFilter.java"), "Consulta pública de peças não liberada no filtro de autenticação"
 assert "A solicitação já foi aceita" in read("backend/src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Proteção contra aceitar múltiplos orçamentos ausente"
+
+
+feature_tables = ["historico_manutencao", "avaliacoes_servico", "ordem_status_historico",
+                  "compatibilidade_pecas", "orcamento_detalhes", "orcamento_itens"]
+assert all("CREATE TABLE IF NOT EXISTS " + table in migration for table in feature_tables), "Migração do ecossistema incompleta"
+assert "SYMPTOM_INSTRUCTIONS" in read("backend/src/main/java/br/com/launchcontrol/PartsAssistantServlet.java"), "Modo de triagem do Launch AI ausente"
+assert "writeGuidedFallback" in read("backend/src/main/java/br/com/launchcontrol/PartsAssistantServlet.java"), "Fallback guiado sem IA ausente"
+assert "INSERT INTO ordem_status_historico" in read("backend/src/main/java/br/com/launchcontrol/OrderServlet.java"), "Linha do tempo de ordens não persistida"
+assert "isValidTransition" in read("backend/src/main/java/br/com/launchcontrol/OrderServlet.java"), "Validação de transições de status ausente"
+assert "partsAmount.add(laborAmount).add(otherAmount)" in read("backend/src/main/java/br/com/launchcontrol/QuoteCreateServlet.java"), "Total de orçamento não calculado no backend"
+assert "api/compatibilidade-pecas" in js and 'id="fitment-status"' in html, "Fitment Engine não conectado à interface"
+assert 'id="maintenance-form"' in html and "api/manutencoes" in js, "CarPassport não conectado à interface"
+assert 'id="repair-timeline"' in html and "historicoVeiculoId" in js, "Oficina Transparente não conectado à interface"
+assert "planningCoverage" in js and "não a saúde mecânica" in html, "AutoCare Score sem regra explicável ou aviso de escopo"
+assert "preservar a identidade visual" in plan.lower() or "preservação visual" in plan.lower(), "Plano técnico sem diretriz de preservação visual"
 
 print("OK: " + str(len(required)) + " arquivos essenciais presentes.")
 print("OK: dependências Servlet/JDBC, " + str(len(tables)) + " tabelas, hash PBKDF2, CSRF, bloqueio de orçamento concluído e checkout demonstrativo.")
