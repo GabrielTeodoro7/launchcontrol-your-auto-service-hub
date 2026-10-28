@@ -23,6 +23,7 @@
         <a class="nav-item" href="#lc-parts"><span>⚙</span> LC Parts</a>
         <a class="nav-item" href="#garagem-inteligente"><span>▣</span> Minha garagem</a>
         <a class="nav-item" href="#diagnostico"><span>⌁</span> Diagnóstico</a>
+        <a class="nav-item" href="#customer-tools"><span>✳</span> Experiência por perfil</a>
         <a class="nav-item" href="#checkout"><span>▣</span> Checkout demonstrativo</a>
       </nav>
       <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
@@ -31,42 +32,7 @@
     <main class="main-content">
       <header class="topbar"><div><p class="eyebrow">PAINEL DE CONTROLE</p><h1 id="dashboard">Visão geral</h1></div><div class="topbar-actions"><span class="api-status" id="api-status">Verificando API…</span><button class="button button-outline" id="auth-open" type="button">Entrar</button><button class="button button-outline" id="refresh-button" type="button">Atualizar</button></div></header>
       <!-- Apresentação inicial do painel. -->
-      <section class="welcome welcome-premium">
-        <div class="welcome-copy">
-          <p class="eyebrow"><span class="live-pulse"></span> SUA CENTRAL AUTOMOTIVA</p>
-          <h2>Seu carro. Sua oficina.<br><span>Tudo sob controle.</span></h2>
-          <p>Da primeira cotação ao acompanhamento do serviço: uma experiência conectada, transparente e feita para cuidar melhor do seu veículo.</p>
-          <div class="welcome-actions"><a class="button button-primary" href="#garagem-inteligente">Explorar minha garagem <span aria-hidden="true">↗</span></a><a class="welcome-secondary" href="#lc-parts">Encontrar uma peça <span aria-hidden="true">→</span></a></div>
-          <div class="welcome-trust"><span>01 <small>Histórico organizado</small></span><span>02 <small>Ofertas reais</small></span><span>03 <small>Decisões transparentes</small></span></div>
-        </div>
-        <div class="welcome-visual" aria-label="Ilustração de um carro esportivo em uma plataforma digital">
-          <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
-          <div class="visual-tag tag-top"><span class="visual-tag-dot"></span> GARAGEM DIGITAL <b>●</b></div>
-          <svg class="hero-car" viewBox="0 0 620 300" role="img" aria-labelledby="hero-car-title">
-            <title id="hero-car-title">Carro esportivo estilizado em destaque</title>
-            <defs><linearGradient id="carPaint" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5f7fa"/><stop offset=".42" stop-color="#9ba8b5"/><stop offset=".7" stop-color="#4a5664"/><stop offset="1" stop-color="#dfe5ec"/></linearGradient><linearGradient id="carGlass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#17334b"/><stop offset="1" stop-color="#071018"/></linearGradient><linearGradient id="carGlow" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#ff7626" stop-opacity="0"/><stop offset=".5" stop-color="#ff7626" stop-opacity=".8"/><stop offset="1" stop-color="#ff7626" stop-opacity="0"/></linearGradient></defs>
-            <ellipse cx="315" cy="245" rx="230" ry="25" fill="#ff7626" opacity=".16"/>
-            <path d="M74 202 L96 170 Q108 157 146 149 L216 94 Q237 78 276 76 L383 79 Q410 81 433 104 L491 155 L532 169 Q548 176 548 195 L540 218 L83 222Z" fill="url(#carPaint)" stroke="#f8fafc" stroke-opacity=".75" stroke-width="2"/>
-            <path d="M178 145 L232 101 Q246 91 275 91 L318 92 L318 145Z" fill="url(#carGlass)" stroke="#758697" stroke-width="2"/><path d="M331 92 L379 94 Q397 96 414 116 L438 145 L331 145Z" fill="url(#carGlass)" stroke="#758697" stroke-width="2"/><path d="M326 92 L326 146" stroke="#647487" stroke-width="3"/>
-            <path d="M109 173 L176 158 L210 158 L199 180 L95 190Z" fill="#202b37"/><path d="M441 159 L496 170 L522 185 L470 185Z" fill="#222e3a"/><path d="M87 202 L170 202" stroke="#ff7626" stroke-width="5" stroke-linecap="round"/><path d="M460 202 L536 198" stroke="#ff7626" stroke-width="5" stroke-linecap="round"/><path d="M215 158 L429 158" stroke="#5c6875" stroke-width="2"/><path d="M248 166 L248 199 M425 166 L425 199" stroke="#596573" stroke-width="2"/><path d="M264 188 L390 188" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>
-            <g fill="#0a0d12" stroke="#8994a1" stroke-width="4"><circle cx="181" cy="213" r="39"/><circle cx="458" cy="213" r="39"/></g><g fill="#303b48" stroke="#c4ccd4" stroke-width="3"><circle cx="181" cy="213" r="25"/><circle cx="458" cy="213" r="25"/></g><g stroke="#aeb8c2" stroke-width="3"><path d="M181 190 V236 M158 213 H204 M165 197 L197 229 M197 197 L165 229"/><path d="M458 190 V236 M435 213 H481 M442 197 L474 229 M474 197 L442 229"/></g><circle cx="181" cy="213" r="8" fill="#ff7626"/><circle cx="458" cy="213" r="8" fill="#ff7626"/><path d="M104 231 Q310 251 530 227" fill="none" stroke="url(#carGlow)" stroke-width="5"/>
-          </svg>
-          <div class="visual-tag tag-bottom"><span>✦</span><div><strong>LAUNCHCONTROL</strong><small>Inteligência para sua jornada</small></div></div><div class="visual-data"><span class="data-line"></span><small>EXPERIÊNCIA<br>360°</small></div>
-        </div>
-      </section>
-      <section class="feature-showcase" aria-label="Recursos do LaunchControl">
-        <div class="feature-showcase-heading"><div><p class="eyebrow">UM ECOSSISTEMA, SETE DIFERENCIAIS</p><h2>Mais controle. Menos dor de cabeça.</h2></div><p>Ferramentas conectadas para transformar a rotina de quem dirige, atende e repara.</p></div>
-        <div class="feature-grid">
-          <a class="feature-card feature-highlight" href="#garagem-inteligente"><span class="feature-number">01 / GARAGEM</span><span class="feature-icon">⌁</span><h3>Garagem inteligente</h3><p>Reúna solicitações, diagnósticos e registros relacionados que já existem no sistema.</p><span class="feature-link">Abrir garagem <b>↗</b></span><span class="feature-state">Disponível para cliente</span></a>
-          <a class="feature-card" href="#lc-parts"><span class="feature-number">02 / PEÇAS</span><span class="feature-icon">◈</span><h3>LC Parts</h3><p>Pesquise por carro e peça, compare anúncios e continue a compra no site original.</p><span class="feature-link">Encontrar peças <b>↗</b></span><span class="feature-state">Pesquisa externa</span></a>
-          <a class="feature-card" href="#quote-panel"><span class="feature-number">03 / ORÇAMENTOS</span><span class="feature-icon">⇄</span><h3>Orçamento sem mistério</h3><p>Consulte propostas e compare valor, prazo e observações quando disponíveis.</p><span class="feature-link">Ver propostas <b>↗</b></span><span class="feature-state">Requer acesso</span></a>
-          <a class="feature-card" href="#diagnostico"><span class="feature-number">04 / REGISTROS</span><span class="feature-icon">▤</span><h3>Relato digital do veículo</h3><p>Registre sintomas sem confundir relato do cliente com laudo técnico.</p><span class="feature-link">Registrar relato <b>↗</b></span><span class="feature-state">Disponível</span></a>
-          <a class="feature-card" href="#servicos"><span class="feature-number">05 / OPERAÇÃO</span><span class="feature-icon">◷</span><h3>Visão de serviços</h3><p>Acompanhe o status das ordens e localize registros da operação.</p><span class="feature-link">Acompanhar serviços <b>↗</b></span><span class="feature-state">Dados do sistema</span></a>
-          <a class="feature-card" href="#quote-panel"><span class="feature-number">06 / CONFIANÇA</span><span class="feature-icon">✓</span><h3>Transparência em primeiro lugar</h3><p>Confira o que está confirmado e valide detalhes com a oficina ou loja.</p><span class="feature-link">Conferir propostas <b>↗</b></span><span class="feature-state">Informações verificáveis</span></a>
-          <a class="feature-card feature-wide" href="#customer-tools"><span class="feature-number">07 / EXPERIÊNCIA</span><span class="feature-icon">✳</span><h3>Uma jornada guiada pelo seu perfil</h3><p>O mesmo ambiente reúne atalhos para clientes, oficinas e operações, mostrando as áreas disponíveis conforme o acesso e os dados carregados.</p><span class="feature-link">Conhecer áreas <b>↗</b></span><span class="feature-state">Interface integrada</span></a>
-        </div>
-      </section>
-      <!-- Indicadores preenchidos pelo JavaScript com dados da API. -->
+      <section class="welcome"><div><p class="eyebrow">LAUNCHCONTROL</p><h2>Controle total da <span>jornada automotiva.</span></h2><p>Consulte os serviços persistidos no MySQL e acompanhe os status reais do atendimento.</p></div><div class="welcome-mark" aria-hidden="true">LC</div></section>
       <section class="stats-grid" aria-label="Resumo de serviços">
         <article class="stat-card"><span class="stat-icon orange">▤</span><p>Ordens de serviço</p><strong id="stat-total">—</strong><small>Registros do banco</small></article>
         <article class="stat-card"><span class="stat-icon blue">◷</span><p>Em andamento</p><strong id="stat-progress">—</strong><small>Status em execução</small></article>
