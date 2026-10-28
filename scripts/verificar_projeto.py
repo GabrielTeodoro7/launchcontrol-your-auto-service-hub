@@ -47,6 +47,8 @@ required = [
     "backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java",
     "backend/src/main/java/br/com/launchcontrol/NotificationOutboxListener.java",
     "frontend/js/launchcontrol-operacoes.js",
+    "scripts/smoke_test_http.py",
+    ".github/workflows/launchcontrol-validation.yml",
     "docs/PLANO-EVOLUCAO-LAUNCHCONTROL.md",
 ]
 missing = [item for item in required if not (ROOT / item).is_file()]
@@ -149,6 +151,19 @@ assert '@WebServlet("/api/auditoria")' in read("backend/src/main/java/br/com/lau
 assert "RESEND_API_KEY" in read("backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java") and "WHATSAPP_ACCESS_TOKEN" in read("backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java"), "Canais externos de notificação não configuráveis"
 assert 'src="js/launchcontrol-operacoes.js"' in html and 'id="operations-metrics"' in html and 'id="fitment-import-form"' in html, "Interface de operações avançadas ausente"
 assert "api/dashboard/analytics" in read("frontend/js/launchcontrol-operacoes.js") and "api/agendamentos" in read("frontend/js/launchcontrol-operacoes.js"), "Frontend de agenda ou dashboard não conectado"
+
+# Verificações de segurança e integração que devem permanecer como contratos explícitos.
+assert "safeMethod" in auth_filter and 'response.setHeader("X-Content-Type-Options", "nosniff")' in auth_filter, "Filtro HTTP deve proteger todos os métodos inseguros e aplicar cabeçalhos defensivos"
+assert "Cache-Control", "no-store" in auth_filter, "Respostas de API devem impedir cache de dados sensíveis"
+assert "catch (IllegalArgumentException ex)" in password and 'Arrays.fill(derived, (byte) 0)' in password, "Hash de senha precisa tolerar dados inválidos e limpar buffers"
+assert 'src="js/launchcontrol-operacoes.js"' in html, "JavaScript operacional não está carregado"
+workflow = read(".github/workflows/launchcontrol-validation.yml")
+assert "mysql:8.4" in workflow and "Tomcat 11" in workflow and "smoke_test_http.py" in workflow, "CI precisa executar banco real, implantação e smoke test HTTP"
+smoke = read("scripts/smoke_test_http.py")
+for scenario in ["cadastro", "CSRF", "e-mail duplicado", "logout", "senha incorreta", "login com credencial correta"]:
+    assert scenario.lower() in smoke.lower(), "Smoke test sem cenário: " + scenario
+for table in ["configuracao_agenda_oficina", "agendamentos", "preferencias_notificacao", "notificacao_entregas"]:
+    assert "CREATE TABLE IF NOT EXISTS " + table in read("banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql"), "Migração ausente: " + table
 
 print("OK: " + str(len(required)) + " arquivos essenciais presentes.")
 print("OK: dependências Servlet/JDBC, " + str(len(tables)) + " tabelas, hash PBKDF2, CSRF, bloqueio de orçamento concluído e checkout demonstrativo.")
