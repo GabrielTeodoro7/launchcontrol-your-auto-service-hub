@@ -175,6 +175,16 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
                 }
             }
             Files.createDirectories(directory);
+            Path realDirectory = directory.toRealPath();
+            if (isInsidePublicWebRoot(realDirectory)) {
+                Json.error(response, 503, "LC_UPLOAD_DIR deve resolver para um diretório fora da pasta pública do Tomcat.");
+                return;
+            }
+            destination = realDirectory.resolve(storedName).normalize();
+            if (!destination.getParent().equals(realDirectory)) {
+                Json.error(response, 400, "Destino de arquivo inválido.");
+                return;
+            }
             try (var input = file.getInputStream()) {
                 Files.copy(input, destination);
             }
@@ -278,9 +288,14 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
 
     private boolean isInsidePublicWebRoot(Path directory) {
         String webRoot = getServletContext().getRealPath("/");
-        if (webRoot == null || webRoot.isBlank()) return false;
-        Path publicRoot = Path.of(webRoot).toAbsolutePath().normalize();
-        return directory.startsWith(publicRoot);
+        if (webRoot == null || webRoot.isBlank()) return true;
+        try {
+            Path publicRoot = Path.of(webRoot).toRealPath().normalize();
+            Path candidate = Files.exists(directory) ? directory.toRealPath().normalize() : directory.toAbsolutePath().normalize();
+            return candidate.startsWith(publicRoot);
+        } catch (IOException | RuntimeException ex) {
+            return true;
+        }
     }
 
     private static String sanitizeName(String submittedName) {
