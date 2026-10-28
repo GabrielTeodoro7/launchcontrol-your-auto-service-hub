@@ -149,6 +149,12 @@ async function loadOrders() {
 function applyRoleUI() {
   const role = currentUser?.perfil;
   document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
+  const partsAssistantNote = document.querySelector("#parts-assistant-note");
+  if (partsAssistantNote) {
+    partsAssistantNote.textContent = role === "CLIENTE"
+      ? "Ao enviar uma mensagem, o texto e os dados da peça preenchidos são enviados ao provedor de IA configurado no servidor. Não inclua dados pessoais. A pesquisa manual continua disponível."
+      : "Entre como cliente para conversar com a IA. A pesquisa manual de peças continua disponível sem login.";
+  }
   document.querySelector("#garagem-inteligente").hidden = role !== "CLIENTE";
   document.querySelector("#office-tools").hidden = role !== "OFICINA";
   document.querySelector("#quote-panel").hidden = !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(role);
@@ -657,11 +663,13 @@ async function searchParts(query) {
   loading.textContent = "Consultando anúncios públicos do Mercado Livre…";
   results.append(loading);
   status.textContent = "Consultando o Mercado Livre e preparando links para outras lojas.";
+  let liveSearchSucceeded = false;
   try {
     const response = await fetch("api/pecas/busca?q=" + encodeURIComponent(query));
     const data = await response.json();
-    loading.remove();
     if (!response.ok) throw new Error(data.erro || "Não foi possível consultar o Mercado Livre agora.");
+    loading.remove();
+    liveSearchSucceeded = true;
     const items = Array.isArray(data.results) ? data.results : [];
     const note = document.createElement("p");
     note.className = "parts-live-note";
@@ -730,9 +738,12 @@ async function searchParts(query) {
   } catch (error) {
     loading.textContent = error.message || "A consulta em tempo real falhou.";
     loading.className = "parts-live-note";
+    if (!loading.isConnected) results.append(loading);
   }
   renderExternalPartSources(query, results);
-  status.textContent = "Pesquisa concluída. Confira o anúncio original, o frete, a reputação do vendedor e a aplicação exata antes de comprar.";
+  status.textContent = liveSearchSucceeded
+    ? "Pesquisa concluída. Confira o anúncio original, o frete, a reputação do vendedor e a aplicação exata antes de comprar."
+    : "A consulta em tempo real não ficou disponível nesta tentativa; os links externos continuam disponíveis.";
   results.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
