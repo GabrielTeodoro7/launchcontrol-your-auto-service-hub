@@ -93,7 +93,7 @@ jobs:
           set -euo pipefail
           docker exec launchcontrol-mysql mysql -uroot -proot -e "CREATE USER 'lc_ci'@'%' IDENTIFIED BY 'lc_ci_password'; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES ON launchcontrol.* TO 'lc_ci'@'%'; FLUSH PRIVILEGES;"
           docker exec -i launchcontrol-mysql mysql -uroot -proot < scripts/seed_smoke_test.sql
-          docker exec launchcontrol-mysql mysql -ulc_ci -plc_ci_password -D launchcontrol -e "SELECT COUNT(*) AS seeded_users FROM usuarios"
+          docker run --rm --network launchcontrol-ci mysql:8.4 mysql -h launchcontrol-mysql -ulc_ci -plc_ci_password -D launchcontrol -e "SELECT COUNT(*) AS seeded_users FROM usuarios"
 
       - name: Deploy WAR to Tomcat 11 with Java 25
         run: |
