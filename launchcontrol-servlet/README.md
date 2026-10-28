@@ -90,3 +90,25 @@ O formulário de cadastro só cria perfil CLIENTE; não existe cadastro público
 ## Verificação auxiliar
 
 Execute python3 scripts/check_project.py. Essa verificação é estrutural e não substitui compilação, teste no servidor ou conexão ao MySQL.
+
+
+## Guia rápido de programação para iniciantes
+
+- **HTML** descreve os elementos da página: títulos, campos, botões, tabelas e janelas.
+- **CSS** define a aparência: cores, tamanhos, espaçamento e adaptação para celular.
+- **JavaScript** roda no navegador. Ele reage aos cliques, verifica formulários e envia pedidos ao servidor.
+- **Java Servlet** é uma classe Java que recebe requisições HTTP e devolve uma resposta ao navegador.
+- **Endpoint** é o endereço da API que executa uma tarefa, como `/api/veiculos`.
+- **MySQL** é o banco que guarda informações de forma persistente.
+- **SQL** é a linguagem usada para criar tabelas e consultar ou alterar dados.
+- **JDBC** é a ponte usada pelo Java para conversar com o banco.
+- **Sessão** é a forma de o servidor reconhecer que a pessoa já entrou no sistema.
+- **Token CSRF** é um código adicional usado para dificultar ações autenticadas não autorizadas.
+- **PreparedStatement** envia a consulta SQL e os valores separadamente, ajudando a evitar injeção de SQL.
+- **WAR** é o pacote que contém a aplicação web Java para instalação em um servidor Servlet.
+
+### Como acompanhar uma ação do início ao fim
+
+Por exemplo, ao cadastrar um veículo: o formulário está em `index.html`; o evento e o pedido HTTP estão em `js/app.js`; o endpoint recebe e valida os dados em `VehicleServlet.java`; `Database.java` abre a conexão; e o SQL grava os dados na tabela `veiculos`. A resposta volta ao JavaScript, que mostra a mensagem para a pessoa.
+
+Os comentários no código explicam as responsabilidades de cada arquivo e os trechos mais importantes. Eles são material de estudo; a fonte da verdade sobre o que está implementado continua sendo o código e os testes executados.
