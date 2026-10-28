@@ -105,7 +105,7 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
         Part file;
         try {
             file = request.getPart("arquivo");
-        } catch (ServletException | IllegalStateException ex) {
+        } catch (ServletException | IllegalStateException | IOException ex) {
             Json.error(response, 400, "O arquivo excede o limite permitido ou não pôde ser recebido.");
             return;
         }
