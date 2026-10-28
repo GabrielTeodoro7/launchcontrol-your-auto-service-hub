@@ -302,18 +302,112 @@ Execute em ordem, em um banco de homologação ou depois de um backup verificado
 
 As migrações usam `CREATE TABLE IF NOT EXISTS`, mas isso **não é** um mecanismo completo de versionamento de esquema. Antes de atualizar uma instalação existente, faça backup, aplique primeiro em homologação e verifique se as tabelas e índices estão coerentes.
 
-### Criar um usuário de banco com privilégios limitados
+### Tutorial prático: configurar o MySQL no Windows
 
-Execute como administrador do MySQL, substituindo a senha e confirmando o nome do host conforme seu ambiente:
+Este procedimento serve para uma instalação local em que MySQL e Tomcat estão no mesmo computador. **Faça primeiro em um banco de desenvolvimento**; não apague um banco que já contenha dados importantes.
+
+#### 1. Inicie o MySQL e confirme a conexão
+
+1. Abra o MySQL Workbench e conecte-se à instância local.
+2. Abra uma nova aba SQL.
+3. Execute:
 
 ```sql
-CREATE USER 'launchcontrol_app'@'localhost' IDENTIFIED BY 'SUBSTITUA_POR_UMA_SENHA_FORTE';
-GRANT SELECT, INSERT, UPDATE, DELETE
-ON launchcontrol.* TO 'launchcontrol_app'@'localhost';
-FLUSH PRIVILEGES;
+SELECT VERSION();
+SHOW DATABASES;
 ```
 
-Se o Tomcat e o MySQL estiverem em hosts diferentes, configure o host autorizado de forma restritiva e use TLS para a conexão JDBC. Não conceda acesso remoto amplo sem necessidade.
+Use MySQL 8.4 ou versão 8 compatível. Se não conseguir conectar, confira se o serviço MySQL está iniciado e se host, porta, usuário e senha estão corretos.
+
+#### 2. Execute os quatro arquivos SQL na ordem certa
+
+Na raiz do repositório, abra cada arquivo pelo menu **File → Open SQL Script** do Workbench. Execute o script inteiro pelo ícone do raio e confira a aba **Action Output** antes de passar ao próximo arquivo.
+
+1. `banco-de-dados/modelo.sql`
+2. `banco-de-dados/migracoes/001_ecossistema_automotivo.sql`
+3. `banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql`
+4. `banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql`
+
+O primeiro arquivo cria e seleciona o banco `launchcontrol`; os outros começam com `USE launchcontrol`. Não execute os arquivos fora dessa ordem. Não execute `scripts/seed_smoke_test.sql` na sua base de uso normal: ele contém dados artificiais destinados exclusivamente aos testes automatizados.
+
+Confira se as tabelas foram criadas:
+
+```sql
+USE launchcontrol;
+SHOW TABLES;
+SELECT COUNT(*) AS total_tabelas
+FROM information_schema.tables
+WHERE table_schema = 'launchcontrol';
+```
+
+A base inclui tabelas como `usuarios`, `oficinas`, `veiculos`, `pecas`, `compatibilidade_pecas`, `orcamentos`, `ordens_servico` e `agendamentos`.
+
+#### 3. Crie um usuário exclusivo para a aplicação
+
+Execute como administrador do MySQL. Troque a senha de exemplo por uma senha forte e guarde-a com segurança:
+
+```sql
+CREATE USER IF NOT EXISTS 'launchcontrol_app'@'localhost'
+  IDENTIFIED BY 'TROQUE_POR_UMA_SENHA_FORTE';
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON launchcontrol.* TO 'launchcontrol_app'@'localhost';
+SHOW GRANTS FOR 'launchcontrol_app'@'localhost';
+```
+
+Se o usuário já existir e você precisar alterar a senha, execute separadamente:
+
+```sql
+ALTER USER 'launchcontrol_app'@'localhost'
+  IDENTIFIED BY 'TROQUE_POR_UMA_SENHA_FORTE';
+```
+
+Não use a conta `root` no LaunchControl. As migrações são executadas pelo administrador; a conta da aplicação recebe apenas permissões de leitura e alteração de dados. Se Tomcat e MySQL estiverem em computadores ou contêineres diferentes, o host autorizado precisa corresponder à rede configurada — não abra acesso remoto irrestrito.
+
+#### 4. Configure as variáveis no PowerShell
+
+Abra um **PowerShell novo** e, nesse mesmo terminal, execute (substituindo a senha pela que você definiu):
+
+```powershell
+$env:LC_DB_URL = "jdbc:mysql://127.0.0.1:3306/launchcontrol?useSSL=false&serverTimezone=UTC"
+$env:LC_DB_USER = "launchcontrol_app"
+$env:LC_DB_PASSWORD = "TROQUE_POR_UMA_SENHA_FORTE"
+```
+
+O backend lê essas três variáveis do ambiente do processo Java. Configurar variáveis em um terminal não as transmite automaticamente a um Tomcat instalado como serviço do Windows; nesse caso, configure-as no próprio serviço antes de iniciá-lo. Não coloque credenciais no JavaScript, HTML ou no repositório.
+
+#### 5. Compile a aplicação
+
+No PowerShell, entre na pasta do repositório e execute:
+
+```powershell
+mvn -B -f backend/pom.xml clean package
+```
+
+O resultado esperado é `BUILD SUCCESS`, com o arquivo `backend/target/launchcontrol.war`. Se aparecer `BUILD FAILURE`, não continue com um WAR antigo: leia a primeira mensagem `ERROR`, corrija a causa e rode o comando novamente. Confirme que `java -version` e `mvn -version` apontam para JDK 25.
+
+#### 6. Implante no Tomcat 11
+
+1. Pare o Tomcat.
+2. Copie `backend/target/launchcontrol.war` para a pasta `webapps` do Tomcat com o nome `launchcontrol.war`.
+3. Configure `LC_DB_URL`, `LC_DB_USER` e `LC_DB_PASSWORD` no ambiente do processo do Tomcat.
+4. Inicie o Tomcat e aguarde a implantação do contexto.
+5. Abra `http://localhost:8080/launchcontrol/`.
+6. Verifique `http://localhost:8080/launchcontrol/api/health`. O esperado é HTTP 200 com `"status":"ok"` e `"database":"connected"`.
+
+#### 7. Diagnóstico rápido
+
+| Erro | O que verificar |
+|---|---|
+| `Access denied for user` | Usuário, senha e host no MySQL; confira `SHOW GRANTS` e se o usuário está definido para `localhost`. |
+| `Unknown database 'launchcontrol'` | Execute primeiro `modelo.sql` como administrador. |
+| `Table doesn't exist` | Execute os quatro scripts, na ordem, e confira `SHOW TABLES`. |
+| `Configure LC_DB_URL...` | As variáveis não estão no ambiente do processo que executa o Tomcat. |
+| `Communications link failure` / conexão recusada | Serviço MySQL ativo, porta 3306, URL JDBC e host. |
+| HTTP 404 | Confirme que o WAR foi implantado com o nome `launchcontrol.war` e que o contexto/URL está correto. |
+| HTTP 500 | Leia os logs do Tomcat para encontrar a exceção original; não tente corrigir apenas pelo código HTTP. |
+| Erro de tabela/coluna depois de atualizar o projeto | Faça backup e compare o esquema existente com as migrações. `CREATE TABLE IF NOT EXISTS` não adiciona automaticamente colunas ausentes a tabelas antigas. |
+
+Para conferir o esquema sem alterar dados, execute `SHOW TABLES;` e, para uma tabela específica, `DESCRIBE nome_da_tabela;`. Em caso de falha, copie a mensagem completa do Workbench ou do log do Tomcat, removendo senhas e tokens antes de compartilhar.
 
 ## 🔌 API principal
 
