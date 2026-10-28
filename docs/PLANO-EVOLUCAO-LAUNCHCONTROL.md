@@ -187,3 +187,13 @@ As novas tabelas foram separadas em `banco-de-dados/migracoes/001_ecossistema_au
 - Verificação da integridade dos dados de catálogo e da linha do tempo em banco já existente.
 
 Nenhum teste é marcado como aprovado neste documento até que seu resultado seja consultado.
+
+
+## 11. Aprovação de serviços adicionais, notificações e exportação
+
+Foi adicionada uma segunda migração aditiva, `banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql`, com as tabelas `servicos_adicionais` e `notificacoes`.
+
+- **Aprovação de adicionais:** a oficina pode propor um serviço associado a uma ordem; o cliente responsável decide aceitar ou recusar. A proposta e a decisão são validadas no backend, com verificação de propriedade e gravação transacional.
+- **Notificações internas:** a proposta cria notificação para o cliente e a decisão cria notificação para a conta da oficina. A consulta e a marcação de leitura são restritas ao usuário autenticado.
+- **Exportação do passaporte:** a interface gera uma versão de impressão do histórico de manutenção escolhido. O usuário pode selecionar “Salvar como PDF” no diálogo do navegador; não é um PDF produzido no servidor.
+- **Limitações:** o fluxo ainda requer testes de integração com MySQL/Tomcat e teste de navegador. A proposta de adicional fica registrada separadamente do orçamento original; não altera automaticamente o valor da ordem. O armazenamento de fotos/documentos não foi implementado nesta etapa porque precisa de uma política explícita de armazenamento, limites e retenção.
