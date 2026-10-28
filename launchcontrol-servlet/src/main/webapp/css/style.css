@@ -31,3 +31,25 @@
 .payment-history{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
 .payment-item .mini-button{display:block;margin-top:10px}
 .customer-tools,.quote-panel,.office-tools{scroll-margin-top:20px}
+
+
+/* LC Parts usa o mesmo sistema visual, com cores definidas nas variáveis existentes. */
+.lc-parts{scroll-margin-top:20px}
+.parts-notice{border:1px solid #57331f;background:#211912;border-radius:9px;padding:13px 15px;margin-bottom:18px}
+.parts-notice strong{color:#ffb17d;font-size:13px}
+.parts-notice p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.parts-form{gap:16px}
+.parts-vehicle-select{max-width:520px}
+.parts-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.parts-fields label,.parts-vehicle-select label{display:grid;gap:6px;color:var(--text);font-size:12px;font-weight:700}
+.parts-fields input,.parts-fields select,.parts-vehicle-select select{width:100%;min-width:0;background:#0e1319;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:11px 12px;font:inherit;font-weight:400}
+.parts-footnote{margin:16px 0 0;color:var(--muted);font-size:12px}
+.parts-results{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+.parts-results h3{margin:0 0 6px;font-size:15px}
+.parts-source-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.parts-source{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;padding:13px;border:1px solid var(--line);border-radius:9px;background:#101720}
+.parts-source strong{font-size:13px}
+.parts-source p{margin:0;color:var(--muted);font-size:11px;min-height:32px}
+.parts-source .button{margin-top:auto;text-decoration:none;font-size:12px}
+@media(max-width:1000px){.parts-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.parts-source-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.parts-fields,.parts-source-list{grid-template-columns:1fr}.parts-source p{min-height:0}}

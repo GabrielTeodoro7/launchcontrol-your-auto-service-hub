@@ -112,3 +112,9 @@ Execute python3 scripts/check_project.py. Essa verificação é estrutural e nã
 Por exemplo, ao cadastrar um veículo: o formulário está em `index.html`; o evento e o pedido HTTP estão em `js/app.js`; o endpoint recebe e valida os dados em `VehicleServlet.java`; `Database.java` abre a conexão; e o SQL grava os dados na tabela `veiculos`. A resposta volta ao JavaScript, que mostra a mensagem para a pessoa.
 
 Os comentários no código explicam as responsabilidades de cada arquivo e os trechos mais importantes. Eles são material de estudo; a fonte da verdade sobre o que está implementado continua sendo o código e os testes executados.
+
+## LC Parts — estado desta implementação
+
+A área LC Parts permite informar marca, modelo, ano, versão, motorização, peça, código OEM, cor opcional e condição. Quando a pessoa está autenticada como cliente, também pode preencher os dados a partir de um veículo cadastrado.
+
+Nesta etapa, a pesquisa abre páginas de busca do Mercado Livre, Shopee, OLX e uma busca geral na web para localizar lojas e fabricantes. **Não há integração de API com esses serviços**: o LaunchControl não recupera os anúncios, preços, frete, avaliações, estoque ou compatibilidade, e não deve ser apresentado como se fizesse isso. A conferência acontece na fonte externa. Nenhuma tabela, coluna, dependência ou endpoint foi adicionado para esta área.

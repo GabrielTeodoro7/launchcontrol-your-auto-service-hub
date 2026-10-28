@@ -20,6 +20,7 @@
         <a class="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
         <a class="nav-item" href="#servicos"><span>▤</span> Serviços</a>
         <a class="nav-item" href="#quote-panel"><span>▧</span> Orçamentos</a>
+        <a class="nav-item" href="#lc-parts"><span>⚙</span> LC Parts</a>
         <a class="nav-item" href="#diagnostico"><span>⌁</span> Diagnóstico</a>
         <a class="nav-item" href="#checkout"><span>▣</span> Checkout demonstrativo</a>
       </nav>
@@ -36,6 +37,52 @@
         <article class="stat-card"><span class="stat-icon blue">◷</span><p>Em andamento</p><strong id="stat-progress">—</strong><small>Status em execução</small></article>
         <article class="stat-card"><span class="stat-icon green">✓</span><p>Concluídos</p><strong id="stat-complete">—</strong><small>Orçamento bloqueado para edição</small></article>
         <article class="stat-card"><span class="stat-icon purple">⌁</span><p>Aguardando peça</p><strong id="stat-parts">—</strong><small>Dependem de reposição</small></article>
+      </section>
+      <!-- LC Parts direciona a pesquisa às plataformas de origem; não inventa anúncios nem preços. -->
+      <section class="panel lc-parts" id="lc-parts">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">PESQUISA AUTOMOTIVA</p>
+            <h2>LC Parts</h2>
+            <p class="muted">Encontre peças usando os dados do veículo e compare os anúncios diretamente nas plataformas.</p>
+          </div>
+        </div>
+        <div class="parts-notice" role="note">
+          <strong>Pesquisa transparente</strong>
+          <p>Esta versão abre pesquisas externas. Ela não consulta APIs de marketplaces, não recebe preços em tempo real e não confirma estoque ou compatibilidade automaticamente.</p>
+        </div>
+        <form id="parts-search-form" class="stack-form parts-form">
+          <div class="parts-vehicle-select">
+            <label for="parts-vehicle-select">Usar veículo já cadastrado (opcional)
+              <select id="parts-vehicle-select" name="registeredVehicle">
+                <option value="">Preencher manualmente</option>
+              </select>
+            </label>
+            <p class="muted">Entre como cliente para carregar seus veículos cadastrados. Você também pode pesquisar sem login.</p>
+          </div>
+          <div class="parts-fields">
+            <label>Marca do veículo<input name="marca" required maxlength="80" placeholder="Ex.: Renault"></label>
+            <label>Modelo<input name="modelo" required maxlength="100" placeholder="Ex.: Sandero Expression"></label>
+            <label>Ano<input name="ano" type="number" min="1950" max="2100" placeholder="Ex.: 2016"></label>
+            <label>Versão<input name="versao" maxlength="100" placeholder="Ex.: Expression"></label>
+            <label>Motorização<input name="motorizacao" maxlength="80" placeholder="Ex.: 1.0 16V"></label>
+            <label>Peça ou categoria<input name="peca" required maxlength="140" placeholder="Ex.: farol dianteiro direito"></label>
+            <label>Código OEM ou equivalente (opcional)<input name="oem" maxlength="80" placeholder="Código da peça, se souber"></label>
+            <label>Cor (quando relevante)<input name="cor" maxlength="50" placeholder="Ex.: branco"></label>
+            <label>Condição
+              <select name="condicao">
+                <option value="">Qualquer condição</option>
+                <option value="nova">Nova</option>
+                <option value="usada">Usada</option>
+                <option value="recondicionada">Recondicionada</option>
+              </select>
+            </label>
+          </div>
+          <button class="button button-primary" type="submit">Pesquisar peças</button>
+          <p id="parts-search-status" class="form-status" role="status">Informe o veículo e a peça. Os resultados serão abertos nas fontes externas.</p>
+        </form>
+        <div id="parts-results" class="parts-results" aria-live="polite" hidden></div>
+        <p class="parts-footnote">Antes de comprar, confira o código OEM, a aplicação exata, a reputação do vendedor, o frete e a política de devolução. O nome do veículo no anúncio não é prova definitiva de compatibilidade.</p>
       </section>
       <!-- Formulários visíveis apenas para clientes autenticados. -->
       <section class="panel customer-tools" id="customer-tools" hidden>

@@ -163,6 +163,21 @@ async function loadVehicles() {
     const response = await fetch("api/veiculos");
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível carregar veículos.");
+    const partsSelect = document.querySelector("#parts-vehicle-select");
+    const partsPlaceholder = document.createElement("option");
+    partsPlaceholder.value = "";
+    partsPlaceholder.textContent = "Preencher manualmente";
+    partsSelect.replaceChildren(partsPlaceholder);
+    result.forEach(vehicle => {
+      const option = document.createElement("option");
+      option.value = vehicle.id;
+      option.textContent = vehicle.marca + " " + vehicle.modelo + (vehicle.ano ? " (" + vehicle.ano + ")" : "");
+      option.dataset.marca = vehicle.marca || "";
+      option.dataset.modelo = vehicle.modelo || "";
+      option.dataset.ano = vehicle.ano || "";
+      option.dataset.motorizacao = vehicle.motorizacao || "";
+      partsSelect.append(option);
+    });
     select.replaceChildren();
     const placeholder = document.createElement("option");
     placeholder.value = ""; placeholder.textContent = result.length ? "Selecione um veículo" : "Cadastre seu primeiro veículo";
@@ -405,6 +420,70 @@ document.querySelector("#quote-edit-form").addEventListener("submit", async even
     quoteEditDialog.close();
     await loadOrders(); await loadQuotes();
   } catch (error) { status.textContent = error.message; }
+});
+
+// Reutiliza um veículo salvo quando o cliente escolhe um; não altera os dados do cadastro.
+document.querySelector("#parts-vehicle-select").addEventListener("change", event => {
+  const option = event.currentTarget.selectedOptions[0];
+  if (!option?.value) return;
+  const form = document.querySelector("#parts-search-form");
+  form.elements.marca.value = option.dataset.marca || "";
+  form.elements.modelo.value = option.dataset.modelo || "";
+  form.elements.ano.value = option.dataset.ano || "";
+  form.elements.motorizacao.value = option.dataset.motorizacao || "";
+});
+
+// A pesquisa abre as fontes originais. O LaunchControl não apresenta preços nem anúncios como se os tivesse consultado.
+document.querySelector("#parts-search-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const values = [
+    form.get("marca"), form.get("modelo"), form.get("ano"), form.get("versao"),
+    form.get("motorizacao"), form.get("peca"), form.get("oem"),
+    form.get("cor") ? "cor " + form.get("cor") : "",
+    form.get("condicao")
+  ].map(value => String(value || "").trim()).filter(Boolean);
+  const query = values.join(" ");
+  if (!query) return;
+  const encoded = encodeURIComponent(query);
+  const marketSlug = encoded.replace(/%20/g, "-");
+  const sources = [
+    {name:"Mercado Livre", detail:"Pesquisa no marketplace", url:"https://lista.mercadolivre.com.br/" + marketSlug},
+    {name:"Shopee", detail:"Pesquisa no marketplace", url:"https://shopee.com.br/search?keyword=" + encoded},
+    {name:"OLX", detail:"Pesquisa de anúncios", url:"https://www.olx.com.br/brasil?q=" + encoded},
+    {name:"Google · lojas e fabricantes", detail:"Busca na web, não um catálogo verificado", url:"https://www.google.com/search?q=" + encodeURIComponent(query + " autopeças loja oficial")}
+  ];
+  const results = document.querySelector("#parts-results");
+  results.replaceChildren();
+  const heading = document.createElement("h3");
+  heading.textContent = "Pesquisas prontas para abrir";
+  results.append(heading);
+  const summary = document.createElement("p");
+  summary.className = "muted";
+  summary.textContent = "Termos usados: " + query;
+  results.append(summary);
+  const list = document.createElement("div");
+  list.className = "parts-source-list";
+  sources.forEach(source => {
+    const item = document.createElement("article");
+    item.className = "parts-source";
+    const title = document.createElement("strong");
+    title.textContent = source.name;
+    const detail = document.createElement("p");
+    detail.textContent = source.detail;
+    const link = document.createElement("a");
+    link.className = "button button-outline";
+    link.href = source.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "Abrir pesquisa";
+    item.append(title, detail, link);
+    list.append(item);
+  });
+  results.append(list);
+  results.hidden = false;
+  document.querySelector("#parts-search-status").textContent = "Pesquisas preparadas. Os anúncios, preços, frete, estoque e compatibilidade devem ser conferidos em cada fonte.";
+  results.scrollIntoView({behavior:"smooth", block:"nearest"});
 });
 
 document.querySelector("#refresh-button").addEventListener("click", loadOrders);
