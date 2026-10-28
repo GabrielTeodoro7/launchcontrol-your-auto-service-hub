@@ -9,6 +9,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Instant;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Consulta referências de aplicação de peças e informa explicitamente o nível de verificação.
@@ -102,4 +106,106 @@ public class FitmentServlet extends HttpServlet {
         String clean = raw.trim();
         return clean.length() > maxLength ? clean.substring(0, maxLength) : clean;
     }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        request.setCharacterEncoding("UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null || !"ADMINISTRADOR".equals(session.getAttribute("userRole"))) {
+            Json.error(response, 403, "Somente administradores podem cadastrar referências de compatibilidade.");
+            return;
+        }
+
+        long partId;
+        Integer yearStart;
+        Integer yearEnd;
+        String make = value(request.getParameter("marcaVeiculo"), 80);
+        String model = value(request.getParameter("modeloVeiculo"), 100);
+        String engine = value(request.getParameter("motorizacao"), 80);
+        String oem = value(request.getParameter("codigoOem"), 80);
+        String status = value(request.getParameter("status"), 30);
+        String source = value(request.getParameter("fonte"), 180);
+        String reference = value(request.getParameter("referencia"), 500);
+        String notes = value(request.getParameter("observacoes"), 500);
+
+        try {
+            partId = Long.parseLong(value(request.getParameter("pecaId"), 20));
+            yearStart = optionalYear(request.getParameter("anoInicio"));
+            yearEnd = optionalYear(request.getParameter("anoFim"));
+            if (partId < 1 || make.length() < 2 || model.length() < 2
+                    || (yearStart != null && yearEnd != null && yearEnd < yearStart)
+                    || !java.util.Set.of("CONFIRMADA", "INCOMPATIVEL", "NAO_VERIFICADA").contains(status)
+                    || (("CONFIRMADA".equals(status) || "INCOMPATIVEL".equals(status))
+                        && (source.isBlank() || reference.isBlank()))) {
+                throw new IllegalArgumentException();
+            }
+        } catch (Exception ex) {
+            Json.error(response, 400, "Confira a peça, veículo, anos, status e fonte. Estados verificados exigem fonte e referência.");
+            return;
+        }
+
+        boolean verified = "CONFIRMADA".equals(status) || "INCOMPATIVEL".equals(status);
+        String sql = "INSERT INTO compatibilidade_pecas(peca_id,marca_veiculo,modelo_veiculo,ano_inicio,ano_fim," +
+                "motorizacao,codigo_oem,status,fonte,referencia,observacoes,verificado_por,verificado_em) " +
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection connection = Database.getConnection()) {
+            try (PreparedStatement part = connection.prepareStatement("SELECT id FROM pecas WHERE id=? AND ativo=TRUE")) {
+                part.setLong(1, partId);
+                try (ResultSet result = part.executeQuery()) {
+                    if (!result.next()) {
+                        Json.error(response, 404, "Peça ativa não encontrada no inventário.");
+                        return;
+                    }
+                }
+            }
+            try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                statement.setLong(1, partId);
+                statement.setString(2, make);
+                statement.setString(3, model);
+                setNullableInteger(statement, 4, yearStart);
+                setNullableInteger(statement, 5, yearEnd);
+                statement.setString(6, engine.isBlank() ? null : engine);
+                statement.setString(7, oem.isBlank() ? null : oem);
+                statement.setString(8, status);
+                statement.setString(9, source.isBlank() ? null : source);
+                statement.setString(10, reference.isBlank() ? null : reference);
+                statement.setString(11, notes.isBlank() ? null : notes);
+                if (verified) {
+                    statement.setLong(12, (Long) session.getAttribute("userId"));
+                    statement.setTimestamp(13, Timestamp.from(Instant.now()));
+                } else {
+                    statement.setNull(12, Types.BIGINT);
+                    statement.setNull(13, Types.TIMESTAMP);
+                }
+                statement.executeUpdate();
+                try (ResultSet keys = statement.getGeneratedKeys()) {
+                    if (!keys.next()) {
+                        Json.error(response, 500, "A referência não recebeu identificador.");
+                        return;
+                    }
+                    response.setStatus(201);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"id\":" + keys.getLong(1)
+                            + ",\"status\":" + Json.quote(verified ? status : "NAO_VERIFICADA")
+                            + ",\"mensagem\":\"Referência de aplicação registrada.\"}");
+                }
+            }
+        } catch (SQLException ex) {
+            Json.error(response, 500, "Não foi possível registrar a referência de compatibilidade.");
+        }
+    }
+
+    private static Integer optionalYear(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        int year = Integer.parseInt(raw.trim());
+        if (year < 1950 || year > 2100) throw new IllegalArgumentException();
+        return year;
+    }
+
+    private static void setNullableInteger(PreparedStatement statement, int index, Integer value) throws SQLException {
+        if (value == null) statement.setNull(index, Types.SMALLINT);
+        else statement.setInt(index, value);
+    }
+
+
 }
