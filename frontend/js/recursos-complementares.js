@@ -31,6 +31,18 @@
       </form>
       <div class="supplemental-section"><h3>Serviços adicionais</h3><div id="additional-service-list" class="supplemental-list"><p class="muted">Entre para consultar.</p></div></div>
       <div class="supplemental-section"><div class="panel-heading"><h3>Notificações</h3><span class="muted" id="notification-count"></span></div><div id="notification-list" class="supplemental-list"><p class="muted">Entre para consultar.</p></div></div>
+      <div class="supplemental-section" id="service-reviews-section">
+        <h3>Avalie um serviço concluído</h3>
+        <p class="muted">Avaliações são liberadas apenas para ordens concluídas e cada ordem pode receber uma avaliação por cliente.</p>
+        <form id="service-review-form" class="stack-form">
+          <label>Ordem concluída<select name="ordemId" id="review-order" required><option value="">Carregando ordens…</option></select></label>
+          <label>Nota<select name="nota" required><option value="5">5 — Excelente</option><option value="4">4 — Muito bom</option><option value="3">3 — Bom</option><option value="2">2 — Regular</option><option value="1">1 — Ruim</option></select></label>
+          <label>Comentário (opcional)<textarea name="comentario" maxlength="1000" rows="3" placeholder="Conte como foi sua experiência"></textarea></label>
+          <button class="button button-primary" type="submit">Enviar avaliação</button>
+          <p class="form-status" id="service-review-status" role="status"></p>
+        </form>
+        <div class="supplemental-section"><h3>Minhas avaliações</h3><div id="service-review-list" class="supplemental-list"><p class="muted">Entre para consultar.</p></div></div>
+      </div>
       <div class="supplemental-section"><h3>Passaporte do veículo</h3>
         <p class="muted">Gera uma versão para impressão do histórico de manutenção registrado. Na janela de impressão, escolha “Salvar como PDF”.</p>
         <button type="button" class="button button-secondary" id="maintenance-export">Exportar histórico para PDF</button>
@@ -52,6 +64,7 @@
     panel.querySelector("#maintenance-export").addEventListener("click", exportMaintenanceHistory);
     panel.querySelector("#maintenance-attachment-form").addEventListener("submit", submitMaintenanceAttachment);
     panel.querySelector("#attachment-vehicle").addEventListener("change", loadMaintenanceAttachmentHistory);
+    panel.querySelector("#service-review-form").addEventListener("submit", submitServiceReview);
   }
 
   async function fetchJson(url, options) {
@@ -196,6 +209,81 @@
     }
   }
 
+  async function loadServiceReviews() {
+    const section = document.querySelector("#service-reviews-section");
+    const form = document.querySelector("#service-review-form");
+    const select = document.querySelector("#review-order");
+    const list = document.querySelector("#service-review-list");
+    section.hidden = currentUser?.perfil !== "CLIENTE";
+    if (section.hidden) return;
+    const [reviews, orders] = await Promise.all([
+      fetchJson("api/avaliacoes"),
+      fetchJson("api/ordens-servico")
+    ]);
+    const reviewedIds = new Set(reviews.map(review => String(review.ordemId)));
+    const eligible = orders.filter(order => order.status === "CONCLUIDO" && !reviewedIds.has(String(order.id)));
+    select.replaceChildren(new Option(
+      eligible.length ? "Selecione uma ordem concluída" : "Não há ordens pendentes de avaliação",
+      ""
+    ));
+    eligible.forEach(order => select.append(new Option(
+      (order.codigo || "Ordem #" + order.id) + " · " + (order.veiculo || "Veículo"),
+      order.id
+    )));
+    const submit = form.querySelector("button[type='submit']");
+    submit.disabled = eligible.length === 0;
+    list.replaceChildren();
+    if (!reviews.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Você ainda não avaliou um serviço.";
+      list.append(empty);
+      return;
+    }
+    reviews.forEach(review => {
+      const card = document.createElement("article");
+      card.className = "supplemental-item";
+      const title = document.createElement("strong");
+      title.textContent = (review.codigo || "Ordem #" + review.ordemId) + " · " + "★".repeat(review.nota) + "☆".repeat(5 - review.nota);
+      const workshop = document.createElement("p");
+      workshop.textContent = review.oficina || "Oficina";
+      card.append(title, workshop);
+      if (review.comentario) {
+        const comment = document.createElement("p");
+        comment.textContent = review.comentario;
+        card.append(comment);
+      }
+      const date = document.createElement("small");
+      date.textContent = "Avaliada em " + dateLabel(review.criadoEm);
+      card.append(date);
+      list.append(card);
+    });
+  }
+
+  async function submitServiceReview(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const status = document.querySelector("#service-review-status");
+    const values = new FormData(form);
+    status.textContent = "Registrando avaliação…";
+    try {
+      await fetchJson("api/avaliacoes", {
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},
+        body:new URLSearchParams({
+          ordemId:values.get("ordemId"),
+          nota:values.get("nota"),
+          comentario:values.get("comentario")
+        })
+      });
+      status.textContent = "Obrigado. Sua avaliação foi registrada.";
+      form.reset();
+      await loadServiceReviews();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  }
+
   async function loadMaintenanceAttachmentVehicles() {
     const select = document.querySelector("#attachment-vehicle");
     const vehicles = await fetchJson("api/veiculos");
@@ -321,7 +409,12 @@
     document.querySelector("#maintenance-export").closest(".supplemental-section").hidden = currentUser.perfil !== "CLIENTE";
     const tasks = [loadAdditionalServices(), loadNotifications()];
     if (!proposalForm.hidden) tasks.push(loadOrdersForProposal());
-    if (currentUser.perfil === "CLIENTE") tasks.push(loadMaintenanceAttachmentVehicles());
+    if (currentUser.perfil === "CLIENTE") {
+      tasks.push(loadMaintenanceAttachmentVehicles());
+      tasks.push(loadServiceReviews());
+    } else {
+      document.querySelector("#service-reviews-section").hidden = true;
+    }
     const results = await Promise.allSettled(tasks);
     const failed = results.find(result => result.status === "rejected");
     if (failed) {
