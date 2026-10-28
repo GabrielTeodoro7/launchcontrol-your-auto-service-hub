@@ -86,6 +86,7 @@ public class OrderServlet extends HttpServlet {
           "os.criado_em,os.concluido_em,so.veiculo_id," +
           "u.nome AS cliente,CONCAT(COALESCE(v.marca,''),' ',COALESCE(v.modelo,'')) AS veiculo," +
           "COALESCE(sv.nome,so.descricao) AS servico,o.valor,o.id AS orcamento_id," +
+          "COALESCE((SELECT SUM(sa.valor) FROM servicos_adicionais sa WHERE sa.ordem_id=os.id AND sa.status='ACEITO'),0) AS valor_adicionais_aceitos," +
           "o.status AS orcamento_status,o.prazo_dias,o.observacoes " +
           "FROM ordens_servico os JOIN solicitacoes_orcamento so ON so.id=os.solicitacao_id " +
           "JOIN usuarios u ON u.id=so.cliente_id LEFT JOIN veiculos v ON v.id=so.veiculo_id " +
@@ -112,6 +113,8 @@ public class OrderServlet extends HttpServlet {
                        .append(",\"veiculo\":").append(Json.quote(rs.getString("veiculo")))
                        .append(",\"servico\":").append(Json.quote(rs.getString("servico")))
                        .append(",\"valor\":").append(rs.getBigDecimal("valor") == null ? "null" : rs.getBigDecimal("valor").toPlainString())
+                       .append(",\"valorAdicionaisAceitos\":").append(rs.getBigDecimal("valor_adicionais_aceitos").toPlainString())
+                       .append(",\"valorTotalAtualizado\":").append((rs.getBigDecimal("valor") == null ? java.math.BigDecimal.ZERO : rs.getBigDecimal("valor")).add(rs.getBigDecimal("valor_adicionais_aceitos")).toPlainString())
                        .append(",\"orcamentoId\":").append(rs.getObject("orcamento_id") == null ? "null" : rs.getLong("orcamento_id"))
                        .append(",\"orcamentoStatus\":").append(Json.quote(rs.getString("orcamento_status")))
                        .append(",\"prazoDias\":").append(rs.getObject("prazo_dias") == null ? "null" : rs.getInt("prazo_dias"))
