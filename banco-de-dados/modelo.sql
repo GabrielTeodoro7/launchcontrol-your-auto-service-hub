@@ -190,3 +190,37 @@ CREATE TABLE IF NOT EXISTS auditoria (
 
 CREATE INDEX idx_servicos_ativo_nome ON servicos(ativo, nome);
 CREATE INDEX idx_pecas_ativo_nome ON pecas(ativo, nome);
+
+-- Passaporte digital do veículo: registros informados pelo cliente, sem substituir notas fiscais ou laudos oficiais.
+CREATE TABLE IF NOT EXISTS historico_manutencao (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  veiculo_id BIGINT NOT NULL,
+  categoria VARCHAR(100) NOT NULL,
+  descricao VARCHAR(2000) NOT NULL,
+  data_servico DATE NOT NULL,
+  quilometragem INT NOT NULL,
+  custo DECIMAL(10,2) NOT NULL DEFAULT 0,
+  proxima_data DATE,
+  proxima_quilometragem INT,
+  oficina VARCHAR(160),
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (veiculo_id) REFERENCES veiculos(id),
+  INDEX idx_historico_veiculo_data (veiculo_id, data_servico DESC),
+  INDEX idx_historico_proxima_data (proxima_data)
+);
+
+-- Avaliações verificadas: cada cliente pode avaliar uma ordem concluída uma única vez.
+CREATE TABLE IF NOT EXISTS avaliacoes_servico (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  ordem_servico_id BIGINT NOT NULL UNIQUE,
+  cliente_id BIGINT NOT NULL,
+  oficina_id BIGINT NOT NULL,
+  nota TINYINT NOT NULL,
+  comentario VARCHAR(1000),
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ordem_servico_id) REFERENCES ordens_servico(id),
+  FOREIGN KEY (cliente_id) REFERENCES usuarios(id),
+  FOREIGN KEY (oficina_id) REFERENCES oficinas(id),
+  CONSTRAINT chk_avaliacao_nota CHECK (nota BETWEEN 1 AND 5),
+  INDEX idx_avaliacoes_oficina (oficina_id, criado_em)
+);
