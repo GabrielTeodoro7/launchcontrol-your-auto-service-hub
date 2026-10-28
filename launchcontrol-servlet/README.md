@@ -12,6 +12,10 @@ Implementado nesta etapa:
 - Hash de senha PBKDF2-HMAC-SHA256 com salt aleatório.
 - Filtro de autenticação e validação de token CSRF para POSTs autenticados.
 - Consulta de ordens persistidas no MySQL com filtro por perfil.
+- Cadastro de veículos por cliente e abertura/listagem de solicitações de orçamento.
+- Painel inicial de propostas para clientes e oficinas, com envio, aceite/recusa e geração de ordem de serviço após aceite.
+- Edição de orçamentos pendentes/enviados pela oficina proprietária, com validação de valor, prazo e limite de observações.
+- Atualização de andamento da ordem por oficina autorizada ou administrador; ordem concluída fica bloqueada para reabertura.
 - Regra no backend que bloqueia edição de orçamento quando a ordem relacionada está CONCLUIDO.
 - Relatos iniciais de diagnóstico, separados de laudo técnico.
 - Checkout demonstrativo que cria registro PENDENTE; não realiza cobrança, não gera PIX válido e não aprova pagamentos.
