@@ -31,6 +31,49 @@
         <article class="stat-card"><span class="stat-icon green">✓</span><p>Concluídos</p><strong id="stat-complete">—</strong><small>Orçamento bloqueado para edição</small></article>
         <article class="stat-card"><span class="stat-icon purple">⌁</span><p>Aguardando peça</p><strong id="stat-parts">—</strong><small>Dependem de reposição</small></article>
       </section>
+      <section class="panel customer-tools" id="customer-tools" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">ÁREA DO CLIENTE</p><h2>Meus veículos e solicitações</h2><p class="muted">Cadastros persistidos no MySQL por meio do backend Java.</p></div></div>
+        <div class="two-columns">
+          <form id="vehicle-form" class="stack-form">
+            <h3>Cadastrar veículo</h3>
+            <label>Marca<input name="marca" required minlength="2" maxlength="80" placeholder="Ex.: Renault"></label>
+            <label>Modelo<input name="modelo" required maxlength="100" placeholder="Ex.: Sandero Expression"></label>
+            <div class="two-columns compact-fields"><label>Ano<input name="ano" type="number" min="1950" max="2100" required></label><label>Quilometragem<input name="quilometragem" type="number" min="0" max="2000000" required></label></div>
+            <label>Placa (opcional)<input name="placa" maxlength="10" placeholder="ABC1D23"></label>
+            <label>Motorização (opcional)<input name="motorizacao" maxlength="80" placeholder="Ex.: 1.0 16V"></label>
+            <button class="button button-primary" type="submit">Salvar veículo</button>
+            <p id="vehicle-status" class="form-status" role="status">Entre com uma conta de cliente para cadastrar.</p>
+          </form>
+          <form id="request-form" class="stack-form">
+            <h3>Solicitar orçamento</h3>
+            <label>Veículo<select id="vehicle-select" name="veiculoId" required><option value="">Cadastre ou carregue um veículo</option></select></label>
+            <label>ID do serviço (opcional)<input name="servicoId" type="number" min="1" placeholder="ID do catálogo"></label>
+            <label>Descrição do serviço ou problema<textarea name="descricao" required minlength="5" maxlength="3000" rows="4" placeholder="Descreva a manutenção ou os sintomas"></textarea></label>
+            <button class="button button-primary" type="submit">Enviar solicitação</button>
+            <p id="request-status" class="form-status" role="status">A solicitação será registrada no banco de dados.</p>
+            <div id="request-list" class="request-list" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+      <section class="panel quote-panel" id="quote-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">PROPOSTAS</p><h2>Orçamentos</h2><p class="muted">Compare as propostas recebidas. Ao aceitar, uma ordem de serviço é criada.</p></div></div>
+        <div id="quote-list" class="quote-list" aria-live="polite"><p class="muted">Entre para consultar seus orçamentos.</p></div>
+      </section>
+      <section class="panel office-tools" id="office-tools" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">ÁREA DA OFICINA</p><h2>Solicitações de clientes</h2><p class="muted">Envie um orçamento usando o identificador da solicitação.</p></div></div>
+        <div class="two-columns">
+          <div><h3>Solicitações disponíveis</h3><div id="office-request-list" class="request-list"></div></div>
+          <form id="quote-form" class="stack-form">
+            <h3>Enviar orçamento</h3>
+            <label>ID da solicitação<input name="solicitacaoId" type="number" min="1" required></label>
+            <label>Valor total (R$)<input name="valor" type="number" min="0" max="99999999.99" step="0.01" required></label>
+            <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
+            <label>Observações<textarea name="observacoes" maxlength="2000" rows="3"></textarea></label>
+            <button class="button button-primary" type="submit">Enviar orçamento</button>
+            <p id="quote-form-status" class="form-status" role="status">O orçamento será gravado no MySQL.</p>
+          </form>
+        </div>
+      </section>
       <section class="panel" id="servicos">
         <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO</p><h2>Ordens de serviço</h2><p class="muted">Ações são controladas pelo status real retornado pelo backend.</p></div><label class="search-box"><span class="sr-only">Pesquisar serviços</span><input id="service-search" type="search" placeholder="Pesquisar cliente, veículo ou serviço"></label></div>
         <div class="table-wrap"><table><thead><tr><th>ORDEM</th><th>CLIENTE</th><th>VEÍCULO</th><th>SERVIÇO</th><th>STATUS</th><th>VALOR</th><th>AÇÕES</th></tr></thead><tbody id="service-rows"><tr><td colspan="7" class="empty">Carregando registros do banco…</td></tr></tbody></table></div>
