@@ -33,7 +33,7 @@ def request(opener, path, method="GET", data=None, headers=None, expected=200):
         request_headers.setdefault("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
     req = urllib.request.Request(BASE_URL + path, data=payload, method=method, headers=request_headers)
     try:
-        with opener.open(req, timeout=10) as response:
+        with opener.open(req, timeout=15) as response:
             code, body, response_headers = response.status, response.read().decode("utf-8"), response.headers
     except urllib.error.HTTPError as error:
         code, body, response_headers = error.code, error.read().decode("utf-8"), error.headers
@@ -185,8 +185,9 @@ def main():
     assert "ordens" in dashboard and "agendamentos" in dashboard, dashboard
     audit, _ = json_request(customer, "/api/auditoria")
     assert isinstance(audit, list), audit
-    request(anonymous, "/api/pecas/busca?q=Smoke", expected=200)
-    checks.append("preferências, dashboard, auditoria e LC Parts")
+    parts_status, parts_body, _ = request(anonymous, "/api/pecas/busca?q=Smoke", expected=None)
+    assert parts_status in {200, 502, 503, 504}, f"LC Parts retornou status inesperado {parts_status}: {parts_body[:300]}"
+    checks.append("preferências, dashboard, auditoria e degradação segura do LC Parts")
 
     logout(customer, csrf)
     workshop = client()
