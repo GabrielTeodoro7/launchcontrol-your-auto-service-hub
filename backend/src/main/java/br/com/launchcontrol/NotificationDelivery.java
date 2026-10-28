@@ -14,7 +14,7 @@ final class NotificationDelivery {
         boolean email=env("RESEND_API_KEY")!=null&&env("EMAIL_FROM")!=null;
         boolean whatsapp=env("WHATSAPP_ACCESS_TOKEN")!=null&&env("WHATSAPP_PHONE_NUMBER_ID")!=null;
         try(Connection c=Database.getConnection()){
-            if(email)try(PreparedStatement p=c.prepareStatement("UPDATE notificacao_entregas e JOIN preferencias_notificacao pr ON pr.usuario_id=e.usuario_id SET e.status='PENDENTE',e.proxima_tentativa_em=NOW() WHERE e.canal='EMAIL' AND e.status='AGUARDANDO_CONFIGURACAO' AND pr.email_ativo=TRUE")){p.executeUpdate();}
+            if(email)try(PreparedStatement p=c.prepareStatement("UPDATE notificacao_entregas e LEFT JOIN preferencias_notificacao pr ON pr.usuario_id=e.usuario_id SET e.status='PENDENTE',e.proxima_tentativa_em=NOW() WHERE e.canal='EMAIL' AND e.status='AGUARDANDO_CONFIGURACAO' AND COALESCE(pr.email_ativo,TRUE)=TRUE")){p.executeUpdate();}
             if(whatsapp)try(PreparedStatement p=c.prepareStatement("UPDATE notificacao_entregas e JOIN preferencias_notificacao pr ON pr.usuario_id=e.usuario_id SET e.status='PENDENTE',e.proxima_tentativa_em=NOW() WHERE e.canal='WHATSAPP' AND e.status='AGUARDANDO_CONFIGURACAO' AND pr.whatsapp_ativo=TRUE AND pr.whatsapp_numero IS NOT NULL")){p.executeUpdate();}
         }catch(SQLException e){System.err.println("LaunchControl: não foi possível reativar a fila de notificações.");}
     }
