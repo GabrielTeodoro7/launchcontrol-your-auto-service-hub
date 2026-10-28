@@ -170,6 +170,9 @@ assert 'src="js/launchcontrol-operacoes.js"' in html, "JavaScript operacional n�
 workflow = read(".github/workflows/launchcontrol-validation.yml")
 assert "mysql:8.4" in workflow and "Tomcat 11" in workflow and "smoke_test_http.py" in workflow, "CI precisa executar banco real, implantação e smoke test HTTP"
 smoke = read("scripts/smoke_test_http.py")
+assert "def multipart_request" in smoke and "LC_UPLOAD_DIR" in read(".github/workflows/launchcontrol-validation.yml"), "Smoke test de anexos não está configurado"
+assert 'ai_result.get("fallback") is True' in smoke, "Fallback do Launch AI não está coberto por smoke test"
+assert "rollback_candidate" in smoke, "Smoke test não cobre rollback de importação CSV mista"
 for scenario in ["cadastro", "CSRF", "e-mail duplicado", "logout", "senha incorreta", "login com credencial correta"]:
     assert scenario.lower() in smoke.lower(), "Smoke test sem cenário: " + scenario
 for table in ["configuracao_agenda_oficina", "agendamentos", "preferencias_notificacao", "notificacao_entregas"]:
