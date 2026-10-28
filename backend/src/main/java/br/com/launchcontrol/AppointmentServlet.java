@@ -75,7 +75,8 @@ public class AppointmentServlet extends HttpServlet {
             officeId=Long.parseLong(req.getParameter("oficinaId")); vehicleId=Long.parseLong(req.getParameter("veiculoId"));
             start=LocalDateTime.parse(req.getParameter("inicio"),INPUT);
             int minutes=Integer.parseInt(req.getParameter("duracaoMinutos"));
-            if(minutes<30||minutes>240||start.isBefore(LocalDateTime.now().plusMinutes(30))||start.isAfter(LocalDateTime.now().plusDays(60))) throw new IllegalArgumentException();
+            LocalDateTime nowInBrazil = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
+            if(minutes<30||minutes>240||start.isBefore(nowInBrazil.plusMinutes(30))||start.isAfter(nowInBrazil.plusDays(60))) throw new IllegalArgumentException();
             end=start.plusMinutes(minutes);
             if (!start.toLocalDate().equals(end.toLocalDate())) throw new IllegalArgumentException();
             if(notes!=null&&notes.length()>500) throw new IllegalArgumentException();
