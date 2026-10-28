@@ -54,14 +54,14 @@ A pasta `launchcontrol-servlet/` é independente do frontend Lovable existente. 
 - [x] Inspecionar estrutura e tecnologias dos ZIPs.
 - [x] Identificar telas, mock data e ausência de backend/SQL.
 - [x] Criar uma base Java Servlet + JDBC + MySQL.
-- [ ] Implementar autenticação e autorização de ponta a ponta.
+- [x] Implementar a primeira etapa de cadastro/login de cliente, sessão, hash PBKDF2 e filtro de autenticação/CSRF. Autorização completa de todos os módulos ainda pendente.
 - [ ] Completar CRUD e regras de negócio por perfil.
-- [ ] Completar diagnóstico, pedidos e checkout.
-- [ ] Revisar/expandir UML e criar DER.
+- [x] Criar endpoint inicial de relato de diagnóstico e checkout demonstrativo pendente. Fluxos completos, provedor real e demais estados ainda pendentes.
+- [x] Criar um DER editável inicial alinhado ao schema atual em docs/diagramas/der-launchcontrol.drawio. Revisão semântica de todos os diagramas e exportações PNG/PDF ainda pendentes.
 - [ ] Compilar e executar com servidor Servlet e MySQL.
-- [ ] Executar testes de integração e responsividade em navegador.
+- [ ] Executar testes de integração e responsividade em navegador. Foram executadas verificações estáticas dos arquivos via GitHub; não substituem testes de execução.
 - [ ] Gerar pacote final depois das verificações.
 
 ## 7. Limitações desta auditoria
 
-Não foi possível confirmar execução ponta a ponta porque o ambiente desta etapa não tem Maven nem servidor Servlet/MySQL configurado. Testes estáticos não equivalem a compilação, conexão ao banco ou testes de segurança. Nenhuma cobrança real deve ser realizada nesta entrega.
+Não foi possível confirmar execução ponta a ponta porque o ambiente desta etapa não tem Maven nem servidor Servlet/MySQL configurado e o clone do GitHub não pôde ser baixado no ambiente local. Foram verificadas estaticamente 11 condições usando os arquivos acessíveis no branch. Isso não equivale a executar o script Python, compilar Java, conectar ao banco ou testar segurança. Nenhuma cobrança real deve ser realizada nesta entrega.
