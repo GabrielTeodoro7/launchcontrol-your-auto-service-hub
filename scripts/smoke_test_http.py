@@ -344,6 +344,14 @@ def main():
                                     "motorizacao": "1.0", "oem": "SMOKE-FILTER-001"})
     fitment, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + query)
     assert any(row.get("status") == "NAO_VERIFICADA" for row in fitment), fitment
+    matching_part_query = urllib.parse.urlencode({"marca": "Renault", "modelo": "Sandero", "ano": "2016",
+                                                   "motorizacao": "1.0", "peca": "Filtro Smoke Test"})
+    matching_parts, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + matching_part_query)
+    assert len(matching_parts) == 1 and matching_parts[0].get("peca") == "Filtro Smoke Test", matching_parts
+    unrelated_part_query = urllib.parse.urlencode({"marca": "Renault", "modelo": "Sandero", "ano": "2016",
+                                                    "motorizacao": "1.0", "peca": "Pastilha inexistente"})
+    unrelated_parts, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + unrelated_part_query)
+    assert not unrelated_parts, unrelated_parts
     rollback_candidate = "900001,Honda,Civic,2015,2018,1.5,ROLLBACK-CANDIDATE,NAO_VERIFICADA,,,Linha que deve sofrer rollback"
     invalid_row = "999999,Renault,Sandero,2015,2018,1.0,UNKNOWN,NAO_VERIFICADA,,,Peça inexistente"
     post_csrf(admin, "/api/compatibilidade-pecas/importacao",
