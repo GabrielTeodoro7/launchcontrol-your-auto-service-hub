@@ -59,7 +59,7 @@ assert "localStorage" not in js, "O frontend não deve usar localStorage como pe
 assert 'id="vehicle-form"' in html and 'id="request-form"' in html, "Formulários de veículo e solicitação ausentes"
 assert 'id="quote-form"' in html and 'id="quote-list"' in html, "Interface de orçamento ausente"
 assert "api/pagamentos" in js and "api/orcamentos/decisao" in js, "Fluxo de orçamento/pagamento não conectado"
-assert "solicitacao já foi aceita" not in read("src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java").lower(), "Texto de regra inesperado"
+assert "A solicitação já foi aceita" in read("src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Proteção contra aceitar múltiplos orçamentos ausente"
 
 print("OK: " + str(len(required)) + " arquivos essenciais presentes.")
 print("OK: dependências Servlet/JDBC, " + str(len(tables)) + " tabelas, hash PBKDF2, CSRF, bloqueio de orçamento concluído e checkout demonstrativo.")
