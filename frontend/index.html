@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/estilo-principal.css">
   <script src="js/interacoes.js" defer></script>
   <script src="js/recursos-complementares.js" defer></script>
+  <script src="js/launchcontrol-operacoes.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -24,6 +25,7 @@
         <a class="nav-item" href="#customer-tools" data-profiles="CLIENTE"><span>✳</span> Experiência por perfil</a>
         <a class="nav-item" href="#estoque-inteligente" data-profiles="FORNECEDOR,ADMINISTRADOR"><span>▦</span> Inteligência de estoque</a>
         <a class="nav-item" href="#checkout" data-profiles="CLIENTE"><span>▣</span> Checkout demonstrativo</a>
+        <a class="nav-item" href="#operations-panel" data-profiles="CLIENTE,OFICINA,ADMINISTRADOR"><span>◷</span> Operação avançada</a>
       </nav>
       <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
     </aside>
@@ -271,6 +273,56 @@
       </div>
       <section class="panel checkout-panel" id="checkout"><div><p class="eyebrow">PAGAMENTOS</p><h2>Checkout de demonstração</h2><p class="muted">Sem provedor de pagamento configurado, o sistema não cobra, não gera PIX válido e não aprova transações reais.</p></div><form id="checkout-form" class="checkout-form"><label>ID do orçamento<input name="quoteId" type="number" min="1" required placeholder="ID do orçamento existente"></label><label>Método<select name="method"><option value="PIX_DEMO">PIX — demonstração</option><option value="CARTAO_DEMO">Cartão — demonstração</option></select></label><button class="button button-primary" type="submit">Criar pagamento pendente</button></form><p id="checkout-status" class="form-status" role="status">A operação demonstrativa ficará pendente e será identificada como demonstração.</p><div class="payment-history-block"><button class="button button-outline" id="load-payments" type="button">Consultar histórico de pagamentos</button><div id="payment-history" class="payment-history" aria-live="polite"></div></div></section>
       <footer>LaunchControl · Java Servlet · MySQL · HTML, CSS e JavaScript</footer>
+
+      <section class="panel" id="operations-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">ANÁLISE OPERACIONAL</p><h2>Indicadores gerenciais</h2><p class="muted">Totais e valores derivados de registros existentes, limitados ao escopo da sua conta.</p></div><button class="button button-outline" id="operations-refresh" type="button">Atualizar indicadores</button></div>
+        <div id="operations-metrics" class="operations-metrics"><p class="muted">Entre para carregar os indicadores.</p></div>
+        <p id="operations-dashboard-status" class="form-status" role="status">Os valores refletem dados persistidos; não representam previsão de faturamento.</p>
+      </section>
+      <section class="panel" id="appointment-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">AGENDA INTELIGENTE</p><h2>Agendamentos e capacidade</h2><p class="muted">A reserva verifica expediente e capacidade da oficina no servidor para evitar conflitos.</p></div></div>
+        <form id="appointment-create-form" class="stack-form" hidden>
+          <h3>Solicitar atendimento</h3>
+          <div class="parts-fields"><label>Oficina<select id="appointment-office" name="oficinaId" required><option value="">Carregando oficinas…</option></select></label><label>Veículo cadastrado<select id="appointment-vehicle" name="veiculoId" required><option value="">Carregando veículos…</option></select></label><label>Início local<input name="inicio" type="datetime-local" required></label></div>
+          <div class="parts-fields"><label>Duração<select name="duracaoMinutos"><option value="30">30 minutos</option><option value="60" selected>1 hora</option><option value="90">1 hora e 30 minutos</option><option value="120">2 horas</option><option value="180">3 horas</option><option value="240">4 horas</option></select></label><label>Observações (opcional)<input name="observacoes" maxlength="500" placeholder="Descreva o serviço desejado"></label></div>
+          <button class="button button-primary" type="submit">Solicitar agendamento</button>
+          <p class="integration-note">A oficina precisa configurar os horários antes de receber reservas. O agendamento é uma solicitação, não uma confirmação de serviço concluído.</p>
+        </form>
+        <form id="appointment-config-form" class="stack-form" hidden>
+          <h3>Configurar expediente e capacidade</h3>
+          <div id="schedule-office-wrap" hidden><label>Oficina<select id="schedule-office-id" name="oficinaId"><option value="">Selecione a oficina</option></select></label></div>
+          <div id="appointment-config-note" class="integration-note" hidden>O sistema associa o expediente à oficina vinculada à sua conta.</div>
+          <div class="parts-fields"><label>Dia da semana<select name="diaSemana" required><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></label><label>Início<input name="horaInicio" type="time" value="08:00" required></label><label>Fim<input name="horaFim" type="time" value="18:00" required></label></div>
+          <label>Capacidade simultânea<input name="capacidade" type="number" min="1" max="50" value="1" required></label>
+          <button class="button button-primary" type="submit">Salvar expediente</button><p id="appointment-config-status" class="form-status" role="status">Defina o horário de cada dia atendido.</p>
+        </form>
+        <p id="appointment-status" class="form-status" role="status">Os agendamentos são carregados após autenticação.</p>
+        <h3>Agenda registrada</h3><div id="appointment-list" class="appointment-list"><p class="muted">Entre para consultar agendamentos.</p></div>
+      </section>
+      <section class="panel" id="fitment-import-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">CATÁLOGO TÉCNICO</p><h2>Importação em lote de compatibilidade</h2><p class="muted">Importação transacional de até 500 registros CSV. Um erro impede que qualquer linha seja gravada.</p></div></div>
+        <p class="integration-note">Cabeçalho obrigatório: <code>pecaId,marcaVeiculo,modeloVeiculo,anoInicio,anoFim,motorizacao,codigoOem,status,fonte,referencia,observacoes</code>. Status aceitos: CONFIRMADA, INCOMPATIVEL ou NAO_VERIFICADA. Os dois primeiros exigem fonte e referência. A importação não valida a veracidade da fonte; essa responsabilidade permanece com o administrador.</p>
+        <form id="fitment-import-form" class="stack-form">
+          <label>Selecionar CSV<input id="fitment-import-file" type="file" accept=".csv,text/csv"></label>
+          <label>Conteúdo CSV<textarea id="fitment-import-csv" class="csv-field" name="csv" rows="8" maxlength="500000" required placeholder="pecaId,marcaVeiculo,modeloVeiculo,anoInicio,anoFim,motorizacao,codigoOem,status,fonte,referencia,observacoes"></textarea></label>
+          <button class="button button-primary" type="submit">Validar e importar</button><p id="fitment-import-status" class="form-status" role="status">Até 500 linhas de dados por importação.</p>
+        </form>
+      </section>
+      <section class="panel" id="audit-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">RASTREABILIDADE</p><h2>Histórico de auditoria</h2><p class="muted">Eventos persistidos, com data e responsável quando disponíveis. A visibilidade é limitada por perfil.</p></div><button class="button button-outline" id="audit-refresh" type="button">Atualizar histórico</button></div>
+        <div id="audit-list" class="audit-list"><p class="muted">Entre para consultar eventos.</p></div>
+      </section>
+      <section class="panel" id="notification-preferences-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">CENTRAL DE AVISOS</p><h2>Preferências de notificação</h2><p class="muted">As notificações internas continuam disponíveis. E-mail e WhatsApp dependem de credenciais válidas no servidor.</p></div></div>
+        <form id="notification-preferences-form" class="stack-form">
+          <p id="notification-email-address" class="muted">Carregando e-mail cadastrado…</p>
+          <label class="inline-check"><input id="notification-email" type="checkbox" checked> Receber notificações por e-mail</label>
+          <label class="inline-check"><input id="notification-whatsapp" type="checkbox"> Receber notificações pelo WhatsApp</label>
+          <label>Número do WhatsApp com código do país<input id="notification-phone" type="tel" maxlength="20" placeholder="+5511999999999"></label>
+          <button class="button button-primary" type="submit">Salvar preferências</button>
+          <p id="notification-preferences-status" class="form-status" role="status">As preferências são pessoais e podem ser alteradas a qualquer momento.</p>
+        </form>
+      </section>
     </main>
   </div>
   <dialog id="auth-dialog" class="detail-dialog">
