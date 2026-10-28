@@ -53,7 +53,15 @@ function renderOrders() {
     badge.className = "status-badge " + String(order.status || "PENDENTE").toLowerCase();
     badge.textContent = statusLabels[order.status] || order.status || "Pendente";
     statusCell.append(badge); tr.append(statusCell);
-    const price = document.createElement("td"); price.textContent = currency(order.valor); tr.append(price);
+    const price = document.createElement("td");
+    const baseAmount = order.valor == null ? null : Number(order.valor);
+    const approvedExtras = Number(order.valorAdicionaisAceitos || 0);
+    price.textContent = baseAmount == null ? "—" : currency(baseAmount + approvedExtras);
+    if (baseAmount != null && approvedExtras > 0) {
+      price.title = "Orçamento base: " + currency(baseAmount) + " · Serviços adicionais aceitos: " + currency(approvedExtras);
+      price.setAttribute("aria-label", price.title + " · Total atualizado: " + price.textContent);
+    }
+    tr.append(price);
     const actions = document.createElement("td");
     const group = document.createElement("div"); group.className = "action-group";
     const view = document.createElement("button"); view.type = "button"; view.className = "mini-button"; view.textContent = "Visualizar";
