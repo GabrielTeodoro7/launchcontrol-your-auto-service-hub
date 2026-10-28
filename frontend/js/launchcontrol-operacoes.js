@@ -38,7 +38,7 @@
     try{
       const offices=await api("api/agendamentos?oficinas=1");
       select.replaceChildren(new Option("Selecione a oficina",""));
-      offices.forEach(item=>select.add(new Option(item.nome+[item.cidade,item.estado].filter(Boolean).join(" · ").replace(/^/," — "),item.id)));
+      offices.forEach(item=>{const location=[item.cidade,item.estado].filter(Boolean).join(" · ");select.add(new Option(item.nome+(location?" — "+location:""),item.id));});
       const adminOffice=$("#schedule-office-id");
       if(adminOffice){adminOffice.replaceChildren(new Option("Selecione a oficina",""));offices.forEach(item=>adminOffice.add(new Option(item.nome,item.id)));}
     }catch(e){status($("#appointment-status"),e.message,true);}
@@ -130,6 +130,7 @@
   document.addEventListener("DOMContentLoaded",()=>{
     wireForms();
     $("#operations-refresh")?.addEventListener("click",()=>refresh());
+    $("#audit-refresh")?.addEventListener("click",()=>loadAudit());
     const previousRefresh=$("#refresh-button");
     previousRefresh?.addEventListener("click",()=>{window.setTimeout(refresh,200);});
     applyFeatureRole();
