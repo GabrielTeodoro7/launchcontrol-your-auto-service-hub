@@ -275,6 +275,45 @@ async function loadOfficeRequests() {
   }
 }
 
+
+async function loadPayments() {
+  const list = document.querySelector("#payment-history");
+  if (!currentUser || currentUser.perfil !== "CLIENTE") {
+    list.textContent = "Entre como cliente para consultar pagamentos.";
+    return;
+  }
+  list.replaceChildren();
+  try {
+    const response = await fetch("api/pagamentos");
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível consultar pagamentos.");
+    if (!result.length) { list.textContent = "Nenhum pagamento registrado."; return; }
+    result.forEach(payment => {
+      const card = document.createElement("div"); card.className = "payment-item";
+      const title = document.createElement("strong"); title.textContent = "Pagamento #" + payment.id + " · Pedido #" + payment.pedidoId;
+      const detail = document.createElement("p"); detail.textContent = currency(payment.valor) + " · " + payment.metodo + " · " + payment.modo;
+      const status = document.createElement("span"); status.className = "status-badge " + String(payment.status).toLowerCase(); status.textContent = payment.status;
+      card.append(title, detail, status);
+      if (payment.status === "PENDENTE" && payment.modo === "DEMONSTRACAO") {
+        const cancel = document.createElement("button"); cancel.type = "button"; cancel.className = "mini-button"; cancel.textContent = "Cancelar demonstração";
+        cancel.addEventListener("click", async () => {
+          cancel.disabled = true;
+          try {
+            const res = await fetch("api/pagamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:payment.id})});
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.erro || "Não foi possível cancelar pagamento.");
+            await loadPayments();
+          } catch (error) { alert(error.message); cancel.disabled = false; }
+        });
+        card.append(cancel);
+      }
+      list.append(card);
+    });
+  } catch (error) { list.textContent = error.message; }
+}
+
+document.querySelector("#load-payments").addEventListener("click", loadPayments);
+
 document.querySelector("#quote-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -327,6 +366,7 @@ document.querySelector("#request-form").addEventListener("submit", async event =
     await loadRequests();
     await loadQuotes();
     await loadOfficeRequests();
+    await loadPayments();
   } catch (error) { status.textContent = error.message; }
 });
 
@@ -380,6 +420,7 @@ document.querySelector("#checkout-form").addEventListener("submit", async event 
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível criar o registro.");
     status.textContent = "Registro de demonstração #" + result.paymentId + " criado com status PENDENTE. Nenhuma cobrança foi realizada.";
+    await loadPayments();
   } catch (error) { status.textContent = error.message; }
 });
 
@@ -437,4 +478,5 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   loadRequests();
   loadQuotes();
   loadOfficeRequests();
+  loadPayments();
 })();
