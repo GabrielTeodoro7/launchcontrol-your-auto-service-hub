@@ -1,13 +1,14 @@
 (() => {
   "use strict";
   const $ = selector => document.querySelector(selector);
+  const sessionUser = () => typeof currentUser !== "undefined" ? currentUser : null;
   const money = value => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(value||0));
   const dateTime = value => value ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date(String(value).replace(" ","T"))) : "—";
   const safe = value => String(value ?? "");
   async function api(path, options={}) {
     const headers = new Headers(options.headers || {});
     headers.set("Accept","application/json");
-    if(options.method && options.method.toUpperCase()!=="GET") headers.set("X-CSRF-Token",window.currentUser?.csrf || "");
+    if(options.method && options.method.toUpperCase()!=="GET") headers.set("X-CSRF-Token",sessionUser()?.csrf || "");
     const response=await fetch(path,{...options,headers});
     const payload=await response.json().catch(()=>({erro:"Resposta inválida do servidor."}));
     if(!response.ok) throw new Error(payload.erro || "A operação não foi concluída.");
@@ -19,7 +20,7 @@
   async function loadAnalytics(){
     const target=$("#operations-metrics"); if(!target)return;
     target.replaceChildren();
-    if(!window.currentUser){target.append(element("p","muted","Entre para visualizar indicadores vinculados à sua conta."));return;}
+    if(!sessionUser()){target.append(element("p","muted","Entre para visualizar indicadores vinculados à sua conta."));return;}
     try{
       const data=await api("api/dashboard/analytics");
       const items=[
@@ -43,13 +44,13 @@
     }catch(e){status($("#appointment-status"),e.message,true);}
   }
   async function loadVehicles(){
-    const select=$("#appointment-vehicle");if(!select||!window.currentUser||window.currentUser.perfil!=="CLIENTE")return;
+    const select=$("#appointment-vehicle");if(!select||!sessionUser()||sessionUser().perfil!=="CLIENTE")return;
     try{const vehicles=await api("api/veiculos");select.replaceChildren(new Option("Selecione o veículo",""));vehicles.forEach(v=>select.add(new Option([v.marca,v.modelo,v.ano].filter(Boolean).join(" "),v.id)));}
     catch(e){status($("#appointment-status"),e.message,true);}
   }
   async function loadAppointments(){
     const target=$("#appointment-list");if(!target)return;target.replaceChildren();
-    if(!window.currentUser){target.append(element("p","muted","Entre para consultar ou solicitar agendamentos."));return;}
+    if(!sessionUser()){target.append(element("p","muted","Entre para consultar ou solicitar agendamentos."));return;}
     try{
       const rows=await api("api/agendamentos");
       if(!rows.length){target.append(element("p","muted","Ainda não há agendamentos registrados."));return;}
@@ -67,7 +68,7 @@
   }
   async function loadAudit(){
     const target=$("#audit-list");if(!target)return;target.replaceChildren();
-    if(!window.currentUser){target.append(element("p","muted","Entre para consultar eventos de auditoria disponíveis ao seu perfil."));return;}
+    if(!sessionUser()){target.append(element("p","muted","Entre para consultar eventos de auditoria disponíveis ao seu perfil."));return;}
     try{
       const rows=await api("api/auditoria");
       if(!rows.length){target.append(element("p","muted","Nenhum evento de auditoria disponível para este perfil."));return;}
@@ -75,20 +76,21 @@
     }catch(e){target.append(element("p","muted",e.message));}
   }
   async function loadPreferences(){
-    if(!window.currentUser)return;
+    if(!sessionUser())return;
     try{const p=await api("api/notificacoes/preferencias");$("#notification-email").checked=Boolean(p.emailAtivo);$("#notification-whatsapp").checked=Boolean(p.whatsappAtivo);$("#notification-phone").value=p.whatsappNumero||"";$("#notification-email-address").textContent=p.email||"E-mail não cadastrado";}
     catch(e){status($("#notification-preferences-status"),e.message,true);}
   }
   function applyFeatureRole(){
-    const role=window.currentUser?.perfil||"";
+    const role=sessionUser()?.perfil||"";
     setVisible("#operations-panel",["CLIENTE","OFICINA","ADMINISTRADOR"].includes(role));
     setVisible("#appointment-panel",["CLIENTE","OFICINA","ADMINISTRADOR"].includes(role));
     setVisible("#fitment-import-panel",role==="ADMINISTRADOR");
     setVisible("#audit-panel",["CLIENTE","OFICINA","ADMINISTRADOR"].includes(role));
-    setVisible("#notification-preferences-panel",Boolean(window.currentUser));
+    setVisible("#notification-preferences-panel",Boolean(sessionUser()));
     setVisible("#appointment-create-form",role==="CLIENTE");
     setVisible("#appointment-config-form",role==="OFICINA"||role==="ADMINISTRADOR");
     setVisible("#schedule-office-wrap",role==="ADMINISTRADOR");
+    if($("#schedule-office-id")) $("#schedule-office-id").required=role==="ADMINISTRADOR";
     setVisible("#appointment-config-note",role==="OFICINA");
   }
   function wireForms(){
@@ -122,7 +124,7 @@
   }
   async function refresh(){
     applyFeatureRole();
-    if(!window.currentUser)return;
+    if(!sessionUser())return;
     await Promise.allSettled([loadAnalytics(),loadOffices(),loadVehicles(),loadAppointments(),loadAudit(),loadPreferences()]);
   }
   document.addEventListener("DOMContentLoaded",()=>{
