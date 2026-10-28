@@ -4,6 +4,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -18,7 +19,7 @@ import java.sql.SQLException;
 public class QuoteCreateServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         String role = (String)session.getAttribute("userRole");
         long userId = (Long)session.getAttribute("userId");
         if (!"CLIENTE".equals(role) && !"OFICINA".equals(role) && !"ADMINISTRADOR".equals(role)) {
@@ -58,7 +59,7 @@ public class QuoteCreateServlet extends HttpServlet {
     }
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (!"OFICINA".equals(session.getAttribute("userRole"))) {
             Json.error(response, 403, "Somente uma conta de oficina pode enviar orçamento.");
             return;
