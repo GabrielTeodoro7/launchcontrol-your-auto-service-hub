@@ -45,6 +45,7 @@ public class AuthServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=UTF-8");
+        // O campo action informa qual tarefa de autenticação o formulário quer executar.
         String action = value(request.getParameter("action"));
         if ("logout".equals(action)) {
             HttpSession session = request.getSession(false);
@@ -54,6 +55,7 @@ public class AuthServlet extends HttpServlet {
                 Json.error(response, 403, "Token CSRF ausente ou inválido.");
                 return;
             }
+            // Invalidar a sessão encerra o login atual no servidor.
             session.invalidate();
             response.getWriter().write("{\"ok\":true}");
             return;
@@ -70,6 +72,7 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
+    // Registra uma nova conta de cliente depois de validar os campos enviados pelo formulário.
     private void register(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, GeneralSecurityException, IOException {
         String name = value(request.getParameter("name")).trim();
@@ -95,6 +98,7 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
+    // Confere e-mail e senha; se estiverem corretos, cria uma sessão para a pessoa.
     private void login(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, GeneralSecurityException, IOException {
         String email = value(request.getParameter("email")).trim().toLowerCase(Locale.ROOT);
