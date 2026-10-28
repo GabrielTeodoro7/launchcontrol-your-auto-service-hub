@@ -74,6 +74,9 @@ assert not missing_selectors, "Seletores JS sem elemento HTML: " + ", ".join(mis
 assert 'id="vehicle-form"' in html and 'id="request-form"' in html, "Formulários de veículo e solicitação ausentes"
 assert 'id="quote-form"' in html and 'id="quote-list"' in html, "Interface de orçamento ausente"
 assert "api/pagamentos" in js and "api/orcamentos/decisao" in js, "Fluxo de orçamento/pagamento não conectado"
+assert 'id="parts-search-form"' in html and 'id="parts-results"' in html, "Interface LC Parts ausente"
+assert all(host in js for host in ["lista.mercadolivre.com.br", "shopee.com.br/search", "olx.com.br/brasil"]), "Pesquisas externas do LC Parts ausentes"
+assert "noopener noreferrer" in js and "não consulta APIs de marketplaces" in html, "Transparência e segurança dos links externos ausentes"
 assert "A solicitação já foi aceita" in read("src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Proteção contra aceitar múltiplos orçamentos ausente"
 
 print("OK: " + str(len(required)) + " arquivos essenciais presentes.")
