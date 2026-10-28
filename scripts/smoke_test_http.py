@@ -74,7 +74,7 @@ def post_csrf(opener, path, data, csrf, expected=200, extra_headers=None):
 
 
 def record(checks, label):
-    record(checks,label)
+    checks.append(label)
     print("  ✓ " + label, flush=True)
 
 
