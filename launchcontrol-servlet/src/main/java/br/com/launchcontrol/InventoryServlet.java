@@ -33,7 +33,7 @@ public class InventoryServlet extends HttpServlet {
         if (stock == null || !java.util.Set.of("todos", "baixo", "zerado").contains(stock)) stock = "todos";
 
         StringBuilder sql = new StringBuilder(
-            "SELECT p.id,p.nome,p.marca,p.codigo,p.descricao,p.preco,p.estoque,p.ativo,f.nome_fantasia AS fornecedor " +
+            "SELECT p.id,p.fornecedor_id,p.nome,p.marca,p.codigo,p.descricao,p.preco,p.estoque,p.ativo,f.nome_fantasia AS fornecedor " +
             "FROM pecas p LEFT JOIN fornecedores f ON f.id=p.fornecedor_id WHERE ");
         if ("FORNECEDOR".equals(role)) sql.append("f.usuario_id=? AND ");
         sql.append("(p.nome LIKE ? OR COALESCE(p.marca,'') LIKE ? OR COALESCE(p.codigo,'') LIKE ?) ");
