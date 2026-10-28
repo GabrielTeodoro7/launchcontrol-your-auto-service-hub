@@ -1,8 +1,15 @@
+"""Verificação estrutural simples para encontrar arquivos ausentes.
+
+Este script não substitui a compilação Java nem testes no servidor e no MySQL.
+"""
+
 from pathlib import Path
 import re
 import sys
 
+# Descobre a pasta raiz da implementação a partir do local deste script.
 ROOT = Path(__file__).resolve().parents[1]
+# Lista os arquivos essenciais que precisam existir no projeto.
 required = [
     "pom.xml", "database/schema.sql", "README.md",
     "src/main/java/br/com/launchcontrol/Database.java",
@@ -22,12 +29,15 @@ required = [
     "src/main/webapp/index.html", "src/main/webapp/css/style.css",
     "src/main/webapp/js/app.js", "src/main/webapp/WEB-INF/web.xml",
 ]
+# Compara a lista com os arquivos realmente existentes no disco.
 missing = [item for item in required if not (ROOT / item).is_file()]
 if missing:
     print("FALHA — arquivos ausentes:\n" + "\n".join(missing))
     sys.exit(1)
 
+# Função auxiliar que lê arquivos de texto em UTF-8.
 read = lambda item: (ROOT / item).read_text(encoding="utf-8")
+# Lê os arquivos usados nas verificações de consistência.
 pom = read("pom.xml")
 schema = read("database/schema.sql")
 quote = read("src/main/java/br/com/launchcontrol/QuoteServlet.java")
