@@ -4,6 +4,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,7 +19,7 @@ import java.util.UUID;
 public class CheckoutServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (!"CLIENTE".equals(session.getAttribute("userRole"))) {
             Json.error(response, 403, "Somente cliente autenticado pode iniciar checkout.");
             return;
