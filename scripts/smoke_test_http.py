@@ -227,7 +227,7 @@ def main():
     idempotency_key = "smoke-key-" + uuid.uuid4().hex[:20]
     payment, _ = post_csrf(customer, "/api/checkout",
                            {"quoteId": str(quote["id"]), "method": "PIX_DEMO"}, csrf,
-                           extra_headers={"Idempotency-Key": idempotency_key})
+                           extra_headers={"Idempotency-Key": idempotency_key}, expected=201)
     assert payment.get("cobrado") is False and payment.get("modo") == "DEMONSTRACAO", payment
     repeated_payment, _ = post_csrf(customer, "/api/checkout",
                                     {"quoteId": str(quote["id"]), "method": "PIX_DEMO"}, csrf,
