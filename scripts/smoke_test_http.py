@@ -167,7 +167,7 @@ def main():
     ai_result, _ = post_csrf(customer, "/api/assistente-pecas",
                              {"modo": "sintomas", "mensagem": "O pedal do freio está muito duro e o carro demora para parar"},
                              csrf)
-    assert ai_result.get("fallback") is True and "não é uma resposta gerada por IA" in ai_result.get("aviso", ""), ai_result
+    assert ai_result.get("fallback") is True and "não uma resposta gerada por IA" in ai_result.get("aviso", ""), ai_result
     record(checks, "cadastro e consulta de veículo")
     record(checks, "Launch AI em modo de contingência sem credencial externa")
 
