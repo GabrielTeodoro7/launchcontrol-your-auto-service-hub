@@ -113,7 +113,7 @@ def main():
             data={"action": "login", "email": email, "password": "Senha-Incorreta-25!"},
             expected=401)
     csrf = login(customer, email)
-    checks.append("logout, senha incorreta e login válido")
+    checks.append("logout, senha incorreta e login com credencial correta")
 
     vehicle, _ = post_csrf(customer, "/api/veiculos",
                            {"marca": "Renault", "modelo": "Sandero", "ano": "2016",
