@@ -59,6 +59,7 @@ public class MaintenanceServlet extends HttpServlet {
                         .append(",\"descricao\":").append(Json.quote(result.getString("descricao")))
                         .append(",\"dataServico\":").append(Json.quote(result.getString("data_servico")))
                         .append(",\"quilometragem\":").append(nullableNumber(result, "quilometragem"))
+                        .append(",\"quilometragemAtual\":").append(nullableNumber(result, "quilometragem_atual"))
                         .append(",\"custo\":").append(result.getBigDecimal("custo") == null ? "null" : result.getBigDecimal("custo").toPlainString())
                         .append(",\"proximaData\":").append(Json.quote(result.getString("proxima_data")))
                         .append(",\"proximaQuilometragem\":").append(nullableNumber(result, "proxima_quilometragem"))
