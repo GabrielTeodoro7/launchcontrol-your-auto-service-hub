@@ -156,6 +156,7 @@ assert "api/dashboard/analytics" in read("frontend/js/launchcontrol-operacoes.js
 
 # Verificações de segurança e integração que devem permanecer como contratos explícitos.
 assert "safeMethod" in auth_filter and 'response.setHeader("X-Content-Type-Options", "nosniff")' in auth_filter, "Filtro HTTP deve proteger todos os métodos inseguros e aplicar cabeçalhos defensivos"
+assert 'Class.forName("com.mysql.cj.jdbc.Driver")' in read("backend/src/main/java/br/com/launchcontrol/Database.java"), "Driver JDBC precisa ser carregado de forma previsível no Tomcat"
 assert 'response.setHeader("Cache-Control", "no-store")' in auth_filter, "Respostas de API devem impedir cache de dados sensíveis"
 assert "catch (IllegalArgumentException ex)" in password and 'Arrays.fill(derived, (byte) 0)' in password, "Hash de senha precisa tolerar dados inválidos e limpar buffers"
 auth_source = read("backend/src/main/java/br/com/launchcontrol/AuthServlet.java")
