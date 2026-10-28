@@ -63,12 +63,12 @@ public class OrderServlet extends HttpServlet {
                         while (result.next()) {
                             if (!first) out.append(',');
                             first = false;
-                            out.append("{\\"id\\":").append(result.getLong("id"))
-                               .append(",\\"ordemId\\":").append(result.getLong("ordem_id"))
-                               .append(",\\"codigo\\":").append(Json.quote(result.getString("codigo")))
-                               .append(",\\"status\\":").append(Json.quote(result.getString("status")))
-                               .append(",\\"observacao\\":").append(Json.quote(result.getString("observacao")))
-                               .append(",\\"criadoEm\\":").append(Json.quote(result.getString("criado_em"))).append('}');
+                            out.append("{\"id\":").append(result.getLong("id"))
+                               .append(",\"ordemId\":").append(result.getLong("ordem_id"))
+                               .append(",\"codigo\":").append(Json.quote(result.getString("codigo")))
+                               .append(",\"status\":").append(Json.quote(result.getString("status")))
+                               .append(",\"observacao\":").append(Json.quote(result.getString("observacao")))
+                               .append(",\"criadoEm\":").append(Json.quote(result.getString("criado_em"))).append('}');
                         }
                         response.setContentType("application/json;charset=UTF-8");
                         response.setHeader("Cache-Control", "no-store");
