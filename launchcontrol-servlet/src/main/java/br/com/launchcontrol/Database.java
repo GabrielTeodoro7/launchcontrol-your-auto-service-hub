@@ -7,7 +7,6 @@ import java.sql.SQLException;
 /**
  * Centraliza a conexão entre o Java e o banco MySQL. Assim, outras classes não precisam repetir a configuração do banco.
  *
- * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
  */
 public final class Database {
     private Database() {}
