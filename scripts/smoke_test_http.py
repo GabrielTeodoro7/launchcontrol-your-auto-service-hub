@@ -106,7 +106,9 @@ def main():
     request(customer, "/api/auth", method="POST",
             data={"action": "register", "name": "Duplicado", "email": email, "password": TEST_PASSWORD},
             expected=409)
-    checks.append("CSRF inválido e e-mail duplicado rejeitados")
+    request(customer, "/api/notificacoes/preferencias", method="PUT",
+            data={"emailAtivo": "true"}, headers={"X-CSRF-Token": "token-invalido"}, expected=403)
+    checks.append("CSRF inválido em POST/PUT e e-mail duplicado rejeitados")
 
     logout(customer, csrf)
     request(customer, "/api/auth", method="POST",
