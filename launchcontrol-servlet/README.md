@@ -18,6 +18,8 @@ Implementado nesta etapa:
 - Atualização de andamento da ordem por oficina autorizada ou administrador; ordem concluída fica bloqueada para reabertura.
 - Regra no backend que bloqueia edição de orçamento quando a ordem relacionada está CONCLUIDO.
 - Relatos iniciais de diagnóstico, separados de laudo técnico.
+- Inteligência de estoque para fornecedor/administrador usando a tabela existente `pecas`: pesquisa, filtros para estoque baixo/zerado e cadastro/edição limitado ao fornecedor autenticado.
+- Comparação de orçamentos por preço, prazo e pesquisa textual, sem inventar avaliações ou declarar uma oficina vencedora sem dados de reputação.
 - Checkout demonstrativo que cria registro PENDENTE; não realiza cobrança, não gera PIX válido e não aprova pagamentos.
 - Schema MySQL inicial com usuários, veículos, serviços, oficinas, fornecedores, peças, solicitações, orçamentos, ordens, diagnósticos, pedidos, pagamentos e auditoria.
 
@@ -142,3 +144,16 @@ O assistente usa a API Responses da OpenAI no servidor Java, sem expor a chave n
 Não coloque a chave no JavaScript, no repositório ou em mensagens de chat. O uso da API pode gerar custos na conta do provedor. Se a chave não estiver configurada, a busca de peças continua funcionando e o assistente informa a configuração ausente.
 
 O assistente ajuda a formular a pesquisa e pode pedir detalhes como versão, motorização ou código OEM. Ele não confirma compatibilidade nem substitui a conferência do anúncio com o vendedor.
+
+
+## Diferenciais implementados nas abas existentes
+
+- **Garagem Inteligente:** agrupa solicitações, orçamentos, ordens e relatos associados aos registros disponíveis, com datas e avisos sobre o limite do histórico.
+- **LC Parts:** consulta anúncios públicos do Mercado Livre e oferece pesquisas externas para outras lojas; a compatibilidade precisa ser confirmada no anúncio/vendedor.
+- **Orçamento sem mistério:** pesquisa e ordenação por preço/prazo/data, além de resumo dos menores valores e prazos informados. Isso é comparação numérica, não uma avaliação de qualidade da oficina.
+- **Relato digital:** registra sintomas e prioridade; laudos e hipóteses só aparecem quando já existem no banco.
+- **Serviços e operação:** mantém a tabela de ordens e seus status retornados pelo backend.
+- **Confiança transparente:** o sistema explicita quais campos existem e não inventa notas, selos, certificações ou avaliações que não estejam armazenadas.
+- **Experiência por perfil:** mostra as áreas existentes conforme a sessão. Fornecedores e administradores têm acesso à área de estoque.
+
+A área de estoque reutiliza as tabelas `pecas`, `fornecedores` e `auditoria`; não exige migração ou novas colunas. Para um fornecedor cadastrar itens, sua conta precisa estar previamente vinculada a um registro ativo em `fornecedores`. A aplicação usa limites simples de alerta (1–5 unidades como baixo, zero como zerado), não previsão de demanda.
