@@ -124,13 +124,17 @@ public class AppointmentServlet extends HttpServlet {
         }catch(SQLException e){Json.error(res,500,"Não foi possível salvar o horário.");}
     }
     private long officeForUser(long uid,String role,String raw)throws SQLException{
-        try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement("SELECT id FROM oficinas WHERE "+("ADMINISTRADOR".equals(role)?"id=?":"usuario_id=?"))){p.setLong(1,Long.parseLong(raw));try(ResultSet r=p.executeQuery()){if(!r.next()||("OFICINA".equals(role)&&r.getLong(1)<=0))throw new SQLException("Oficina não encontrada.");return r.getLong(1);}}
+        String sql="SELECT id FROM oficinas WHERE "+("ADMINISTRADOR".equals(role)?"id=?":"usuario_id=?");
+        try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement(sql)){
+            p.setLong(1,"ADMINISTRADOR".equals(role)?Long.parseLong(raw):uid);
+            try(ResultSet r=p.executeQuery()){if(!r.next())throw new SQLException("Oficina não encontrada ou não pertence à conta.");return r.getLong(1);}
+        }
     }
     private void cancel(HttpServletRequest req,HttpServletResponse res,String role,long uid)throws IOException{
         long id;try{id=Long.parseLong(req.getParameter("id"));}catch(Exception e){Json.error(res,400,"Agendamento inválido.");return;}
-        String sql="UPDATE agendamentos a JOIN oficinas f ON f.id=a.oficina_id SET a.status='CANCELADO' WHERE a.id=? AND a.status IN ('AGENDADO','CONFIRMADO') AND (a.cliente_id=? OR f.usuario_id=?)";
+        String sql="UPDATE agendamentos a JOIN oficinas f ON f.id=a.oficina_id SET a.status='CANCELADO' WHERE a.id=? AND a.status IN ('AGENDADO','CONFIRMADO') AND "+("ADMINISTRADOR".equals(role)?"1=1":"(a.cliente_id=? OR f.usuario_id=?)");
         if(!"CLIENTE".equals(role)&&!"OFICINA".equals(role)&&!"ADMINISTRADOR".equals(role)){Json.error(res,403,"Perfil sem acesso.");return;}
-        try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement(sql)){p.setLong(1,id);p.setLong(2,uid);p.setLong(3,uid);if("ADMINISTRADOR".equals(role)){p.setLong(2,-1);p.setLong(3,-1);}int changed=p.executeUpdate();if(changed==0){Json.error(res,404,"Agendamento não encontrado ou já encerrado.");return;}auditSimple(uid,"AGENDAMENTO_CANCELADO","agendamentos",id,"Cancelamento solicitado.");json(res,"{\"ok\":true}");}
+        try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement(sql)){p.setLong(1,id);if(!"ADMINISTRADOR".equals(role)){p.setLong(2,uid);p.setLong(3,uid);}int changed=p.executeUpdate();if(changed==0){Json.error(res,404,"Agendamento não encontrado ou já encerrado.");return;}auditSimple(uid,"AGENDAMENTO_CANCELADO","agendamentos",id,"Cancelamento solicitado.");json(res,"{\"ok\":true}");}
         catch(SQLException e){Json.error(res,500,"Não foi possível cancelar o agendamento.");}
     }
     private static void audit(Connection c,long uid,String action,String entity,long id,String details)throws SQLException{
