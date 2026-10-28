@@ -20,7 +20,7 @@ public class AuditTrailServlet extends HttpServlet {
         else if("CLIENTE".equals(role))sql+="WHERE (a.entidade='orcamentos' AND a.entidade_id IN (SELECT o.id FROM orcamentos o JOIN solicitacoes_orcamento so ON so.id=o.solicitacao_id WHERE so.cliente_id=?)) OR (a.entidade='agendamentos' AND a.entidade_id IN (SELECT id FROM agendamentos WHERE cliente_id=?)) ";
         sql+="ORDER BY a.criado_em DESC,a.id DESC LIMIT 100";
         try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement(sql)){
-            if(!"ADMINISTRADOR".equals(role)){p.setLong(1,uid);if(!sql.contains("entidade='orcamentos' AND a.entidade_id IN (SELECT o.id")){} if(role.equals("OFICINA")||role.equals("CLIENTE"))p.setLong(2,uid);}
+            if(!"ADMINISTRADOR".equals(role)){p.setLong(1,uid);if(role.equals("OFICINA")||role.equals("CLIENTE"))p.setLong(2,uid);}
             try(ResultSet r=p.executeQuery()){StringBuilder out=new StringBuilder("[");boolean first=true;while(r.next()){if(!first)out.append(',');first=false;
                 out.append("{\"id\":").append(r.getLong("id")).append(",\"acao\":").append(Json.quote(r.getString("acao")))
                 .append(",\"entidade\":").append(Json.quote(r.getString("entidade"))).append(",\"entidadeId\":").append(r.getObject("entidade_id")==null?"null":r.getLong("entidade_id"))
