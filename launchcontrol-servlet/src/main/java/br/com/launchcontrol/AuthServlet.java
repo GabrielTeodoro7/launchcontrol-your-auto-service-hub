@@ -12,9 +12,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Locale;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 @WebServlet("/api/auth")
 public class AuthServlet extends HttpServlet {
+    private static final SecureRandom RANDOM = new SecureRandom();
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
@@ -26,7 +29,8 @@ public class AuthServlet extends HttpServlet {
         response.getWriter().write("{\"id\":" + session.getAttribute("userId") +
                 ",\"nome\":" + Json.quote((String)session.getAttribute("userName")) +
                 ",\"email\":" + Json.quote((String)session.getAttribute("userEmail")) +
-                ",\"perfil\":" + Json.quote((String)session.getAttribute("userRole")) + "}");
+                ",\"perfil\":" + Json.quote((String)session.getAttribute("userRole")) +
+                ",\"csrf\":" + Json.quote((String)session.getAttribute("csrfToken")) + "}");
     }
 
     @Override
@@ -105,10 +109,15 @@ public class AuthServlet extends HttpServlet {
         session.setAttribute("userName", name);
         session.setAttribute("userRole", role);
         session.setAttribute("userEmail", email);
+        byte[] token = new byte[32];
+        RANDOM.nextBytes(token);
+        String csrf = Base64.getUrlEncoder().withoutPadding().encodeToString(token);
+        session.setAttribute("csrfToken", csrf);
         session.setMaxInactiveInterval(30 * 60);
         response.setStatus(200);
         response.getWriter().write("{\"ok\":true,\"id\":" + id + ",\"nome\":" + Json.quote(name) +
-                ",\"email\":" + Json.quote(email) + ",\"perfil\":" + Json.quote(role) + "}");
+                ",\"email\":" + Json.quote(email) + ",\"perfil\":" + Json.quote(role) +
+                ",\"csrf\":" + Json.quote(csrf) + "}");
     }
     private static String value(String s) { return s == null ? "" : s; }
 }
