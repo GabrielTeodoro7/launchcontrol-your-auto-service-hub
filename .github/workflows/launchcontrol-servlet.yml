@@ -32,3 +32,10 @@ jobs:
         run: python scripts/check_project.py
       - name: Build WAR
         run: mvn -B -f launchcontrol-servlet/pom.xml clean package
+      - name: Upload WAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: launchcontrol-servlet-war
+          path: launchcontrol-servlet/target/launchcontrol.war
+          if-no-files-found: error
+          retention-days: 14
