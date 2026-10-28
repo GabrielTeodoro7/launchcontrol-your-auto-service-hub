@@ -219,14 +219,28 @@ public class AdditionalServiceServlet extends HttpServlet {
 
     static void createNotification(Connection connection, long userId, String title, String message,
                                    String type, long referenceId) throws SQLException {
+        long notificationId;
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO notificacoes(usuario_id,titulo,mensagem,tipo,referencia_id) VALUES(?,?,?,?,?)")) {
+                "INSERT INTO notificacoes(usuario_id,titulo,mensagem,tipo,referencia_id) VALUES(?,?,?,?,?)",
+                PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setLong(1, userId);
             statement.setString(2, title);
             statement.setString(3, message.length() > 500 ? message.substring(0, 500) : message);
             statement.setString(4, type);
             statement.setLong(5, referenceId);
             statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) throw new SQLException("Notificação sem identificador.");
+                notificationId = keys.getLong(1);
+            }
+        }
+        try (PreparedStatement delivery = connection.prepareStatement(
+                "INSERT INTO notificacao_entregas(notificacao_id,usuario_id,canal) VALUES(?,?,'EMAIL'),(?,?,'WHATSAPP')")) {
+            delivery.setLong(1, notificationId);
+            delivery.setLong(2, userId);
+            delivery.setLong(3, notificationId);
+            delivery.setLong(4, userId);
+            delivery.executeUpdate();
         }
     }
 }
