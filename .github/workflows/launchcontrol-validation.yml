@@ -77,9 +77,8 @@ jobs:
         run: |
           set -euo pipefail
           docker run -d --name launchcontrol-tomcat \
-            --add-host=host.docker.internal:host-gateway \
-            -p 8080:8080 \
-            -e 'LC_DB_URL=jdbc:mysql://host.docker.internal:3306/launchcontrol?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \
+            --network host \
+            -e 'LC_DB_URL=jdbc:mysql://127.0.0.1:3306/launchcontrol?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \
             -e 'LC_DB_USER=root' \
             -e 'LC_DB_PASSWORD=root' \
             -v "$PWD/backend/target/launchcontrol.war:/usr/local/tomcat/webapps/launchcontrol.war:ro" \
