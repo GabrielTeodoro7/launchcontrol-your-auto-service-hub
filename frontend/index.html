@@ -1,0 +1,253 @@
+<!-- Página principal. O navegador lê este HTML e monta a estrutura visível da tela. -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LaunchControl — gestão de serviços automotivos">
+  <title>LaunchControl | Painel</title>
+  <link rel="stylesheet" href="css/estilo-principal.css">
+  <script src="js/interacoes.js" defer></script>
+</head>
+<body>
+  <!-- app-shell é o contêiner geral: menu lateral e conteúdo principal. -->
+  <div class="app-shell">
+    <!-- Menu lateral: os links levam às áreas desta página. -->
+    <aside class="sidebar">
+      <a class="brand" href="./"><span class="brand-mark">LC</span><span><strong>LAUNCHCONTROL</strong><small>GESTÃO AUTOMOTIVA</small></span></a>
+      <p class="nav-label">MENU PRINCIPAL</p>
+      <nav class="side-nav" aria-label="Menu principal">
+        <a class="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
+        <a class="nav-item" href="#garagem-inteligente" data-profiles="CLIENTE"><span>▣</span> Garagem inteligente</a>
+        <a class="nav-item" href="#lc-parts"><span>⚙</span> LC Parts</a>
+        <a class="nav-item" href="#quote-panel" data-profiles="CLIENTE,OFICINA,ADMINISTRADOR"><span>▧</span> Orçamento sem mistério</a>
+        <a class="nav-item" href="#diagnostico" data-profiles="CLIENTE"><span>⌁</span> Relato digital do veículo</a>
+        <a class="nav-item" href="#servicos" data-profiles="CLIENTE,OFICINA,ADMINISTRADOR"><span>▤</span> Serviços e operação</a>
+        <a class="nav-item" href="#customer-tools" data-profiles="CLIENTE"><span>✳</span> Experiência por perfil</a>
+        <a class="nav-item" href="#estoque-inteligente" data-profiles="FORNECEDOR,ADMINISTRADOR"><span>▦</span> Inteligência de estoque</a>
+        <a class="nav-item" href="#checkout" data-profiles="CLIENTE"><span>▣</span> Checkout demonstrativo</a>
+      </nav>
+      <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
+    </aside>
+    <!-- Área principal, onde ficam indicadores, formulários e tabelas. -->
+    <main class="main-content">
+      <header class="topbar"><div><p class="eyebrow">PAINEL DE CONTROLE</p><h1 id="dashboard">Visão geral</h1></div><div class="topbar-actions"><span class="api-status" id="api-status">Verificando API…</span><button class="button button-outline" id="auth-open" type="button">Entrar</button><button class="button button-outline" id="refresh-button" type="button">Atualizar</button></div></header>
+      <!-- Apresentação inicial do painel. -->
+      <section class="welcome"><div><p class="eyebrow">LAUNCHCONTROL</p><h2>Controle total da <span>jornada automotiva.</span></h2><p>Consulte os serviços persistidos no MySQL e acompanhe os status reais do atendimento.</p></div><div class="welcome-mark" aria-hidden="true">LC</div></section>
+      <section class="stats-grid" aria-label="Resumo de serviços">
+        <article class="stat-card"><span class="stat-icon orange">▤</span><p>Ordens de serviço</p><strong id="stat-total">—</strong><small>Registros do banco</small></article>
+        <article class="stat-card"><span class="stat-icon blue">◷</span><p>Em andamento</p><strong id="stat-progress">—</strong><small>Status em execução</small></article>
+        <article class="stat-card"><span class="stat-icon green">✓</span><p>Concluídos</p><strong id="stat-complete">—</strong><small>Orçamento bloqueado para edição</small></article>
+        <article class="stat-card"><span class="stat-icon purple">⌁</span><p>Aguardando peça</p><strong id="stat-parts">—</strong><small>Dependem de reposição</small></article>
+      </section>
+      <!-- LC Parts direciona a pesquisa às plataformas de origem; não inventa anúncios nem preços. -->
+      <section class="panel lc-parts" id="lc-parts">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">PESQUISA AUTOMOTIVA</p>
+            <h2>LC Parts</h2>
+            <p class="muted">Encontre peças usando os dados do veículo e compare os anúncios diretamente nas plataformas.</p>
+          </div>
+        </div>
+        <div class="parts-notice" role="note">
+          <strong>Pesquisa transparente</strong>
+          <p>O LaunchControl consulta anúncios públicos do Mercado Livre quando a API está disponível. Shopee, OLX e buscas por lojas oficiais são abertas nos próprios sites. Preços e frete podem mudar; a compatibilidade não é confirmada automaticamente.</p>
+        </div>
+        <form id="parts-search-form" class="stack-form parts-form">
+          <div class="parts-vehicle-select">
+            <label for="parts-vehicle-select">Usar veículo já cadastrado (opcional)
+              <select id="parts-vehicle-select" name="registeredVehicle">
+                <option value="">Preencher manualmente</option>
+              </select>
+            </label>
+            <p class="muted">Entre como cliente para carregar seus veículos cadastrados. Você também pode pesquisar sem login.</p>
+          </div>
+          <div class="parts-fields">
+            <label>Marca do veículo<input name="marca" required maxlength="80" placeholder="Ex.: Renault"></label>
+            <label>Modelo<input name="modelo" required maxlength="100" placeholder="Ex.: Sandero Expression"></label>
+            <label>Ano<input name="ano" type="number" min="1950" max="2100" placeholder="Ex.: 2016"></label>
+            <label>Versão<input name="versao" maxlength="100" placeholder="Ex.: Expression"></label>
+            <label>Motorização<input name="motorizacao" maxlength="80" placeholder="Ex.: 1.0 16V"></label>
+            <label>Peça ou categoria<input name="peca" required maxlength="140" placeholder="Ex.: farol dianteiro direito"></label>
+            <label>Código OEM ou equivalente (opcional)<input name="oem" maxlength="80" placeholder="Código da peça, se souber"></label>
+            <label>Cor (quando relevante)<input name="cor" maxlength="50" placeholder="Ex.: branco"></label>
+            <label>Condição
+              <select name="condicao">
+                <option value="">Qualquer condição</option>
+                <option value="nova">Nova</option>
+                <option value="usada">Usada</option>
+                <option value="recondicionada">Recondicionada</option>
+              </select>
+            </label>
+          </div>
+          <button class="button button-primary" type="submit">Pesquisar peças</button>
+          <p id="parts-search-status" class="form-status" role="status">Informe o veículo e a peça. Os resultados serão abertos nas fontes externas.</p>
+        </form>
+        <section class="parts-assistant" aria-labelledby="parts-assistant-title">
+          <div class="parts-assistant-heading">
+            <div>
+              <p class="eyebrow">ASSISTENTE DE PESQUISA</p>
+              <h3 id="parts-assistant-title">Assistente IA do LC Parts</h3>
+              <p class="muted">Descreva a peça do seu jeito. O assistente ajuda a refinar a busca e, quando possível, pesquisa anúncios reais para você abrir na loja de origem.</p>
+            </div>
+          </div>
+          <div class="parts-assistant-note" id="parts-assistant-note" role="note">Entre como cliente para conversar com a IA. A pesquisa manual de peças continua disponível sem login.</div>
+          <div id="parts-assistant-messages" class="parts-assistant-messages" aria-live="polite" aria-relevant="additions">
+            <div class="assistant-message assistant">Posso ajudar a preparar uma busca mais precisa. Por exemplo: “preciso do farol dianteiro direito do Sandero Expression 2016, motor 1.0”. Se faltar algum dado importante, vou perguntar antes de pesquisar.</div>
+          </div>
+          <form id="parts-assistant-form" class="parts-assistant-form">
+            <label for="parts-assistant-message">O que você está procurando?
+              <textarea id="parts-assistant-message" name="message" rows="2" maxlength="1000" placeholder="Descreva a peça, o carro ou sua dúvida…" required></textarea>
+            </label>
+            <div class="parts-assistant-actions">
+              <p id="parts-assistant-status" class="form-status" role="status">A IA precisa de uma chave configurada no servidor para responder.</p>
+              <button class="button button-primary" type="submit">Perguntar e pesquisar</button>
+            </div>
+          </form>
+        </section>
+        <div id="parts-results" class="parts-results" aria-live="polite" hidden></div>
+        <p class="parts-footnote">Antes de comprar, confira o código OEM, a aplicação exata, a reputação do vendedor, o frete e a política de devolução. O nome do veículo no anúncio não é prova definitiva de compatibilidade.</p>
+      </section>
+      <!-- Formulários visíveis apenas para clientes autenticados. -->
+      <section class="panel customer-tools" id="customer-tools" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">ÁREA DO CLIENTE</p><h2>Meus veículos e solicitações</h2><p class="muted">Cadastros persistidos no MySQL por meio do backend Java.</p></div></div>
+        <div class="two-columns">
+          <form id="vehicle-form" class="stack-form">
+            <h3>Cadastrar veículo</h3>
+            <label>Marca<input name="marca" required minlength="2" maxlength="80" placeholder="Ex.: Renault"></label>
+            <label>Modelo<input name="modelo" required maxlength="100" placeholder="Ex.: Sandero Expression"></label>
+            <div class="two-columns compact-fields"><label>Ano<input name="ano" type="number" min="1950" max="2100" required></label><label>Quilometragem<input name="quilometragem" type="number" min="0" max="2000000" required></label></div>
+            <label>Placa (opcional)<input name="placa" maxlength="10" placeholder="ABC1D23"></label>
+            <label>Motorização (opcional)<input name="motorizacao" maxlength="80" placeholder="Ex.: 1.0 16V"></label>
+            <button class="button button-primary" type="submit">Salvar veículo</button>
+            <p id="vehicle-status" class="form-status" role="status">Entre com uma conta de cliente para cadastrar.</p>
+          </form>
+          <form id="request-form" class="stack-form">
+            <h3>Solicitar orçamento</h3>
+            <label>Veículo<select id="vehicle-select" name="veiculoId" required><option value="">Cadastre ou carregue um veículo</option></select></label>
+            <label>ID do serviço (opcional)<input name="servicoId" type="number" min="1" placeholder="ID do catálogo"></label>
+            <label>Descrição do serviço ou problema<textarea name="descricao" required minlength="5" maxlength="3000" rows="4" placeholder="Descreva a manutenção ou os sintomas"></textarea></label>
+            <button class="button button-primary" type="submit">Enviar solicitação</button>
+            <p id="request-status" class="form-status" role="status">A solicitação será registrada no banco de dados.</p>
+            <div id="request-list" class="request-list" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+      <!-- A garagem organiza apenas os registros que existem para o cliente autenticado. -->
+      <section class="panel smart-garage" id="garagem-inteligente" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">HISTÓRICO DO VEÍCULO</p>
+            <h2>Garagem Inteligente</h2>
+            <p class="muted">Consulte solicitações, orçamentos e ordens relacionados ao veículo selecionado.</p>
+          </div>
+        </div>
+        <div class="garage-notice" role="note">
+          <strong>Histórico disponível no LaunchControl</strong>
+          <p>Aqui aparecem somente os registros que a plataforma possui. Isso não representa necessariamente o histórico completo ou oficial do veículo.</p>
+        </div>
+        <label class="garage-vehicle-label" for="garage-vehicle-select">Escolha um veículo cadastrado
+          <select id="garage-vehicle-select">
+            <option value="">Carregando veículos…</option>
+          </select>
+        </label>
+        <div id="garage-vehicle-summary" class="garage-vehicle-summary" aria-live="polite"></div>
+        <div class="garage-columns">
+          <section class="garage-subsection">
+            <h3>Histórico de solicitações e serviços</h3>
+            <div id="garage-timeline" class="garage-timeline" aria-live="polite">
+              <p class="muted">Selecione um veículo para consultar os registros relacionados.</p>
+            </div>
+          </section>
+          <section class="garage-subsection">
+            <h3>Relatos de diagnóstico</h3>
+            <p class="muted">Os relatos são informações fornecidas pelo cliente; somente um laudo registrado pela equipe técnica será apresentado como laudo.</p>
+            <div id="garage-diagnostics" class="garage-diagnostics" aria-live="polite"></div>
+          </section>
+        </div>
+      </section>
+      <!-- Lista de orçamentos permitidos ao usuário conectado. -->
+      <section class="panel quote-panel" id="quote-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">PROPOSTAS</p><h2>Orçamentos</h2><p class="muted">Compare as propostas recebidas. Ao aceitar, uma ordem de serviço é criada.</p></div></div>
+        <div class="quote-comparison-tools">
+          <label>Pesquisar propostas<input id="quote-search" type="search" placeholder="Oficina, serviço ou status"></label>
+          <label>Ordenar por<select id="quote-sort"><option value="recommended">Comparação equilibrada</option><option value="price">Menor preço</option><option value="deadline">Menor prazo</option><option value="newest">Mais recentes</option></select></label>
+          <p class="muted">A comparação usa somente preço, prazo e observações fornecidos no orçamento. Não existe avaliação de reputação verificada nesta base de dados.</p>
+        </div>
+        <div id="quote-comparison-summary" class="comparison-summary" aria-live="polite"></div>
+        <div id="quote-list" class="quote-list" aria-live="polite"><p class="muted">Entre para consultar seus orçamentos.</p></div>
+      </section>
+      <!-- Ferramentas específicas do perfil de oficina. -->
+      <section class="panel office-tools" id="office-tools" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">ÁREA DA OFICINA</p><h2>Solicitações de clientes</h2><p class="muted">Envie um orçamento usando o identificador da solicitação.</p></div></div>
+        <div class="two-columns">
+          <div><h3>Solicitações disponíveis</h3><div id="office-request-list" class="request-list"></div></div>
+          <form id="quote-form" class="stack-form">
+            <h3>Enviar orçamento</h3>
+            <label>ID da solicitação<input name="solicitacaoId" type="number" min="1" required></label>
+            <label>Valor total (R$)<input name="valor" type="number" min="0" max="99999999.99" step="0.01" required></label>
+            <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
+            <label>Observações<textarea name="observacoes" maxlength="2000" rows="3"></textarea></label>
+            <button class="button button-primary" type="submit">Enviar orçamento</button>
+            <p id="quote-form-status" class="form-status" role="status">O orçamento será gravado no MySQL.</p>
+          </form>
+        </div>
+      </section>
+      <section class="panel inventory-panel" id="estoque-inteligente" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO DO FORNECEDOR</p><h2>Inteligência de estoque</h2><p class="muted">Acompanhe os itens cadastrados, identifique quantidade baixa e mantenha preço e disponibilidade atualizados.</p></div><button class="button button-outline" id="inventory-refresh" type="button">Atualizar estoque</button></div>
+        <div class="inventory-notice" role="note"><strong>Alertas baseados no estoque cadastrado</strong><p>“Baixo” significa de 1 a 5 unidades e “zerado” significa 0. São limites operacionais simples, não previsões de demanda.</p></div>
+        <div class="inventory-summary" id="inventory-summary" aria-live="polite"></div>
+        <div class="inventory-controls"><label>Pesquisar peça<input id="inventory-search" type="search" placeholder="Nome, marca ou código"></label><label>Disponibilidade<select id="inventory-filter"><option value="todos">Todas</option><option value="baixo">Estoque baixo (1–5)</option><option value="zerado">Estoque zerado</option></select></label></div>
+        <div id="inventory-list" class="inventory-list" aria-live="polite"><p class="muted">Entre com um perfil de fornecedor para consultar o estoque.</p></div>
+        <form id="inventory-form" class="stack-form inventory-form">
+          <h3 id="inventory-form-title">Cadastrar peça no estoque</h3>
+          <input type="hidden" name="id">
+          <div class="parts-fields"><label id="inventory-supplier-field" hidden>ID do fornecedor (administrador)<input name="fornecedorId" type="number" min="1" placeholder="ID do fornecedor ativo"></label><label>Nome da peça<input name="nome" required maxlength="160"></label><label>Marca<input name="marca" maxlength="100"></label><label>Código / OEM<input name="codigo" maxlength="80"></label><label>Preço (R$)<input name="preco" type="number" min="0" max="99999999.99" step="0.01" required></label><label>Quantidade disponível<input name="estoque" type="number" min="0" max="2000000" required></label><label>Ativo<select name="ativo"><option value="true">Sim</option><option value="false">Não</option></select></label></div>
+          <label>Descrição (opcional)<textarea name="descricao" rows="2" maxlength="2000"></textarea></label>
+          <div class="action-group"><button class="button button-primary" type="submit">Salvar peça</button><button class="mini-button" id="inventory-cancel-edit" type="button">Limpar formulário</button></div>
+          <p class="form-status" id="inventory-status" role="status">Os dados serão salvos no estoque existente no MySQL.</p>
+        </form>
+      </section>
+      <!-- Tabela de ordens, preenchida dinamicamente pelo app.js. -->
+      <section class="panel" id="servicos">
+        <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO</p><h2>Ordens de serviço</h2><p class="muted">Ações são controladas pelo status real retornado pelo backend.</p></div><label class="search-box"><span class="sr-only">Pesquisar serviços</span><input id="service-search" type="search" placeholder="Pesquisar cliente, veículo ou serviço"></label></div>
+        <div class="table-wrap"><table><thead><tr><th>ORDEM</th><th>CLIENTE</th><th>VEÍCULO</th><th>SERVIÇO</th><th>STATUS</th><th>VALOR</th><th>AÇÕES</th></tr></thead><tbody id="service-rows"><tr><td colspan="7" class="empty">Carregando registros do banco…</td></tr></tbody></table></div>
+        <p class="table-note" id="service-status" role="status">Aguardando resposta do backend.</p>
+      </section>
+      <div class="two-columns">
+        <section class="panel" id="orcamentos"><div class="panel-heading"><div><p class="eyebrow">REGRAS DE NEGÓCIO</p><h2>Orçamentos</h2></div></div><div class="info-row"><span class="info-mark green">✓</span><div><strong>Serviço concluído</strong><p>O botão de edição é ocultado na interface e a API também deve recusar alterações.</p></div></div><div class="info-row"><span class="info-mark orange">!</span><div><strong>Persistência real</strong><p>Esta tela não usa localStorage como fonte dos registros. Os dados vêm do endpoint Java.</p></div></div></section>
+        <section class="panel" id="diagnostico"><div class="panel-heading"><div><p class="eyebrow">ATENDIMENTO</p><h2>Diagnóstico preliminar</h2></div></div><form id="diagnostic-form" class="stack-form"><label>Veículo / identificação<input name="vehicle" required maxlength="120" placeholder="Ex.: Sandero 1.0 2016"></label><label>Sintomas relatados<textarea name="symptoms" required maxlength="2000" rows="3" placeholder="Descreva os sintomas observados"></textarea></label><label>Prioridade<select name="priority"><option value="NORMAL">Normal</option><option value="ALTA">Alta</option><option value="URGENTE">Urgente</option></select></label><button class="button button-primary" type="submit">Registrar relato</button><p class="form-status" id="diagnostic-status" role="status">Relatos são informações do cliente, não diagnóstico técnico validado.</p></form></section>
+      </div>
+      <!-- Checkout demonstrativo: não realiza cobrança real. -->
+      <section class="panel checkout-panel" id="checkout"><div><p class="eyebrow">PAGAMENTOS</p><h2>Checkout de demonstração</h2><p class="muted">Sem provedor de pagamento configurado, o sistema não cobra, não gera PIX válido e não aprova transações reais.</p></div><form id="checkout-form" class="checkout-form"><label>ID do orçamento<input name="quoteId" type="number" min="1" required placeholder="ID do orçamento existente"></label><label>Método<select name="method"><option value="PIX_DEMO">PIX — demonstração</option><option value="CARTAO_DEMO">Cartão — demonstração</option></select></label><button class="button button-primary" type="submit">Criar pagamento pendente</button></form><p id="checkout-status" class="form-status" role="status">A operação demonstrativa ficará pendente e será identificada como demonstração.</p><div class="payment-history-block"><button class="button button-outline" id="load-payments" type="button">Consultar histórico de pagamentos</button><div id="payment-history" class="payment-history" aria-live="polite"></div></div></section>
+      <footer>LaunchControl · Java Servlet · MySQL · HTML, CSS e JavaScript</footer>
+    </main>
+  </div>
+  <!-- Janelas de diálogo abertas pelo JavaScript para login, detalhes e edição. -->
+  <dialog id="auth-dialog" class="detail-dialog">
+    <form id="auth-form" class="stack-form">
+      <button class="dialog-close" id="auth-close" type="button" aria-label="Fechar">×</button>
+      <p class="eyebrow">CONTA LAUNCHCONTROL</p><h2 id="auth-title">Entrar</h2>
+      <label id="auth-name-wrap" hidden>Nome completo<input name="name" autocomplete="name" maxlength="120"></label>
+      <label>E-mail<input name="email" type="email" autocomplete="email" required maxlength="190"></label>
+      <label>Senha<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
+      <button class="button button-primary" id="auth-submit" type="submit">Entrar</button>
+      <button class="mini-button" id="auth-toggle" type="button">Criar uma conta de cliente</button>
+      <p class="form-status" id="auth-status" role="status">A conta será persistida no MySQL.</p>
+    </form>
+  </dialog>
+  <dialog id="quote-edit-dialog" class="detail-dialog">
+    <form id="quote-edit-form" class="stack-form">
+      <button class="dialog-close" id="quote-edit-close" type="button" aria-label="Fechar">×</button>
+      <p class="eyebrow">GESTÃO DE ORÇAMENTO</p><h2>Editar orçamento</h2>
+      <input type="hidden" name="id">
+      <label>Valor total (R$)<input name="valor" type="number" min="0" max="99999999.99" step="0.01" required></label>
+      <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
+      <label>Observações<textarea name="observacoes" maxlength="2000" rows="3"></textarea></label>
+      <button class="button button-primary" type="submit">Salvar alterações</button>
+      <p id="quote-edit-status" class="form-status" role="status">Orçamentos aceitos ou serviços concluídos não podem ser alterados.</p>
+    </form>
+  </dialog>
+  <dialog id="detail-dialog" class="detail-dialog"><form method="dialog"><button class="dialog-close" aria-label="Fechar">×</button></form><p class="eyebrow">DETALHES DA ORDEM</p><h2 id="detail-title">Ordem</h2><pre id="detail-content"></pre></dialog>
+</body>
+</html>

@@ -1,90 +1,60 @@
 # LaunchControl
 
-Sistema de serviços automotivos desenvolvido com Java, Jakarta Servlet, MySQL, HTML, CSS e JavaScript.
+Sistema de gestão de serviços automotivos, organizado por função para facilitar a navegação no VS Code.
+
+## Organização das pastas
+
+```text
+LaunchControl/
+├── backend/                    Código Java e configuração Maven
+│   └── src/main/
+│       ├── java/br/com/launchcontrol/  Regras e endpoints
+│       └── webapp/WEB-INF/             Configuração do servidor
+├── frontend/                   Interface do navegador
+│   ├── index.html               Estrutura das telas
+│   ├── css/estilo-principal.css Aparência, cores e layout
+│   └── js/interacoes.js         Botões, formulários e chamadas à API
+├── banco-de-dados/
+│   └── modelo.sql               Estrutura das tabelas MySQL
+├── scripts/
+│   └── verificar_projeto.py     Verificações automáticas
+├── .github/workflows/           Compilação automática
+└── README.md                    Este guia
+```
 
 ## Tecnologias
 
-- Java 25 LTS
-- Jakarta Servlet 6.1
-- MySQL 8+
-- JDBC
-- HTML5, CSS3 e JavaScript puro
-- Maven 3.10+
-- Apache Tomcat 11
+Java 25 LTS, Jakarta Servlet 6.1, MySQL 8+, JDBC, HTML5, CSS3, JavaScript puro, Maven 3.10+ e Apache Tomcat 11.
 
 ## Executar no VS Code
 
-### 1. Instalar os programas
-
-Instale o JDK 25, Apache Maven, MySQL Server 8 e Apache Tomcat 11. No VS Code, instale o pacote **Extension Pack for Java**.
-
-Confirme no terminal:
-
-```bash
-java -version
-mvn -version
-```
-
-### 2. Baixar o projeto
-
-No terminal do VS Code:
+1. Instale o JDK 25, Maven, MySQL Server 8 e Apache Tomcat 11. No VS Code, instale **Extension Pack for Java**.
+2. Baixe o repositório:
 
 ```bash
 git clone https://github.com/GabrielTeodoro7/launchcontrol-your-auto-service-hub.git
 cd launchcontrol-your-auto-service-hub
+code .
 ```
 
-Abra essa pasta no VS Code. O código principal está em `launchcontrol-servlet/`.
-
-### 3. Criar o banco de dados
-
-Inicie o MySQL e execute o script:
-
-```sql
-source launchcontrol-servlet/database/schema.sql;
-```
-
-O comando `source` funciona no cliente de linha de comando do MySQL quando executado a partir da raiz do repositório. Se estiver usando MySQL Workbench, abra o arquivo `launchcontrol-servlet/database/schema.sql` e execute o script nele.
-
-Configure as variáveis de ambiente com os dados do seu banco:
-
-- `LC_DB_URL`: URL JDBC do banco criado pelo script.
-- `LC_DB_USER`: usuário do MySQL.
-- `LC_DB_PASSWORD`: senha desse usuário.
-
-Não publique senhas no GitHub. Configure essas variáveis no terminal antes de iniciar o servidor.
-
-### 4. Compilar a aplicação
-
-No terminal, execute:
+3. Abra `banco-de-dados/modelo.sql` no MySQL Workbench e execute o script para criar as tabelas.
+4. Configure no ambiente em que o Tomcat será iniciado as variáveis `LC_DB_URL`, `LC_DB_USER` e `LC_DB_PASSWORD`. Não publique senhas no GitHub.
+5. Na raiz do projeto, compile:
 
 ```bash
-cd launchcontrol-servlet
-mvn clean package
+mvn -f backend/pom.xml clean package
 ```
 
-O arquivo `target/launchcontrol.war` será criado se a compilação terminar sem erros.
+6. Copie `backend/target/launchcontrol.war` para a pasta `webapps` do Tomcat 11, inicie o servidor e acesse `http://localhost:8080/launchcontrol/`.
 
-### 5. Executar no Tomcat
+O Tomcat precisa usar o JDK 25 e conseguir acessar o MySQL.
 
-Inicie o Tomcat 11 usando o JDK 25 e copie `launchcontrol-servlet/target/launchcontrol.war` para a pasta `webapps` do Tomcat. Inicie ou reinicie o servidor e acesse:
+## Onde alterar cada parte
 
-```
-http://localhost:8080/launchcontrol/
-```
+- **Cores e layout:** `frontend/css/estilo-principal.css`
+- **Telas, textos e campos:** `frontend/index.html`
+- **Botões e comportamento da interface:** `frontend/js/interacoes.js`
+- **Regras e endpoints do servidor:** classes Java em `backend/src/main/java/br/com/launchcontrol/`
+- **Tabelas e estrutura do banco:** `banco-de-dados/modelo.sql`
 
-Se o Tomcat estiver configurado em outra porta ou contexto, ajuste o endereço conforme sua instalação.
-
-## Executar pelo GitHub
-
-O GitHub armazena o código e executa verificações automáticas por meio de GitHub Actions. Para conferir o resultado, abra a aba **Actions** deste repositório.
-
-O GitHub não executa diretamente uma aplicação Java Servlet com banco MySQL apenas por abrir o repositório. Para usar o sistema no navegador, compile o WAR e execute-o em um servidor Tomcat com acesso ao banco de dados, ou configure uma hospedagem que ofereça esses serviços.
-
-## Observações
-
-- O esquema do banco está em `launchcontrol-servlet/database/schema.sql`.
-- O código Java fica em `launchcontrol-servlet/src/main/java/`.
-- As páginas, estilos e scripts ficam em `launchcontrol-servlet/src/main/webapp/`.
-- O checkout disponível é demonstrativo e não processa cobranças reais.
-- A compilação não substitui o teste completo com Tomcat e MySQL configurados.
+A aba **Actions** do GitHub mostra o resultado das verificações automáticas. O GitHub não inicia sozinho o Tomcat e o MySQL. O checkout é demonstrativo e não processa cobranças reais; a compilação não substitui testes com o servidor e o banco configurados.
