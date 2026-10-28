@@ -72,6 +72,7 @@ jobs:
           mysql --protocol=TCP -h 127.0.0.1 -uroot < banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql
           mysql --protocol=TCP -h 127.0.0.1 -uroot < banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql
           mysql --protocol=TCP -h 127.0.0.1 -uroot -D launchcontrol -e "SHOW TABLES"
+          mysql --protocol=TCP -h 127.0.0.1 -uroot -e "CREATE USER 'lc_ci'@'%' IDENTIFIED BY 'lc_ci_password'; GRANT ALL PRIVILEGES ON launchcontrol.* TO 'lc_ci'@'%'; FLUSH PRIVILEGES;"
 
       - name: Deploy WAR to Tomcat 11 with Java 25
         run: |
