@@ -214,8 +214,14 @@
           <form id="quote-form" class="stack-form">
             <h3>Enviar orçamento</h3>
             <label>ID da solicitação<input name="solicitacaoId" type="number" min="1" required></label>
-            <label>Valor total (R$)<input name="valor" type="number" min="0" max="99999999.99" step="0.01" required></label>
+            <div class="parts-fields quote-cost-fields"><label>Peças e materiais (R$)<input name="valorPecas" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+            <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
+            <label>Total calculado (R$)<input id="quote-total-preview" type="text" value="R$ 0,00" readonly aria-describedby="quote-total-note"></label>
+            <p id="quote-total-note" class="muted">Prévia visual. O total oficial é recalculado e validado pelo backend.</p>
             <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
+            <div class="parts-fields quote-cost-fields"><label>Garantia (dias, opcional)<input name="garantiaDias" type="number" min="0" max="3650"></label>
+            <label>Validade da proposta (dias, opcional)<input name="validadeDias" type="number" min="0" max="365"></label></div>
+            <label>Condição das peças<select name="condicaoPecas"><option value="NAO_INFORMADA">Não informada</option><option value="NOVAS">Novas</option><option value="USADAS">Usadas</option><option value="RECONDICIONADAS">Recondicionadas</option><option value="MISTAS">Mistas</option></select></label>
             <label>Observações<textarea name="observacoes" maxlength="2000" rows="3"></textarea></label>
             <button class="button button-primary" type="submit">Enviar orçamento</button>
             <p id="quote-form-status" class="form-status" role="status">O orçamento será gravado no MySQL.</p>
