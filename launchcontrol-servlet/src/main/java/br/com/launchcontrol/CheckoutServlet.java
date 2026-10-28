@@ -11,14 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-@WebServlet("/api/checkout")
 /**
  * Cria um registro de pagamento apenas demonstrativo. Ele não cobra dinheiro e não confirma pagamentos reais.
- *
- * Esta classe reúne a lógica de uma responsabilidade específica do sistema.
  */
+@WebServlet("/api/checkout")
 public class CheckoutServlet extends HttpServlet {
-    // POST recebe informações para criar ou alterar registros.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
