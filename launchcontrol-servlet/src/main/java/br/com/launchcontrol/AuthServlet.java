@@ -17,15 +17,12 @@ import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-@WebServlet("/api/auth")
 /**
  * Gerencia cadastro, login, consulta da sessão e logout. A sessão permite que o servidor reconheça o usuário entre requisições.
- *
- * Esta classe reúne a lógica de uma responsabilidade específica do sistema.
  */
+@WebServlet("/api/auth")
 public class AuthServlet extends HttpServlet {
     private static final SecureRandom RANDOM = new SecureRandom();
-    // GET é usado principalmente para consultar informações já existentes.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
@@ -40,7 +37,6 @@ public class AuthServlet extends HttpServlet {
                 ",\"perfil\":" + Json.quote((String)session.getAttribute("userRole")) +
                 ",\"csrf\":" + Json.quote((String)session.getAttribute("csrfToken")) + "}");
     }
-    // POST recebe informações para criar ou alterar registros.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
