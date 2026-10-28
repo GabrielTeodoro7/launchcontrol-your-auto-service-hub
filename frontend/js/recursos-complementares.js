@@ -35,12 +35,23 @@
         <p class="muted">Gera uma versão para impressão do histórico de manutenção registrado. Na janela de impressão, escolha “Salvar como PDF”.</p>
         <button type="button" class="button button-secondary" id="maintenance-export">Exportar histórico para PDF</button>
         <p class="form-status" id="maintenance-export-status" role="status"></p>
+        <form id="maintenance-attachment-form" class="stack-form">
+          <h3>Anexar comprovante ou foto</h3>
+          <label>Veículo<select id="attachment-vehicle" required><option value="">Carregando veículos…</option></select></label>
+          <label>Registro de manutenção<select id="attachment-history" name="historicoId" required><option value="">Selecione um veículo primeiro</option></select></label>
+          <label>Arquivo (PDF, PNG ou JPEG; até 5 MB)<input type="file" name="arquivo" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required></label>
+          <button class="button button-primary" type="submit">Enviar anexo</button>
+          <p class="form-status" id="maintenance-attachment-status" role="status"></p>
+        </form>
+        <div class="supplemental-section"><h3>Anexos do veículo</h3><div id="maintenance-attachment-list" class="supplemental-list"><p class="muted">Selecione um veículo para consultar.</p></div></div>
       </div>`;
     const main = document.querySelector("main") || document.body;
     main.append(panel);
     panel.querySelector("#supplemental-refresh").addEventListener("click", refreshSupplementalFeatures);
     panel.querySelector("#additional-service-form").addEventListener("submit", submitAdditionalService);
     panel.querySelector("#maintenance-export").addEventListener("click", exportMaintenanceHistory);
+    panel.querySelector("#maintenance-attachment-form").addEventListener("submit", submitMaintenanceAttachment);
+    panel.querySelector("#attachment-vehicle").addEventListener("change", loadMaintenanceAttachmentHistory);
   }
 
   async function fetchJson(url, options) {
@@ -185,6 +196,92 @@
     }
   }
 
+  async function loadMaintenanceAttachmentVehicles() {
+    const select = document.querySelector("#attachment-vehicle");
+    const vehicles = await fetchJson("api/veiculos");
+    const previous = select.value;
+    select.replaceChildren(new Option("Selecione um veículo", ""));
+    vehicles.forEach(vehicle => select.append(new Option(
+      [vehicle.marca, vehicle.modelo, vehicle.ano].filter(Boolean).join(" "),
+      vehicle.id
+    )));
+    if (vehicles.some(vehicle => String(vehicle.id) === previous)) select.value = previous;
+    if (select.value) await loadMaintenanceAttachmentHistory();
+    else {
+      document.querySelector("#attachment-history").replaceChildren(new Option("Selecione um veículo primeiro", ""));
+      document.querySelector("#maintenance-attachment-list").textContent = "Selecione um veículo para consultar.";
+    }
+  }
+
+  async function loadMaintenanceAttachmentHistory() {
+    const vehicleId = document.querySelector("#attachment-vehicle").value;
+    const historySelect = document.querySelector("#attachment-history");
+    const list = document.querySelector("#maintenance-attachment-list");
+    historySelect.replaceChildren(new Option(vehicleId ? "Selecione um registro" : "Selecione um veículo primeiro", ""));
+    list.replaceChildren();
+    if (!vehicleId) return;
+    try {
+      const [records, attachments] = await Promise.all([
+        fetchJson("api/manutencoes?veiculoId=" + encodeURIComponent(vehicleId)),
+        fetchJson("api/anexos-manutencao?veiculoId=" + encodeURIComponent(vehicleId))
+      ]);
+      records.forEach(record => historySelect.append(new Option(
+        dateLabel(record.dataServico) + " · " + record.categoria + " · " + record.descricao,
+        record.id
+      )));
+      if (!attachments.length) {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "Nenhum anexo registrado para este veículo.";
+        list.append(empty);
+      } else {
+        attachments.forEach(item => {
+          const card = document.createElement("article");
+          card.className = "supplemental-item";
+          const link = document.createElement("a");
+          link.href = item.url;
+          link.textContent = item.nome;
+          link.rel = "noopener";
+          const metadata = document.createElement("small");
+          metadata.textContent = dateLabel(item.criadoEm) + " · " + Math.ceil(item.tamanho / 1024) + " KB · manutenção #" + item.historicoId;
+          card.append(link, metadata);
+          list.append(card);
+        });
+      }
+    } catch (error) {
+      list.textContent = error.message;
+    }
+  }
+
+  async function submitMaintenanceAttachment(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const status = document.querySelector("#maintenance-attachment-status");
+    const fileInput = form.elements.arquivo;
+    if (!fileInput.files?.length) {
+      status.textContent = "Selecione um arquivo.";
+      return;
+    }
+    if (fileInput.files[0].size > 5 * 1024 * 1024) {
+      status.textContent = "O arquivo ultrapassa o limite de 5 MB.";
+      return;
+    }
+    const body = new FormData(form);
+    status.textContent = "Validando e armazenando o anexo…";
+    try {
+      await fetchJson("api/anexos-manutencao", {
+        method:"POST",
+        headers:{"X-CSRF-Token":currentUser?.csrf || ""},
+        body
+      });
+      status.textContent = "Anexo armazenado no passaporte.";
+      form.elements.arquivo.value = "";
+      await loadMaintenanceAttachmentHistory();
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  }
+
   async function exportMaintenanceHistory() {
     const status = document.querySelector("#maintenance-export-status");
     const selectedId = document.querySelector("#garage-vehicle-select")?.value;
@@ -224,6 +321,7 @@
     document.querySelector("#maintenance-export").closest(".supplemental-section").hidden = currentUser.perfil !== "CLIENTE";
     const tasks = [loadAdditionalServices(), loadNotifications()];
     if (!proposalForm.hidden) tasks.push(loadOrdersForProposal());
+    if (currentUser.perfil === "CLIENTE") tasks.push(loadMaintenanceAttachmentVehicles());
     const results = await Promise.allSettled(tasks);
     const failed = results.find(result => result.status === "rejected");
     if (failed) {
