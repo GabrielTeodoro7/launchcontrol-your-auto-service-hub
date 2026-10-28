@@ -19,7 +19,8 @@ import java.util.UUID;
  */
 public class QuoteDecisionServlet extends HttpServlet {
     // Executado quando o navegador envia dados para criar ou alterar alguma informação.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         if (!"CLIENTE".equals(session.getAttribute("userRole"))) {
             Json.error(response, 403, "Somente o cliente dono da solicitação pode responder ao orçamento.");
