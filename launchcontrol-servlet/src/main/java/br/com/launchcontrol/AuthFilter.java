@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -16,7 +17,6 @@ import java.security.MessageDigest;
 @WebFilter(urlPatterns = "/api/*")
 public class AuthFilter implements Filter {
     @Override
-    // Este filtro é executado antes dos endpoints /api/* e decide se a requisição pode continuar.
     public void doFilter(jakarta.servlet.ServletRequest rawRequest, jakarta.servlet.ServletResponse rawResponse,
                          FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) rawRequest;
@@ -30,7 +30,7 @@ public class AuthFilter implements Filter {
         }
 
         // Não cria uma sessão nova: verifica se já existe uma sessão autenticada.
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             Json.error(response, 401, "Autenticação necessária.");
             return;
