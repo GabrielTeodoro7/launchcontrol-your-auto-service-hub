@@ -82,6 +82,7 @@ tables = ["usuarios", "oficinas", "fornecedores", "servicos", "pecas", "veiculos
           "solicitacoes_orcamento", "orcamentos", "ordens_servico", "diagnosticos",
           "pedidos", "pagamentos", "auditoria"]
 assert all("CREATE TABLE IF NOT EXISTS " + table in schema for table in tables), "Schema incompleto"
+assert "information_schema.statistics" in schema and "PREPARE lc_index_stmt" in schema, "Índices do esquema-base não são seguros para reexecução"
 assert "PBKDF2WithHmacSHA256" in password, "Hash de senha não localizado"
 assert "X-CSRF-Token" in auth_filter, "Proteção CSRF não localizada"
 assert "CONCLUIDO" in quote and "não podem ser alterados" in quote, "Bloqueio de orçamento concluído não localizado"
