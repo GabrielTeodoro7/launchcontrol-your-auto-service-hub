@@ -52,6 +52,12 @@ jobs:
       - name: Build deployable WAR
         run: mvn -B -f backend/pom.xml clean package
 
+      - name: Validate local Docker Compose configuration
+        run: docker compose config --quiet
+
+      - name: Build the one-command local Docker image
+        run: docker build --tag launchcontrol-local:ci .
+
       - name: Start isolated MySQL 8.4 test database
         run: |
           set -euo pipefail
