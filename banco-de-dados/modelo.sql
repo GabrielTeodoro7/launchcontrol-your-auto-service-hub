@@ -224,3 +224,16 @@ CREATE TABLE IF NOT EXISTS avaliacoes_servico (
   CONSTRAINT chk_avaliacao_nota CHECK (nota BETWEEN 1 AND 5),
   INDEX idx_avaliacoes_oficina (oficina_id, criado_em)
 );
+
+-- Histórico imutável das transições de status das ordens de serviço.
+CREATE TABLE IF NOT EXISTS ordem_status_historico (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  ordem_id BIGINT NOT NULL,
+  status VARCHAR(40) NOT NULL,
+  observacao VARCHAR(500),
+  usuario_id BIGINT,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ordem_id) REFERENCES ordens_servico(id),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+  INDEX idx_ordem_historico_data (ordem_id, criado_em)
+);
