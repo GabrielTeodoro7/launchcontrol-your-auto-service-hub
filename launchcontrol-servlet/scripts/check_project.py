@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,6 +57,10 @@ assert "CANCELADO" in payments and "cobrancaRealizada" in payments, "Cancelament
 assert 'order.status === "CONCLUIDO"' in js and "canEditQuote = !completed" in js, "Ação de edição deve ser omitida para serviços concluídos"
 assert not any(token in (html + js + css).lower() for token in ["react", "typescript", "vite"]), "Tecnologia não autorizada detectada no frontend"
 assert "localStorage" not in js, "O frontend não deve usar localStorage como persistência de domínio"
+html_ids = set(re.findall(r'\bid="([^"]+)"', html))
+js_ids = set(re.findall(r'querySelector\(["\']#([A-Za-z0-9_-]+)', js))
+missing_selectors = sorted(js_ids - html_ids)
+assert not missing_selectors, "Seletores JS sem elemento HTML: " + ", ".join(missing_selectors)
 assert 'id="vehicle-form"' in html and 'id="request-form"' in html, "Formulários de veículo e solicitação ausentes"
 assert 'id="quote-form"' in html and 'id="quote-list"' in html, "Interface de orçamento ausente"
 assert "api/pagamentos" in js and "api/orcamentos/decisao" in js, "Fluxo de orçamento/pagamento não conectado"
