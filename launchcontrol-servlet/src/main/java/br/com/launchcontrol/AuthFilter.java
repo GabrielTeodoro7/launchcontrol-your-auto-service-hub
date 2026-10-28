@@ -24,7 +24,8 @@ public class AuthFilter implements Filter {
         String path = request.getRequestURI().substring(request.getContextPath().length());
 
         // Cadastro, login, catálogo de serviços e verificação de saúde podem ser acessados sem sessão.
-        if ("/api/auth".equals(path) || "/api/servicos".equals(path) || "/api/health".equals(path)) {
+        if ("/api/auth".equals(path) || "/api/servicos".equals(path) || "/api/health".equals(path)
+                || ("/api/pecas/busca".equals(path) && "GET".equalsIgnoreCase(request.getMethod()))) {
             chain.doFilter(request, response);
             return;
         }
