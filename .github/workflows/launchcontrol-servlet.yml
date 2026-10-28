@@ -1,0 +1,34 @@
+name: LaunchControl Servlet checks
+
+on:
+  push:
+    branches: [main, "work/**"]
+    paths:
+      - "launchcontrol-servlet/**"
+      - ".github/workflows/launchcontrol-servlet.yml"
+  pull_request:
+    paths:
+      - "launchcontrol-servlet/**"
+      - ".github/workflows/launchcontrol-servlet.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Structural checks
+        working-directory: launchcontrol-servlet
+        run: python scripts/check_project.py
+      - name: Build WAR
+        run: mvn -B -f launchcontrol-servlet/pom.xml clean package
