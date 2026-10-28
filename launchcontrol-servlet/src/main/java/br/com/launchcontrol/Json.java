@@ -7,7 +7,7 @@ package br.com.launchcontrol;
  */
 public final class Json {
     private Json() {}
-    public static String quote(String value) {
+    // Escapa caracteres especiais para que um texto possa ser incluído com segurança em JSON.\n    public static String quote(String value) {
         if (value == null) return "null";
         StringBuilder out = new StringBuilder("\"");
         for (int i = 0; i < value.length(); i++) {
@@ -25,7 +25,7 @@ public final class Json {
         }
         return out.append('"').toString();
     }
-    public static void error(jakarta.servlet.http.HttpServletResponse response, int status, String message)
+    // Devolve uma resposta de erro em JSON e define o código HTTP correspondente.\n    public static void error(jakarta.servlet.http.HttpServletResponse response, int status, String message)
             throws java.io.IOException {
         response.setStatus(status);
         response.setContentType("application/json;charset=UTF-8");
