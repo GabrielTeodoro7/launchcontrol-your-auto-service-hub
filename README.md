@@ -1,36 +1,90 @@
-# LaunchControl — Plataforma de Serviços Automotivos
+# LaunchControl
 
-O LaunchControl tem como objetivo aproximar clientes, oficinas e fornecedores, facilitando a consulta de serviços, o cadastro de veículos e a troca de solicitações e orçamentos.
-
-## Implementação independente
-
-A aplicação Java está na pasta `launchcontrol-servlet/`. Ela utiliza Java 17, Jakarta Servlets, JDBC, MySQL, HTML, CSS e JavaScript puro. Python é usado apenas para uma verificação estrutural auxiliar.
-
-### Estrutura principal
-
-- `launchcontrol-servlet/src/main/java/`: regras de negócio e endpoints HTTP implementados em Java.
-- `launchcontrol-servlet/src/main/webapp/`: páginas HTML, estilos CSS e JavaScript executado no navegador.
-- `launchcontrol-servlet/database/schema.sql`: criação do banco e das tabelas.
-- `launchcontrol-servlet/scripts/check_project.py`: verifica se arquivos importantes e seletores esperados existem.
-- `launchcontrol-servlet/README.md`: instruções detalhadas para configurar, compilar e executar a aplicação.
+Sistema de serviços automotivos desenvolvido com Java, Jakarta Servlet, MySQL, HTML, CSS e JavaScript.
 
 ## Tecnologias
 
-- Java 17 e Jakarta Servlet 6
-- MySQL 8 e JDBC
-- HTML5, CSS3 e JavaScript sem frameworks no frontend independente
-- Maven para compilar e empacotar a aplicação como arquivo WAR
+- Java 25 LTS
+- Jakarta Servlet 6.1
+- MySQL 8+
+- JDBC
+- HTML5, CSS3 e JavaScript puro
+- Maven 3.10+
+- Apache Tomcat 11
 
-## Começar
+## Executar no VS Code
 
-Leia primeiro o arquivo `launchcontrol-servlet/README.md`. Ele explica os requisitos, como configurar as variáveis de ambiente do banco, como executar o script SQL e como compilar o projeto.
+### 1. Instalar os programas
 
-## Estado e limitações
+Instale o JDK 25, Apache Maven, MySQL Server 8 e Apache Tomcat 11. No VS Code, instale o pacote **Extension Pack for Java**.
 
-A implementação independente já possui uma base de autenticação, veículos, solicitações, orçamentos, ordens de serviço, relatos de diagnóstico e pagamentos demonstrativos. Isso não significa que todos os módulos descritos no escopo acadêmico estejam completos ou prontos para produção.
+Confirme no terminal:
 
-O checkout é demonstrativo e não realiza cobranças reais. A aplicação ainda precisa de testes integrados em um servidor Servlet conectado a uma instância MySQL, além da revisão dos fluxos e permissões restantes. Consulte a documentação dentro de `launchcontrol-servlet/` para o estado detalhado.
+```bash
+java -version
+mvn -version
+```
 
-## Diagramas e documentação acadêmica
+### 2. Baixar o projeto
 
-Os materiais de apoio e diagramas estão em `docs/`. Antes de apresentar uma funcionalidade como concluída, confira se ela está implementada e testada, não apenas descrita em documentos.
+No terminal do VS Code:
+
+```bash
+git clone https://github.com/GabrielTeodoro7/launchcontrol-your-auto-service-hub.git
+cd launchcontrol-your-auto-service-hub
+```
+
+Abra essa pasta no VS Code. O código principal está em `launchcontrol-servlet/`.
+
+### 3. Criar o banco de dados
+
+Inicie o MySQL e execute o script:
+
+```sql
+source launchcontrol-servlet/database/schema.sql;
+```
+
+O comando `source` funciona no cliente de linha de comando do MySQL quando executado a partir da raiz do repositório. Se estiver usando MySQL Workbench, abra o arquivo `launchcontrol-servlet/database/schema.sql` e execute o script nele.
+
+Configure as variáveis de ambiente com os dados do seu banco:
+
+- `LC_DB_URL`: URL JDBC do banco criado pelo script.
+- `LC_DB_USER`: usuário do MySQL.
+- `LC_DB_PASSWORD`: senha desse usuário.
+
+Não publique senhas no GitHub. Configure essas variáveis no terminal antes de iniciar o servidor.
+
+### 4. Compilar a aplicação
+
+No terminal, execute:
+
+```bash
+cd launchcontrol-servlet
+mvn clean package
+```
+
+O arquivo `target/launchcontrol.war` será criado se a compilação terminar sem erros.
+
+### 5. Executar no Tomcat
+
+Inicie o Tomcat 11 usando o JDK 25 e copie `launchcontrol-servlet/target/launchcontrol.war` para a pasta `webapps` do Tomcat. Inicie ou reinicie o servidor e acesse:
+
+```
+http://localhost:8080/launchcontrol/
+```
+
+Se o Tomcat estiver configurado em outra porta ou contexto, ajuste o endereço conforme sua instalação.
+
+## Executar pelo GitHub
+
+O GitHub armazena o código e executa verificações automáticas por meio de GitHub Actions. Para conferir o resultado, abra a aba **Actions** deste repositório.
+
+O GitHub não executa diretamente uma aplicação Java Servlet com banco MySQL apenas por abrir o repositório. Para usar o sistema no navegador, compile o WAR e execute-o em um servidor Tomcat com acesso ao banco de dados, ou configure uma hospedagem que ofereça esses serviços.
+
+## Observações
+
+- O esquema do banco está em `launchcontrol-servlet/database/schema.sql`.
+- O código Java fica em `launchcontrol-servlet/src/main/java/`.
+- As páginas, estilos e scripts ficam em `launchcontrol-servlet/src/main/webapp/`.
+- O checkout disponível é demonstrativo e não processa cobranças reais.
+- A compilação não substitui o teste completo com Tomcat e MySQL configurados.

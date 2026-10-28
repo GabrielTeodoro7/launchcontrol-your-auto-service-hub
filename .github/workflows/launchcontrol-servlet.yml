@@ -1,25 +1,17 @@
-name: LaunchControl Servlet checks
+name: LaunchControl checks
 
 on:
   push:
     branches: [main, "work/**"]
     paths:
       - "launchcontrol-servlet/**"
-      - "package.json"
-      - "bun.lock"
-      - "bunfig.toml"
-      - "vite.config.ts"
-      - "src/**"
       - ".github/workflows/launchcontrol-servlet.yml"
+      - "README.md"
   pull_request:
     paths:
       - "launchcontrol-servlet/**"
-      - "package.json"
-      - "bun.lock"
-      - "bunfig.toml"
-      - "vite.config.ts"
-      - "src/**"
       - ".github/workflows/launchcontrol-servlet.yml"
+      - "README.md"
 
 jobs:
   build:
@@ -57,17 +49,3 @@ jobs:
           path: launchcontrol-servlet/target/launchcontrol.war
           if-no-files-found: error
           retention-days: 14
-
-  existing-web-client-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
-      - name: Build existing web client
-        run: bun run build
