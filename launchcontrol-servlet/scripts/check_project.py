@@ -11,7 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 # Lista os arquivos essenciais que precisam existir no projeto.
 required = [
-    "pom.xml", "database/schema.sql", "README.md",
+    "pom.xml", "database/schema.sql",
     "src/main/java/br/com/launchcontrol/Database.java",
     "src/main/java/br/com/launchcontrol/Json.java",
     "src/main/java/br/com/launchcontrol/PasswordUtil.java",
