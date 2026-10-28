@@ -138,3 +138,9 @@
 .repair-transparency .garage-timeline-item:last-child{border-bottom:0}
 .repair-transparency .garage-timeline-item strong{display:block;font-size:13px}
 .repair-transparency .garage-timeline-item p,.repair-transparency .garage-timeline-item small{display:block;margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+
+
+.fitment-result{padding:12px 0;border-bottom:1px solid var(--line)}
+.fitment-result:last-child{border-bottom:0}
+.fitment-result strong{display:block;font-size:13px}
+.fitment-result p{margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
