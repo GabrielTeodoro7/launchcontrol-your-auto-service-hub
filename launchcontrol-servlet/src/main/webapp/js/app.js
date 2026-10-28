@@ -58,15 +58,16 @@ function renderOrders() {
     const view = document.createElement("button"); view.type = "button"; view.className = "mini-button"; view.textContent = "Visualizar";
     view.addEventListener("click", () => showDetails(order));
     group.append(view);
-    const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
     const completed = order.status === "CONCLUIDO";
-    edit.disabled = completed;
-    edit.title = completed ? "Serviços concluídos não permitem edição do orçamento." : "A edição depende de autenticação e permissão da oficina.";
-    edit.addEventListener("click", () => {
-      if (completed) return;
-      alert("A edição só pode ser realizada pela API autenticada da oficina; o formulário de edição ainda não foi liberado nesta etapa.");
-    });
-    group.append(edit); actions.append(group); tr.append(actions); rows.append(tr);
+    if (!completed) {
+      const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
+      edit.title = "A edição depende de autenticação e permissão da oficina.";
+      edit.addEventListener("click", () => {
+        alert("A edição só pode ser realizada pela API autenticada da oficina; o formulário de edição ainda não foi liberado nesta etapa.");
+      });
+      group.append(edit);
+    }
+    actions.append(group); tr.append(actions); rows.append(tr);
   }
 }
 
