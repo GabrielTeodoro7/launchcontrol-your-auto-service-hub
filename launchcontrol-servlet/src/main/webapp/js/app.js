@@ -161,6 +161,7 @@ function applyRoleUI() {
   document.querySelector("#checkout").hidden = role !== "CLIENTE";
   document.querySelector("#diagnostico").hidden = role !== "CLIENTE";
   document.querySelector("#estoque-inteligente").hidden = !["FORNECEDOR", "ADMINISTRADOR"].includes(role);
+  document.querySelector("#inventory-supplier-field").hidden = role !== "ADMINISTRADOR";
   document.querySelectorAll(".nav-item[data-profiles]").forEach(link => {
     const allowed = link.dataset.profiles.split(",");
     link.hidden = !allowed.includes(role);
@@ -522,7 +523,7 @@ async function loadInventory() {
       const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar item";
       edit.addEventListener("click", () => {
         const form = document.querySelector("#inventory-form");
-        ["id","nome","marca","codigo","descricao","preco","estoque"].forEach(key => { form.elements[key].value = item[key] ?? ""; });
+        ["id","nome","marca","codigo","descricao","preco","estoque","fornecedorId"].forEach(key => { form.elements[key].value = item[key] ?? ""; });
         form.elements.ativo.value = String(item.ativo);
         document.querySelector("#inventory-form-title").textContent = "Editar peça #" + item.id;
         document.querySelector("#inventory-status").textContent = "Atualize os dados e salve para persistir as alterações.";
@@ -550,7 +551,7 @@ document.querySelector("#inventory-form").addEventListener("submit", async event
   const status = document.querySelector("#inventory-status");
   status.textContent = "Salvando no estoque…";
   const payload = {};
-  ["id","nome","marca","codigo","descricao","preco","estoque","ativo"].forEach(key => payload[key] = values.get(key));
+  ["id","nome","marca","codigo","descricao","preco","estoque","ativo","fornecedorId"].forEach(key => payload[key] = values.get(key));
   try {
     const response = await fetch("api/estoque", {
       method:"POST",
