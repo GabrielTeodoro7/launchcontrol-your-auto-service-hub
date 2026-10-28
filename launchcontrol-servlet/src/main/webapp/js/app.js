@@ -6,6 +6,7 @@ const dialog = document.querySelector("#detail-dialog");
 const detailsTitle = document.querySelector("#detail-title");
 const detailsContent = document.querySelector("#detail-content");
 const authDialog = document.querySelector("#auth-dialog");
+const quoteEditDialog = document.querySelector("#quote-edit-dialog");
 let authMode = "login";
 let currentUser = null;
 let orders = [];
@@ -59,11 +60,18 @@ function renderOrders() {
     view.addEventListener("click", () => showDetails(order));
     group.append(view);
     const completed = order.status === "CONCLUIDO";
-    if (!completed) {
+    const canEditQuote = !completed && ["OFICINA", "ADMINISTRADOR"].includes(currentUser?.perfil)
+      && order.orcamentoId && ["PENDENTE", "ENVIADO"].includes(order.orcamentoStatus);
+    if (canEditQuote) {
       const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
-      edit.title = "A edição depende de autenticação e permissão da oficina.";
       edit.addEventListener("click", () => {
-        alert("A edição só pode ser realizada pela API autenticada da oficina; o formulário de edição ainda não foi liberado nesta etapa.");
+        const form = document.querySelector("#quote-edit-form");
+        form.elements.id.value = order.orcamentoId;
+        form.elements.valor.value = order.valor ?? "";
+        form.elements.prazoDias.value = order.prazoDias ?? 0;
+        form.elements.observacoes.value = order.observacoes ?? "";
+        document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + order.orcamentoId + ".";
+        quoteEditDialog.showModal();
       });
       group.append(edit);
     }
@@ -287,6 +295,23 @@ document.querySelector("#request-form").addEventListener("submit", async event =
     await loadRequests();
     await loadQuotes();
     await loadOfficeRequests();
+  } catch (error) { status.textContent = error.message; }
+});
+
+
+document.querySelector("#quote-edit-close").addEventListener("click", () => quoteEditDialog.close());
+document.querySelector("#quote-edit-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#quote-edit-status");
+  status.textContent = "Salvando alterações…";
+  try {
+    const response = await fetch("api/orcamentos/editar", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:form.get("id"),valor:form.get("valor"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível atualizar orçamento.");
+    status.textContent = "Orçamento atualizado.";
+    quoteEditDialog.close();
+    await loadOrders(); await loadQuotes();
   } catch (error) { status.textContent = error.message; }
 });
 
