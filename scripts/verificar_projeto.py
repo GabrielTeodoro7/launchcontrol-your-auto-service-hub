@@ -156,6 +156,13 @@ assert "api/dashboard/analytics" in read("frontend/js/launchcontrol-operacoes.js
 assert "safeMethod" in auth_filter and 'response.setHeader("X-Content-Type-Options", "nosniff")' in auth_filter, "Filtro HTTP deve proteger todos os métodos inseguros e aplicar cabeçalhos defensivos"
 assert 'response.setHeader("Cache-Control", "no-store")' in auth_filter, "Respostas de API devem impedir cache de dados sensíveis"
 assert "catch (IllegalArgumentException ex)" in password and 'Arrays.fill(derived, (byte) 0)' in password, "Hash de senha precisa tolerar dados inválidos e limpar buffers"
+auth_source = read("backend/src/main/java/br/com/launchcontrol/AuthServlet.java")
+assert 'allowAttempt("login|" + remoteAddress, 10)' in auth_source and 'allowAttempt("register|" + remoteAddress, 5)' in auth_source, "Limitação básica de tentativas de autenticação ausente"
+assert 'response.setHeader("Retry-After", "900")' in auth_source, "Bloqueio temporário de autenticação sem Retry-After"
+appointment_source = read("backend/src/main/java/br/com/launchcontrol/AppointmentServlet.java")
+assert "!start.toLocalDate().equals(end.toLocalDate())" in appointment_source, "Agenda deve impedir reservas que cruzem a meia-noite"
+delivery_source = read("backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java")
+assert "if((resend==null||from==null)&&(waToken==null||waPhoneId==null))return;" not in delivery_source, "Fila deve sinalizar quando os canais externos ainda não estão configurados"
 assert 'src="js/launchcontrol-operacoes.js"' in html, "JavaScript operacional não está carregado"
 workflow = read(".github/workflows/launchcontrol-validation.yml")
 assert "mysql:8.4" in workflow and "Tomcat 11" in workflow and "smoke_test_http.py" in workflow, "CI precisa executar banco real, implantação e smoke test HTTP"
