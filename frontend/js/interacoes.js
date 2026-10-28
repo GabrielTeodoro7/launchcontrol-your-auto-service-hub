@@ -960,7 +960,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   }
 });
 
-document.querySelector("#garage-vehicle-select").addEventListener("change", loadGarage);
+document.querySelector("#garage-vehicle-select").addEventListener("change", async () => { await loadGarage(); await loadMaintenance(); });
 document.querySelector("#refresh-button").addEventListener("click", async () => { await loadOrders(); await loadGarage(); });
 searchInput.addEventListener("input", renderOrders);
 
@@ -1062,3 +1062,129 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   loadInventory();
   loadPayments();
 })();
+
+// CarPassport: histórico de manutenção persistido pelo endpoint Java existente na branch.
+function formatMaintenanceDate(value) {
+  if (!value) return "Não informado";
+  const parsed = new Date(String(value).slice(0, 10) + "T12:00:00");
+  return Number.isNaN(parsed.getTime())
+    ? "Data indisponível"
+    : new Intl.DateTimeFormat("pt-BR", {dateStyle:"medium"}).format(parsed);
+}
+
+async function loadMaintenance() {
+  const vehicleId = document.querySelector("#garage-vehicle-select").value;
+  const timeline = document.querySelector("#maintenance-timeline");
+  const summary = document.querySelector("#maintenance-summary");
+  const status = document.querySelector("#maintenance-status");
+  timeline.replaceChildren();
+  summary.replaceChildren();
+
+  if (!currentUser || currentUser.perfil !== "CLIENTE") {
+    timeline.textContent = "Entre como cliente para consultar o passaporte digital.";
+    return;
+  }
+  if (!vehicleId) {
+    timeline.textContent = "Selecione um veículo para consultar manutenções.";
+    status.textContent = "Selecione um veículo para começar.";
+    return;
+  }
+
+  timeline.textContent = "Consultando histórico de manutenção…";
+  try {
+    const response = await fetch("api/manutencoes?veiculoId=" + encodeURIComponent(vehicleId), {
+      headers: {"Accept":"application/json"}
+    });
+    const records = await response.json();
+    if (!response.ok) throw new Error(records.erro || "Não foi possível carregar o histórico.");
+    const total = records.reduce((sum, item) => sum + Number(item.custo || 0), 0);
+    const metrics = [
+      ["Registros", String(records.length)],
+      ["Custo registrado", currency(total)],
+      ["Origem", "Dados cadastrados"]
+    ];
+    metrics.forEach(([label, value]) => {
+      const item = document.createElement("div");
+      item.className = "garage-summary-item";
+      const title = document.createElement("span");
+      title.textContent = label;
+      const valueNode = document.createElement("strong");
+      valueNode.textContent = value;
+      item.append(title, valueNode);
+      summary.append(item);
+    });
+
+    if (!records.length) {
+      timeline.textContent = "Nenhuma manutenção cadastrada para este veículo. Registre o primeiro serviço ao lado.";
+    } else {
+      records.forEach(record => {
+        const item = document.createElement("article");
+        item.className = "garage-timeline-item";
+        const title = document.createElement("strong");
+        title.textContent = record.categoria + " · " + formatMaintenanceDate(record.dataServico);
+        const description = document.createElement("p");
+        description.textContent = record.descricao;
+        const detail = document.createElement("p");
+        detail.textContent = [
+          record.quilometragem != null ? Number(record.quilometragem).toLocaleString("pt-BR") + " km" : "",
+          "Custo: " + currency(record.custo),
+          record.oficina ? "Oficina informada: " + record.oficina : "",
+          record.proximaData ? "Próxima data: " + formatMaintenanceDate(record.proximaData) : "",
+          record.proximaQuilometragem != null ? "Próxima quilometragem: " + Number(record.proximaQuilometragem).toLocaleString("pt-BR") + " km" : ""
+        ].filter(Boolean).join(" · ");
+        const provenance = document.createElement("small");
+        provenance.textContent = "Registro informado pelo proprietário; não equivale a laudo ou comprovante verificado.";
+        item.append(title, description, detail, provenance);
+        timeline.append(item);
+      });
+    }
+    status.textContent = records.length + (records.length === 1 ? " manutenção registrada." : " manutenções registradas.");
+  } catch (error) {
+    timeline.textContent = error.message || "Não foi possível carregar o histórico.";
+    status.textContent = error.message || "Falha ao consultar o passaporte digital.";
+  }
+}
+
+document.querySelector("#maintenance-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const status = document.querySelector("#maintenance-status");
+  const vehicleId = document.querySelector("#garage-vehicle-select").value;
+  if (!currentUser || currentUser.perfil !== "CLIENTE") {
+    status.textContent = "Entre como cliente para registrar uma manutenção.";
+    return;
+  }
+  if (!vehicleId) {
+    status.textContent = "Selecione um veículo antes de salvar.";
+    return;
+  }
+  const form = new FormData(event.currentTarget);
+  status.textContent = "Salvando manutenção…";
+  const body = new URLSearchParams({
+    veiculoId: vehicleId,
+    categoria: form.get("categoria"),
+    descricao: form.get("descricao"),
+    dataServico: form.get("dataServico"),
+    quilometragem: form.get("quilometragem"),
+    custo: form.get("custo"),
+    oficina: form.get("oficina"),
+    proximaData: form.get("proximaData"),
+    proximaQuilometragem: form.get("proximaQuilometragem")
+  });
+  try {
+    const response = await fetch("api/manutencoes", {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+        "X-CSRF-Token":currentUser.csrf || ""
+      },
+      body
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível salvar a manutenção.");
+    event.currentTarget.reset();
+    status.textContent = "Manutenção registrada. Atualizando o histórico…";
+    await loadMaintenance();
+  } catch (error) {
+    status.textContent = error.message || "Falha ao salvar a manutenção.";
+  }
+});
