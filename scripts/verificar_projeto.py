@@ -110,6 +110,10 @@ assert "LC_UPLOAD_DIR" in read("backend/src/main/java/br/com/launchcontrol/Maint
 assert all("CREATE TABLE IF NOT EXISTS " + table in migration_two for table in ["servicos_adicionais", "notificacoes", "anexos_manutencao"]), "Migração de aprovações/anexos incompleta"
 assert "api/anexos-manutencao" in supplemental_js and "Salvar como PDF" in supplemental_js, "Anexos ou exportação do passaporte não conectados"
 assert "servicos-adicionais" in supplemental_js and "api/notificacoes" in supplemental_js, "Aprovações/notificações não conectadas à interface"
+assert "api/avaliacoes" in supplemental_js and "loadServiceReviews" in supplemental_js, "Avaliações verificadas não conectadas à experiência do cliente"
+assert "renderMaintenanceReminders" in supplemental_js and "proximaQuilometragem" in supplemental_js, "Lembretes informativos de manutenção ausentes"
+assert "valor_adicionais_aceitos" in read("backend/src/main/java/br/com/launchcontrol/OrderServlet.java"), "Total de adicionais aceitos não está disponível na ordem"
+assert "createNotification(c, workshopUserId" in read("backend/src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Decisão de orçamento não notifica a oficina"
 
 
 feature_tables = ["historico_manutencao", "avaliacoes_servico", "ordem_status_historico",
