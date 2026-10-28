@@ -215,7 +215,8 @@
             <h3>Enviar orçamento</h3>
             <label>ID da solicitação<input name="solicitacaoId" type="number" min="1" required></label>
             <div class="parts-fields quote-cost-fields"><label>Peças e materiais (R$)<input name="valorPecas" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
-            <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
+            <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+            <label>Outros custos (R$)<input name="valorOutro" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
             <label>Total calculado (R$)<input id="quote-total-preview" type="text" value="R$ 0,00" readonly aria-describedby="quote-total-note"></label>
             <p id="quote-total-note" class="muted">Prévia visual. O total oficial é recalculado e validado pelo backend.</p>
             <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
@@ -274,7 +275,8 @@
       <p class="eyebrow">GESTÃO DE ORÇAMENTO</p><h2>Editar orçamento</h2>
       <input type="hidden" name="id">
       <div class="parts-fields quote-cost-fields"><label>Peças e materiais (R$)<input name="valorPecas" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
-      <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
+      <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+      <label>Outros custos (R$)<input name="valorOutro" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
       <label>Total calculado (R$)<input id="quote-edit-total-preview" type="text" value="R$ 0,00" readonly></label>
       <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
       <div class="parts-fields quote-cost-fields"><label>Garantia (dias)<input name="garantiaDias" type="number" min="0" max="3650"></label>
