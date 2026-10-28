@@ -221,6 +221,7 @@
     panel.hidden = false;
     const proposalForm = document.querySelector("#additional-service-form");
     proposalForm.hidden = !["OFICINA","ADMINISTRADOR"].includes(currentUser.perfil);
+    document.querySelector("#maintenance-export").closest(".supplemental-section").hidden = currentUser.perfil !== "CLIENTE";
     const tasks = [loadAdditionalServices(), loadNotifications()];
     if (!proposalForm.hidden) tasks.push(loadOrdersForProposal());
     const results = await Promise.allSettled(tasks);
