@@ -308,7 +308,7 @@ Execute como administrador do MySQL, substituindo a senha e confirmando o nome d
 
 ```sql
 CREATE USER 'launchcontrol_app'@'localhost' IDENTIFIED BY 'SUBSTITUA_POR_UMA_SENHA_FORTE';
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES
+GRANT SELECT, INSERT, UPDATE, DELETE
 ON launchcontrol.* TO 'launchcontrol_app'@'localhost';
 FLUSH PRIVILEGES;
 ```
