@@ -168,7 +168,7 @@ def main():
                              {"modo": "sintomas", "mensagem": "O pedal do freio está muito duro e o carro demora para parar"},
                              csrf)
     assert ai_result.get("fallback") is True and "não é uma resposta gerada por IA" in ai_result.get("aviso", ""), ai_result
-    checks.append("cadastro e consulta de veículo")
+    record(checks, "cadastro e consulta de veículo")
     record(checks, "Launch AI em modo de contingência sem credencial externa")
 
     today = dt.datetime.now(dt.timezone.utc).date()
