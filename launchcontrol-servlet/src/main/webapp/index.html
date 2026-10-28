@@ -50,7 +50,7 @@
         </div>
         <div class="parts-notice" role="note">
           <strong>Pesquisa transparente</strong>
-          <p>Esta versão abre pesquisas externas. Ela não consulta APIs de marketplaces, não recebe preços em tempo real e não confirma estoque ou compatibilidade automaticamente.</p>
+          <p>O LaunchControl consulta anúncios públicos do Mercado Livre quando a API está disponível. Shopee, OLX e buscas por lojas oficiais são abertas nos próprios sites. Preços e frete podem mudar; a compatibilidade não é confirmada automaticamente.</p>
         </div>
         <form id="parts-search-form" class="stack-form parts-form">
           <div class="parts-vehicle-select">
@@ -82,6 +82,28 @@
           <button class="button button-primary" type="submit">Pesquisar peças</button>
           <p id="parts-search-status" class="form-status" role="status">Informe o veículo e a peça. Os resultados serão abertos nas fontes externas.</p>
         </form>
+        <section class="parts-assistant" aria-labelledby="parts-assistant-title">
+          <div class="parts-assistant-heading">
+            <div>
+              <p class="eyebrow">ASSISTENTE DE PESQUISA</p>
+              <h3 id="parts-assistant-title">Assistente IA do LC Parts</h3>
+              <p class="muted">Descreva a peça do seu jeito. O assistente ajuda a refinar a busca e, quando possível, pesquisa anúncios reais para você abrir na loja de origem.</p>
+            </div>
+          </div>
+          <div class="parts-assistant-note" id="parts-assistant-note" role="note">Entre como cliente para conversar com a IA. A pesquisa manual de peças continua disponível sem login.</div>
+          <div id="parts-assistant-messages" class="parts-assistant-messages" aria-live="polite" aria-relevant="additions">
+            <div class="assistant-message assistant">Posso ajudar a preparar uma busca mais precisa. Por exemplo: “preciso do farol dianteiro direito do Sandero Expression 2016, motor 1.0”. Se faltar algum dado importante, vou perguntar antes de pesquisar.</div>
+          </div>
+          <form id="parts-assistant-form" class="parts-assistant-form">
+            <label for="parts-assistant-message">O que você está procurando?
+              <textarea id="parts-assistant-message" name="message" rows="2" maxlength="1000" placeholder="Descreva a peça, o carro ou sua dúvida…" required></textarea>
+            </label>
+            <div class="parts-assistant-actions">
+              <p id="parts-assistant-status" class="form-status" role="status">A IA precisa de uma chave configurada no servidor para responder.</p>
+              <button class="button button-primary" type="submit">Perguntar e pesquisar</button>
+            </div>
+          </form>
+        </section>
         <div id="parts-results" class="parts-results" aria-live="polite" hidden></div>
         <p class="parts-footnote">Antes de comprar, confira o código OEM, a aplicação exata, a reputação do vendedor, o frete e a política de devolução. O nome do veículo no anúncio não é prova definitiva de compatibilidade.</p>
       </section>
