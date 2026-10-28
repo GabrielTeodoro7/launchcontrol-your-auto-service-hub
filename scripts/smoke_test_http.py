@@ -347,7 +347,7 @@ def main():
     rollback_candidate = "900001,Honda,Civic,2015,2018,1.5,ROLLBACK-CANDIDATE,NAO_VERIFICADA,,,Linha que deve sofrer rollback"
     invalid_row = "999999,Renault,Sandero,2015,2018,1.0,UNKNOWN,NAO_VERIFICADA,,,Peça inexistente"
     post_csrf(admin, "/api/compatibilidade-pecas/importacao",
-              {"csv": csv_header + "\\n" + rollback_candidate + "\\n" + invalid_row},
+              {"csv": csv_header + "\n" + rollback_candidate + "\n" + invalid_row},
               admin_csrf, expected=400)
     fitment_after, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + query)
     rollback_query = urllib.parse.urlencode({"marca": "Honda", "modelo": "Civic", "ano": "2016", "motorizacao": "1.5"})
