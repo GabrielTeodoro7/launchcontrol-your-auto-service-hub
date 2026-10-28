@@ -17,7 +17,17 @@ public class AuthFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) rawResponse;
         String path = request.getRequestURI().substring(request.getContextPath().length());
         if ("/api/auth".equals(path) || "/api/servicos".equals(path) || "/api/health".equals(path)) {
-            chain.doFilter(request, response);
+            if ("POST".equalsIgnoreCase(request.getMethod())) {
+            String expected = (String) session.getAttribute("csrfToken");
+            String supplied = request.getHeader("X-CSRF-Token");
+            if (expected == null || supplied == null || !java.security.MessageDigest.isEqual(
+                    expected.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                    supplied.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+                Json.error(response, 403, "Token CSRF ausente ou inválido.");
+                return;
+            }
+        }
+        chain.doFilter(request, response);
             return;
         }
         var session = request.getSession(false);
