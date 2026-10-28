@@ -266,6 +266,7 @@ async function loadQuotes() {
   }
 }
 
+// Carrega a lista de solicitações que a oficina pode analisar para preparar orçamentos.
 async function loadOfficeRequests() {
   if (!currentUser || currentUser.perfil !== "OFICINA") return;
   const list = document.querySelector("#office-request-list");
@@ -330,6 +331,7 @@ async function loadPayments() {
 
 document.querySelector("#load-payments").addEventListener("click", loadPayments);
 
+// Este evento envia a proposta criada pela oficina.
 document.querySelector("#quote-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -345,6 +347,7 @@ document.querySelector("#quote-form").addEventListener("submit", async event => 
   } catch (error) { status.textContent = error.message; }
 });
 
+// Quando o cliente envia o formulário, os campos são enviados ao endpoint de veículos.
 document.querySelector("#vehicle-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -364,6 +367,7 @@ document.querySelector("#vehicle-form").addEventListener("submit", async event =
   } catch (error) { status.textContent = error.message; }
 });
 
+// Este evento envia uma nova solicitação de orçamento para o servidor.
 document.querySelector("#request-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -406,6 +410,7 @@ document.querySelector("#quote-edit-form").addEventListener("submit", async even
 document.querySelector("#refresh-button").addEventListener("click", loadOrders);
 searchInput.addEventListener("input", renderOrders);
 
+// Registra o relato informado pelo cliente; isso não é um diagnóstico técnico confirmado.
 document.querySelector("#diagnostic-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -423,6 +428,7 @@ document.querySelector("#diagnostic-form").addEventListener("submit", async even
   } catch (error) { status.textContent = error.message; }
 });
 
+// Cria um registro de pagamento demonstrativo, sem efetuar uma cobrança real.
 document.querySelector("#checkout-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -461,6 +467,7 @@ document.querySelector("#auth-toggle").addEventListener("click", () => {
   document.querySelector("#auth-form [name=password]").minLength = authMode === "login" ? 1 : 10;
   document.querySelector("#auth-toggle").textContent = authMode === "login" ? "Criar uma conta de cliente" : "Já tenho conta? Entrar";
 });
+// O formulário de autenticação envia as credenciais ao servidor, que valida o login.
 document.querySelector("#auth-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
