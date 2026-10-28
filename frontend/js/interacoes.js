@@ -1045,6 +1045,7 @@ document.querySelector("#auth-open").addEventListener("click", async () => {
     const response = await fetch("api/auth", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({action:"logout"})});
     if (!response.ok) throw new Error("Não foi possível encerrar a sessão.");
     currentUser = null;
+    window.dispatchEvent(new Event("launchcontrol:session"));
     document.querySelector("#auth-open").textContent = "Entrar";
     applyRoleUI();
     await loadOrders();
@@ -1070,6 +1071,7 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível autenticar.");
     currentUser = result;
+    window.dispatchEvent(new Event("launchcontrol:session"));
     document.querySelector("#auth-open").textContent = result.nome + " · Sair";
     status.textContent = "Autenticado como " + result.perfil + ".";
     authDialog.close();
@@ -1088,6 +1090,7 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     const response = await fetch("api/auth");
     if (response.ok) {
       currentUser = await response.json();
+      window.dispatchEvent(new Event("launchcontrol:session"));
       document.querySelector("#auth-open").textContent = currentUser.nome + " · Sair";
     }
   } catch {}
