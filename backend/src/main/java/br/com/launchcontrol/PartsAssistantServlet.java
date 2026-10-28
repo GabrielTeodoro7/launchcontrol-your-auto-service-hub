@@ -68,6 +68,12 @@ public class PartsAssistantServlet extends HttpServlet {
         String mode = value(request.getParameter("modo"), 20).toLowerCase(Locale.ROOT);
         if (!"pecas".equals(mode) && !"sintomas".equals(mode)) mode = "pecas";
 
+        String message = value(request.getParameter("mensagem"), 1_000);
+        if (message.isBlank()) {
+            Json.error(response, 400, "Descreva a peça ou os sintomas do veículo.");
+            return;
+        }
+
         long now = System.currentTimeMillis();
         Object previousRequest = session.getAttribute("launchAiLastRequestAt");
         if (previousRequest instanceof Long lastRequest && now - lastRequest < 1_500) {
@@ -79,16 +85,10 @@ public class PartsAssistantServlet extends HttpServlet {
         String apiKey = System.getenv("OPENAI_API_KEY");
         if (apiKey == null || apiKey.isBlank()) {
             if ("sintomas".equals(mode)) {
-                writeGuidedFallback(response, messageOrEmpty(request.getParameter("mensagem")), "O provedor de IA não está configurado; esta é uma orientação guiada, não uma resposta gerada por IA.");
+                writeGuidedFallback(response, message, "O provedor de IA não está configurado; esta é uma orientação guiada, não uma resposta gerada por IA.");
             } else {
                 Json.error(response, 503, "O Launch AI ainda não está configurado no servidor. Configure OPENAI_API_KEY; a pesquisa manual continua disponível.");
             }
-            return;
-        }
-
-        String message = value(request.getParameter("mensagem"), 1_000);
-        if (message.isBlank()) {
-            Json.error(response, 400, "Descreva a peça ou os sintomas do veículo.");
             return;
         }
 
