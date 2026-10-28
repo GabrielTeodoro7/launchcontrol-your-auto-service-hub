@@ -237,3 +237,32 @@ CREATE TABLE IF NOT EXISTS ordem_status_historico (
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
   INDEX idx_ordem_historico_data (ordem_id, criado_em)
 );
+
+-- Referências de aplicação de peças. CONFIRMADA exige uma fonte verificável; ausência de correspondência não significa incompatibilidade.
+CREATE TABLE IF NOT EXISTS compatibilidade_pecas (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  peca_id BIGINT NOT NULL,
+  marca_veiculo VARCHAR(80) NOT NULL,
+  modelo_veiculo VARCHAR(100) NOT NULL,
+  ano_inicio SMALLINT,
+  ano_fim SMALLINT,
+  motorizacao VARCHAR(80),
+  codigo_oem VARCHAR(80),
+  status ENUM('CONFIRMADA','INCOMPATIVEL','NAO_VERIFICADA') NOT NULL DEFAULT 'NAO_VERIFICADA',
+  fonte VARCHAR(180),
+  referencia VARCHAR(500),
+  observacoes VARCHAR(500),
+  verificado_por BIGINT,
+  verificado_em DATETIME,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (peca_id) REFERENCES pecas(id),
+  FOREIGN KEY (verificado_por) REFERENCES usuarios(id),
+  CONSTRAINT chk_compatibilidade_ano CHECK (
+    (ano_inicio IS NULL OR ano_inicio BETWEEN 1950 AND 2100) AND
+    (ano_fim IS NULL OR ano_fim BETWEEN 1950 AND 2100) AND
+    (ano_inicio IS NULL OR ano_fim IS NULL OR ano_fim >= ano_inicio)
+  ),
+  INDEX idx_fitment_vehicle (marca_veiculo, modelo_veiculo, ano_inicio, ano_fim),
+  INDEX idx_fitment_oem (codigo_oem),
+  INDEX idx_fitment_part (peca_id, status)
+);
