@@ -898,6 +898,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   const button = form.querySelector('button[type="submit"]');
   const partsForm = document.querySelector("#parts-search-form");
   const parts = new FormData(partsForm);
+  const mode = form.elements.mode.value === "sintomas" ? "sintomas" : "pecas";
   const history = partsAssistantHistory.slice(-6).map(item => item.role + ": " + item.content).join("\n").slice(-2500);
   addPartsAssistantMessage("user", message);
   partsAssistantStatus.textContent = "Analisando a descrição e preparando uma busca segura…";
@@ -905,6 +906,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   try {
     const body = new URLSearchParams({
       mensagem: message,
+      modo: mode,
       historico: history,
       marca: String(parts.get("marca") || ""),
       modelo: String(parts.get("modelo") || ""),
@@ -927,14 +929,20 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
     const orientation = assistantField(answer, "ORIENTACAO");
     const query = assistantField(answer, "CONSULTA");
     const missing = assistantField(answer, "FALTA");
+    const alert = assistantField(answer, "ALERTA");
+    const safetySignal = result.alertaSeguranca === true;
     const visibleAnswer = [
       orientation || answer,
-      missing && missing.toUpperCase() !== "VAZIO" ? "Para continuar, preciso de: " + missing : ""
+      missing && missing.toUpperCase() !== "VAZIO" ? "Para continuar, preciso de: " + missing : "",
+      mode === "sintomas" && (safetySignal || alert.toUpperCase() === "URGENTE")
+        ? "ALERTA DE SEGURANÇA: não continue dirigindo se houver risco. Pare em local seguro, desligue o motor se for seguro e procure assistência profissional ou guincho." : ""
     ].filter(Boolean).join("\n\n");
     addPartsAssistantMessage("assistant", visibleAnswer || "Não consegui montar uma orientação. Tente explicar a peça e o veículo com outras palavras.");
     partsAssistantHistory.push({role:"user",content:message},{role:"assistente",content:visibleAnswer || answer});
     if (partsAssistantHistory.length > 12) partsAssistantHistory.splice(0, partsAssistantHistory.length - 12);
-    if (query && query.toUpperCase() !== "VAZIO" && query.length >= 3) {
+    if (mode === "sintomas") {
+      partsAssistantStatus.textContent = "Orientação preliminar. Não é um diagnóstico técnico; registre o relato ou procure uma oficina quando necessário.";
+    } else if (query && query.toUpperCase() !== "VAZIO" && query.length >= 3) {
       partsAssistantStatus.textContent = "A orientação está pronta; buscando anúncios reais no Mercado Livre.";
       await searchParts(query);
     } else {
