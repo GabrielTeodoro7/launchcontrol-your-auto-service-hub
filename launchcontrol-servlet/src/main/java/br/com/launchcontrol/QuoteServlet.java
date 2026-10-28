@@ -12,9 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @WebServlet("/api/orcamentos/editar")
+/**
+ * Permite consultar ou editar orçamentos, verificando as permissões e o estado do serviço.
+ *
+ * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
+ */
 public class QuoteServlet extends HttpServlet {
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Executado quando o navegador envia dados para criar ou alterar alguma informação.
+$2HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         if (!"OFICINA".equals(request.getSession(false).getAttribute("userRole"))
                 && !"ADMINISTRADOR".equals(request.getSession(false).getAttribute("userRole"))) {
