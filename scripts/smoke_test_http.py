@@ -360,8 +360,13 @@ def main():
     supplier_csrf = login(supplier, "smoke-supplier@example.test")
     stock, _ = json_request(supplier, "/api/estoque?q=Smoke&estoque=todos")
     assert any(row.get("id") == 900001 for row in stock), stock
+    _, _, limited_headers = request(supplier, "/api/auth", method="POST",
+                                     data={"action": "login", "email": "smoke-supplier@example.test",
+                                           "password": TEST_PASSWORD}, expected=429)
+    assert limited_headers.get("Retry-After") == "900", limited_headers
     logout(supplier, supplier_csrf)
-    checks.append("isolamento e consulta de estoque do fornecedor")
+    record(checks, "isolamento e consulta de estoque do fornecedor")
+    record(checks, "limitação de tentativas de login e cabeçalho Retry-After")
 
     print(f"SMOKE TEST OK — {len(checks)} grupos de integração.")
 
