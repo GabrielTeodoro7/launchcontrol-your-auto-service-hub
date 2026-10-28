@@ -9,9 +9,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 @WebServlet("/api/health")
+/**
+ * Oferece uma rota de verificação para descobrir se a aplicação e a conexão com o banco estão respondendo.
+ *
+ * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
+ */
 public class HealthServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
+$2HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         try (Connection ignored = Database.getConnection()) {
             response.setStatus(HttpServletResponse.SC_OK);
