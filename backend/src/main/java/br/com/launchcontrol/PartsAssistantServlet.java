@@ -184,16 +184,17 @@ public class PartsAssistantServlet extends HttpServlet {
                 ? "Há um relato que pode indicar risco de segurança. Não continue dirigindo se o veículo parecer inseguro. Pare em local seguro, desligue o motor se for seguro e procure assistência profissional ou guincho. Esta triagem não confirma a causa."
                 : "Ainda não é possível apontar uma causa. Para organizar o relato, informe quando o sintoma começou, em que situação acontece, se há luzes no painel e se há ruído, cheiro, fumaça ou vazamento. Não substitui uma avaliação profissional.";
         String answer = "ORIENTACAO: " + guidance
-                + "\\nCONSULTA: VAZIO"
-                + "\\nFALTA: quando ocorre; luzes no painel; ruídos, cheiros ou vazamentos observados"
-                + "\\nALERTA: " + (urgent ? "URGENTE" : "NORMAL");
+                + "\nCONSULTA: VAZIO"
+                + "\nFALTA: quando ocorre; luzes no painel; ruídos, cheiros ou vazamentos observados"
+                + "\nALERTA: " + (urgent ? "URGENTE" : "NORMAL");
         response.setContentType("application/json;charset=UTF-8");
         response.setHeader("Cache-Control", "no-store");
-        response.getWriter().write("{\\"resposta\\":" + Json.quote(answer)
-                + ",\\"modo\\":\\"sintomas\\",\\"alertaSeguranca\\":" + urgent
-                + ",\\"fallback\\":true,\\"aviso\\":" + Json.quote(notice) + "}");
+        response.getWriter().write("{\"resposta\":" + Json.quote(answer)
+                + ",\"modo\":\"sintomas\",\"alertaSeguranca\":" + urgent
+                + ",\"fallback\":true,\"aviso\":" + Json.quote(notice) + "}");
     }
-\n    private static boolean hasSafetyCriticalSignal(String message) {
+
+    private static boolean hasSafetyCriticalSignal(String message) {
         String normalized = Normalizer.normalize(message, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
         String[] signals = {
