@@ -4,6 +4,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,7 +18,7 @@ public class DiagnosticServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         String role = (String) session.getAttribute("userRole");
         if (!"CLIENTE".equals(role)) { Json.error(response, 403, "Somente cliente autenticado pode registrar relato inicial."); return; }
         String vehicle = clean(request.getParameter("vehicle"));
@@ -31,7 +32,7 @@ public class DiagnosticServlet extends HttpServlet {
         try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, (Long)session.getAttribute("userId")); ps.setString(2, vehicle);
             ps.setString(3, symptoms); ps.setString(4, priority); ps.executeUpdate();
-            try (var keys = ps.getGeneratedKeys()) {
+            try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (!keys.next()) { Json.error(response, 500, "Relato não recebeu identificador."); return; }
                 response.setStatus(201); response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"id\":" + keys.getLong(1) + ",\"status\":\"RELATO_RECEBIDO\",\"aviso\":\"Relato inicial; não é laudo técnico.\"}");
