@@ -420,14 +420,31 @@ async function loadQuotes() {
       const title = document.createElement("strong"); title.textContent = "Orçamento #" + quote.id + " · Solicitação #" + quote.solicitacaoId;
       const description = document.createElement("p"); description.textContent = quote.descricao || "Serviço automotivo";
       const meta = document.createElement("p"); meta.textContent = (quote.oficina || "Oficina") + " · " + currency(quote.valor) + " · Prazo: " + (quote.prazoDias == null ? "a combinar" : quote.prazoDias + " dia(s)");
+      const breakdown = document.createElement("p");
+      const hasBreakdown = quote.custoPecas != null || quote.custoMaoObra != null;
+      breakdown.textContent = hasBreakdown && (Number(quote.custoPecas || 0) > 0 || Number(quote.custoMaoObra || 0) > 0)
+        ? "Peças e materiais: " + currency(quote.custoPecas || 0) + " · Mão de obra: " + currency(quote.custoMaoObra || 0)
+        : "Detalhamento por item não disponível para esta proposta.";
+      const terms = document.createElement("p");
+      const conditionLabels = {NOVAS:"Peças novas",USADAS:"Peças usadas",RECONDICIONADAS:"Peças recondicionadas",MISTAS:"Peças mistas",NAO_INFORMADA:"Condição das peças não informada"};
+      terms.textContent = [
+        quote.garantiaDias != null ? "Garantia informada: " + quote.garantiaDias + " dia(s)" : "Garantia não informada",
+        quote.validadeDias != null ? "Validade da proposta: " + quote.validadeDias + " dia(s)" : "Validade não informada",
+        conditionLabels[quote.condicaoPecas] || "Condição das peças não informada"
+      ].join(" · ");
       const badge = document.createElement("span"); badge.className = "status-badge " + String(quote.status).toLowerCase(); badge.textContent = quote.status;
-      card.append(title, description, meta, badge);
+      card.append(title, description, meta, breakdown, terms, badge);
       if (currentUser.perfil === "OFICINA" && ["PENDENTE", "ENVIADO"].includes(quote.status)) {
         const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
         edit.addEventListener("click", () => {
           const form = document.querySelector("#quote-edit-form");
           form.elements.id.value = quote.id;
-          form.elements.valor.value = quote.valor;
+          form.elements.valorPecas.value = quote.custoPecas ?? 0;
+          form.elements.valorMaoObra.value = quote.custoMaoObra ?? 0;
+          form.elements.garantiaDias.value = quote.garantiaDias ?? "";
+          form.elements.validadeDias.value = quote.validadeDias ?? "";
+          form.elements.condicaoPecas.value = quote.condicaoPecas || "NAO_INFORMADA";
+          updateQuoteTotalPreview(form, "#quote-edit-total-preview");
           form.elements.prazoDias.value = quote.prazoDias ?? 0;
           form.elements.observacoes.value = quote.observacoes ?? "";
           document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + quote.id + ".";
@@ -620,7 +637,7 @@ document.querySelector("#quote-form").addEventListener("submit", async event => 
   const status = document.querySelector("#quote-form-status");
   status.textContent = "Enviando orçamento…";
   try {
-    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valor:form.get("valor"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valorPecas:form.get("valorPecas"),valorMaoObra:form.get("valorMaoObra"),garantiaDias:form.get("garantiaDias"),validadeDias:form.get("validadeDias"),condicaoPecas:form.get("condicaoPecas"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível enviar orçamento.");
     status.textContent = "Orçamento #" + result.id + " enviado.";
@@ -679,7 +696,7 @@ document.querySelector("#quote-edit-form").addEventListener("submit", async even
   const status = document.querySelector("#quote-edit-status");
   status.textContent = "Salvando alterações…";
   try {
-    const response = await fetch("api/orcamentos/editar", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:form.get("id"),valor:form.get("valor"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const response = await fetch("api/orcamentos/editar", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:form.get("id"),valorPecas:form.get("valorPecas"),valorMaoObra:form.get("valorMaoObra"),garantiaDias:form.get("garantiaDias"),validadeDias:form.get("validadeDias"),condicaoPecas:form.get("condicaoPecas"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível atualizar orçamento.");
     status.textContent = "Orçamento atualizado.";
@@ -1318,3 +1335,18 @@ async function loadFitmentStatus(form) {
     results.textContent = (error.message || "Falha ao consultar compatibilidade.") + " A pesquisa comercial continua disponível, mas não confirma aplicação técnica.";
   }
 }
+
+
+function updateQuoteTotalPreview(form, targetSelector) {
+  const parts = Number(form.elements.valorPecas?.value || 0);
+  const labor = Number(form.elements.valorMaoObra?.value || 0);
+  const target = document.querySelector(targetSelector);
+  if (target) target.value = currency((Number.isFinite(parts) ? parts : 0) + (Number.isFinite(labor) ? labor : 0));
+}
+
+document.querySelector("#quote-form").addEventListener("input", () => {
+  updateQuoteTotalPreview(document.querySelector("#quote-form"), "#quote-total-preview");
+});
+document.querySelector("#quote-edit-form").addEventListener("input", () => {
+  updateQuoteTotalPreview(document.querySelector("#quote-edit-form"), "#quote-edit-total-preview");
+});
