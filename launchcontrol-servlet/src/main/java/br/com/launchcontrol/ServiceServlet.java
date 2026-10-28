@@ -15,10 +15,13 @@ public class ServiceServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
         String search = request.getParameter("q");
         if (search == null) search = "";
         search = search.trim();
+        if (search.length() > 100) {
+            Json.error(response, 400, "A pesquisa pode ter no máximo 100 caracteres.");
+            return;
+        }
 
         String sql = "SELECT id, nome, descricao, preco_base, categoria FROM servicos " +
                      "WHERE ativo = TRUE AND (nome LIKE ? OR COALESCE(descricao, '') LIKE ?) " +
@@ -36,27 +39,19 @@ public class ServiceServlet extends HttpServlet {
                     if (!first) json.append(',');
                     first = false;
                     json.append("{\"id\":").append(results.getLong("id"))
-                        .append(",\"nome\":\"").append(escape(results.getString("nome"))).append("\"")
-                        .append(",\"descricao\":\"").append(escape(results.getString("descricao"))).append("\"")
-                        .append(",\"categoria\":\"").append(escape(results.getString("categoria"))).append("\"")
+                        .append(",\"nome\":").append(Json.quote(results.getString("nome")))
+                        .append(",\"descricao\":").append(Json.quote(results.getString("descricao")))
+                        .append(",\"categoria\":").append(Json.quote(results.getString("categoria")))
                         .append(",\"precoBase\":");
                     java.math.BigDecimal price = results.getBigDecimal("preco_base");
                     json.append(price == null ? "null" : price.toPlainString()).append('}');
                 }
-                json.append(']');
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write(json.toString());
+                response.getWriter().write(json.append(']').toString());
             }
         } catch (SQLException exception) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write("{\"erro\":\"nao_foi_possivel_consultar_servicos\"}");
+            Json.error(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Não foi possível consultar o catálogo de serviços.");
         }
-    }
-
-    private static String escape(String value) {
-        if (value == null) return "";
-        return value.replace("\\", "\\\\").replace("\"", "\\\"")
-                    .replace("\n", "\\n").replace("\r", "\\r")
-                    .replace("\t", "\\t");
     }
 }
