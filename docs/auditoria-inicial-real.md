@@ -14,7 +14,7 @@ Escopo: os dois arquivos ZIP e o PDF enviados nesta conversa, além da estrutura
 
 | Material | Tecnologias observadas | Situação |
 |---|---|---|
-| Frontend Lovable | React, TypeScript, Vite, TanStack Start/Router, componentes UI | A interface está estruturada, mas a store inclui comportamento de demonstração |
+| Frontend web existente | React, TypeScript, Vite, TanStack Start/Router, componentes UI | A interface está estruturada, mas a store inclui comportamento de demonstração |
 | Protótipo acadêmico | HTML, CSS, JavaScript, localStorage | Útil como referência de fluxos; não tem persistência no servidor |
 | Backend | Nenhum backend Java Servlet identificado nos ZIPs | Precisa ser criado |
 | Banco de dados | Nenhum schema SQL/MySQL identificado nos ZIPs | Precisa ser criado |
@@ -47,7 +47,7 @@ Para obedecer à restrição tecnológica mais recente, a nova implementação u
 - C e C++: não serão introduzidos sem necessidade técnica concreta.
 - Sem React, TypeScript, Vite, TanStack Router, Node.js, Express ou Spring Boot na aplicação independente.
 
-A pasta `launchcontrol-servlet/` é independente do frontend Lovable existente. Isso permite manter o material de referência e não quebrar a integração atual do Lovable, que depende de sua stack original.
+A pasta `launchcontrol-servlet/` é uma implementação independente do frontend web existente. Isso mantém as duas estruturas separadas e evita misturar a entrega Java com a arquitetura própria do frontend anterior.
 
 ## 6. Próximas entregas e estado real
 
