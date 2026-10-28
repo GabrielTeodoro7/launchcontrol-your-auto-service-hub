@@ -24,6 +24,7 @@
         <a class="nav-item" href="#garagem-inteligente"><span>▣</span> Minha garagem</a>
         <a class="nav-item" href="#diagnostico"><span>⌁</span> Diagnóstico</a>
         <a class="nav-item" href="#customer-tools"><span>✳</span> Experiência por perfil</a>
+        <a class="nav-item" href="#estoque-inteligente" data-profiles="FORNECEDOR,ADMINISTRADOR"><span>▦</span> Inteligência de estoque</a>
         <a class="nav-item" href="#checkout"><span>▣</span> Checkout demonstrativo</a>
       </nav>
       <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
@@ -168,6 +169,12 @@
       <!-- Lista de orçamentos permitidos ao usuário conectado. -->
       <section class="panel quote-panel" id="quote-panel" hidden>
         <div class="panel-heading"><div><p class="eyebrow">PROPOSTAS</p><h2>Orçamentos</h2><p class="muted">Compare as propostas recebidas. Ao aceitar, uma ordem de serviço é criada.</p></div></div>
+        <div class="quote-comparison-tools">
+          <label>Pesquisar propostas<input id="quote-search" type="search" placeholder="Oficina, serviço ou status"></label>
+          <label>Ordenar por<select id="quote-sort"><option value="recommended">Comparação equilibrada</option><option value="price">Menor preço</option><option value="deadline">Menor prazo</option><option value="newest">Mais recentes</option></select></label>
+          <p class="muted">A comparação usa somente preço, prazo e observações fornecidos no orçamento. Não existe avaliação de reputação verificada nesta base de dados.</p>
+        </div>
+        <div id="quote-comparison-summary" class="comparison-summary" aria-live="polite"></div>
         <div id="quote-list" class="quote-list" aria-live="polite"><p class="muted">Entre para consultar seus orçamentos.</p></div>
       </section>
       <!-- Ferramentas específicas do perfil de oficina. -->
@@ -185,6 +192,21 @@
             <p id="quote-form-status" class="form-status" role="status">O orçamento será gravado no MySQL.</p>
           </form>
         </div>
+      </section>
+      <section class="panel inventory-panel" id="estoque-inteligente" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO DO FORNECEDOR</p><h2>Inteligência de estoque</h2><p class="muted">Acompanhe os itens cadastrados, identifique quantidade baixa e mantenha preço e disponibilidade atualizados.</p></div><button class="button button-outline" id="inventory-refresh" type="button">Atualizar estoque</button></div>
+        <div class="inventory-notice" role="note"><strong>Alertas baseados no estoque cadastrado</strong><p>“Baixo” significa de 1 a 5 unidades e “zerado” significa 0. São limites operacionais simples, não previsões de demanda.</p></div>
+        <div class="inventory-summary" id="inventory-summary" aria-live="polite"></div>
+        <div class="inventory-controls"><label>Pesquisar peça<input id="inventory-search" type="search" placeholder="Nome, marca ou código"></label><label>Disponibilidade<select id="inventory-filter"><option value="todos">Todas</option><option value="baixo">Estoque baixo (1–5)</option><option value="zerado">Estoque zerado</option></select></label></div>
+        <div id="inventory-list" class="inventory-list" aria-live="polite"><p class="muted">Entre com um perfil de fornecedor para consultar o estoque.</p></div>
+        <form id="inventory-form" class="stack-form inventory-form">
+          <h3 id="inventory-form-title">Cadastrar peça no estoque</h3>
+          <input type="hidden" name="id">
+          <div class="parts-fields"><label>Nome da peça<input name="nome" required maxlength="160"></label><label>Marca<input name="marca" maxlength="100"></label><label>Código / OEM<input name="codigo" maxlength="80"></label><label>Preço (R$)<input name="preco" type="number" min="0" max="99999999.99" step="0.01" required></label><label>Quantidade disponível<input name="estoque" type="number" min="0" max="2000000" required></label><label>Ativo<select name="ativo"><option value="true">Sim</option><option value="false">Não</option></select></label></div>
+          <label>Descrição (opcional)<textarea name="descricao" rows="2" maxlength="2000"></textarea></label>
+          <div class="action-group"><button class="button button-primary" type="submit">Salvar peça</button><button class="mini-button" id="inventory-cancel-edit" type="button">Limpar formulário</button></div>
+          <p class="form-status" id="inventory-status" role="status">Os dados serão salvos no estoque existente no MySQL.</p>
+        </form>
       </section>
       <!-- Tabela de ordens, preenchida dinamicamente pelo app.js. -->
       <section class="panel" id="servicos">
