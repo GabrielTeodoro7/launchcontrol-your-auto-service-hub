@@ -92,6 +92,18 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
             return;
         }
 
+        Path directory;
+        try {
+            directory = Path.of(configuredDirectory).toAbsolutePath().normalize();
+        } catch (RuntimeException ex) {
+            Json.error(response, 503, "O diretório configurado para anexos é inválido.");
+            return;
+        }
+        if (isInsidePublicWebRoot(directory)) {
+            Json.error(response, 503, "LC_UPLOAD_DIR deve ficar fora da pasta pública do Tomcat.");
+            return;
+        }
+
         long userId = (Long) session.getAttribute("userId");
         long historyId;
         try {
@@ -139,7 +151,6 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
 
         String originalName = sanitizeName(file.getSubmittedFileName());
         String storedName = UUID.randomUUID() + extension;
-        Path directory = Path.of(configuredDirectory).toAbsolutePath().normalize();
         Path destination = directory.resolve(storedName).normalize();
         if (!destination.getParent().equals(directory)) {
             Json.error(response, 400, "Destino de arquivo inválido.");
@@ -222,7 +233,17 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
             Json.error(response, 500, "Não foi possível consultar o anexo.");
             return;
         }
-        Path root = Path.of(directory).toAbsolutePath().normalize();
+        Path root;
+        try {
+            root = Path.of(directory).toAbsolutePath().normalize();
+        } catch (RuntimeException ex) {
+            Json.error(response, 503, "O diretório configurado para anexos é inválido.");
+            return;
+        }
+        if (isInsidePublicWebRoot(root)) {
+            Json.error(response, 503, "LC_UPLOAD_DIR deve ficar fora da pasta pública do Tomcat.");
+            return;
+        }
         Path file = root.resolve(storedName).normalize();
         if (!file.getParent().equals(root) || !Files.isRegularFile(file)) {
             Json.error(response, 404, "Arquivo não encontrado no armazenamento.");
@@ -235,6 +256,13 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
         response.setHeader("Content-Disposition", "attachment; filename=\"anexo\"; filename*=UTF-8''" + encodedName);
         response.setContentLengthLong(Files.size(file));
         Files.copy(file, response.getOutputStream());
+    }
+
+    private boolean isInsidePublicWebRoot(Path directory) {
+        String webRoot = getServletContext().getRealPath("/");
+        if (webRoot == null || webRoot.isBlank()) return false;
+        Path publicRoot = Path.of(webRoot).toAbsolutePath().normalize();
+        return directory.startsWith(publicRoot);
     }
 
     private static String sanitizeName(String submittedName) {
