@@ -10,14 +10,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@WebServlet("/api/ordens-servico")
 /**
  * Consulta ordens de serviço e permite que perfis autorizados atualizem o andamento respeitando as regras do sistema.
- *
- * Esta classe reúne a lógica de uma responsabilidade específica do sistema.
  */
+@WebServlet("/api/ordens-servico")
 public class OrderServlet extends HttpServlet {
-    // GET é usado principalmente para consultar informações já existentes.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
@@ -66,7 +63,6 @@ public class OrderServlet extends HttpServlet {
             Json.error(response, 500, "Não foi possível consultar as ordens de serviço.");
         }
     }
-    // POST recebe informações para criar ou alterar registros.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
