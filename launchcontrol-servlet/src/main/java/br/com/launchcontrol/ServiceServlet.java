@@ -18,7 +18,8 @@ import java.sql.SQLException;
  */
 public class ServiceServlet extends HttpServlet {
     // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
-$2HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         String search = request.getParameter("q");
         if (search == null) search = "";
