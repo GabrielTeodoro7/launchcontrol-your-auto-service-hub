@@ -8,12 +8,13 @@ Esta matriz relaciona os requisitos do prompt mestre aos artefatos atualmente en
 | Cadastro e login de cliente | AuthServlet.java, PasswordUtil.java | Parcial; sem recuperação de senha, rate limit e cadastro de perfis privilegiados |
 | Sessão e autorização no servidor | AuthFilter.java | Parcial; há autenticação e CSRF para POSTs protegidos, mas faltam políticas completas por módulo |
 | Pesquisa de serviços | ServiceServlet.java | Inicial; consulta catálogo ativo com PreparedStatement |
-| Consulta de ordens por perfil | OrderServlet.java | Inicial; cliente, oficina e administrador com filtros por perfil |
+| Consulta e atualização de ordens | OrderServlet.java | GET filtrado por perfil e POST de andamento/conclusão; teste de integração pendente |
 | Editar orçamento | QuoteServlet.java | Inicial; exige oficina/admin e bloqueia ordem CONCLUIDO |
 | Remover ação de edição para concluídos | src/main/webapp/js/app.js | Implementado no render da lista; ação backend também bloqueia |
-| Cadastro de veículos | schema tem tabela veiculos | CRUD/endpoints e tela pendentes |
+| Cadastro de veículos | VehicleServlet.java e tabela veiculos | GET/POST inicial; editar/remover e tela dedicada pendentes |
 | Cadastro e gestão de peças | schema tem tabela pecas | CRUD/endpoints e tela pendentes |
-| Solicitação e comparação de orçamentos | schema e relações iniciais | Fluxo completo pendente |
+| Solicitação de orçamento | RequestServlet.java | GET/POST inicial, com validação de propriedade do veículo |
+| Criar e decidir orçamento | QuoteCreateServlet.java e QuoteDecisionServlet.java | Envio pela oficina e aceite/recusa do cliente implementados inicialmente; comparação completa pendente |
 | Diagnóstico automotivo | DiagnosticServlet.java | Apenas relato inicial; regras, anexos, laudo e histórico pendentes |
 | Checkout | CheckoutServlet.java | Demonstrativo; orçamento aceito gera pedido e pagamento pendente |
 | Histórico/cancelamento de pagamento demonstrativo | PaymentServlet.java | Inicial; consulta e cancelamento do próprio pagamento pendente de demonstração |
