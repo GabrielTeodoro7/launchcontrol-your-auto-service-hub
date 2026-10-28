@@ -12,7 +12,7 @@ import java.sql.SQLException;
 public final class Database {
     private Database() {}
 
-    public static Connection getConnection() throws SQLException {
+    // Lê as configurações do ambiente e abre uma conexão nova com o MySQL.\n    public static Connection getConnection() throws SQLException {
         String url = System.getenv("LC_DB_URL");
         String user = System.getenv("LC_DB_USER");
         String password = System.getenv("LC_DB_PASSWORD");
