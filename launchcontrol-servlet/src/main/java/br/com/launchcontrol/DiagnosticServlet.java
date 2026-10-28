@@ -10,7 +10,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @WebServlet("/api/diagnosticos")
+/**
+ * Guarda o relato inicial de sintomas informado pelo cliente. Esse relato não substitui uma avaliação feita por um profissional.
+ *
+ * Esta classe reúne a lógica de uma responsabilidade específica do sistema.
+ */
 public class DiagnosticServlet extends HttpServlet {
+    // POST recebe informações para criar ou alterar registros.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
