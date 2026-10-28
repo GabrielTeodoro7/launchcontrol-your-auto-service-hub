@@ -81,8 +81,8 @@ jobs:
           docker run -d --name launchcontrol-tomcat \
             --network host \
             -e 'LC_DB_URL=jdbc:mysql://127.0.0.1:3306/launchcontrol?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \
-            -e 'LC_DB_USER=root' \
-            -e 'LC_DB_PASSWORD=root' \
+            -e 'LC_DB_USER=lc_ci' \
+            -e 'LC_DB_PASSWORD=lc_ci_password' \
             -v "$PWD/backend/target/launchcontrol.war:/usr/local/tomcat/webapps/launchcontrol.war:ro" \
             tomcat:11-jdk25-temurin
 
