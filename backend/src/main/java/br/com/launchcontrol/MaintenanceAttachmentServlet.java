@@ -13,7 +13,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -87,14 +86,19 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
             return;
         }
         String configuredDirectory = System.getenv("LC_UPLOAD_DIR");
-        if (configuredDirectory == null || configuredDirectory.isBlank() || !Path.of(configuredDirectory).isAbsolute()) {
+        if (configuredDirectory == null || configuredDirectory.isBlank()) {
             Json.error(response, 503, "O armazenamento de anexos não está configurado. Defina LC_UPLOAD_DIR como um caminho absoluto fora da pasta pública do Tomcat.");
             return;
         }
 
         Path directory;
         try {
-            directory = Path.of(configuredDirectory).toAbsolutePath().normalize();
+            Path configuredPath = Path.of(configuredDirectory);
+            if (!configuredPath.isAbsolute()) {
+                Json.error(response, 503, "LC_UPLOAD_DIR deve ser um caminho absoluto.");
+                return;
+            }
+            directory = configuredPath.toAbsolutePath().normalize();
         } catch (RuntimeException ex) {
             Json.error(response, 503, "O diretório configurado para anexos é inválido.");
             return;
@@ -172,7 +176,7 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
             }
             Files.createDirectories(directory);
             try (var input = file.getInputStream()) {
-                Files.copy(input, destination, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(input, destination);
             }
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO anexos_manutencao(historico_id,cliente_id,nome_original,nome_armazenado,tipo_mime,tamanho_bytes) " +
@@ -194,6 +198,11 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
                 throw ex;
             }
         } catch (IOException | SQLException ex) {
+            try {
+                Files.deleteIfExists(destination);
+            } catch (IOException cleanupError) {
+                getServletContext().log("Não foi possível remover um arquivo parcial de anexo.", cleanupError);
+            }
             Json.error(response, 500, "Não foi possível armazenar o anexo. Confira a configuração do diretório.");
         }
     }
@@ -208,8 +217,17 @@ public class MaintenanceAttachmentServlet extends HttpServlet {
             return;
         }
         String directory = System.getenv("LC_UPLOAD_DIR");
-        if (directory == null || directory.isBlank() || !Path.of(directory).isAbsolute()) {
+        if (directory == null || directory.isBlank()) {
             Json.error(response, 503, "O armazenamento de anexos não está configurado.");
+            return;
+        }
+        try {
+            if (!Path.of(directory).isAbsolute()) {
+                Json.error(response, 503, "LC_UPLOAD_DIR deve ser um caminho absoluto.");
+                return;
+            }
+        } catch (RuntimeException ex) {
+            Json.error(response, 503, "O diretório configurado para anexos é inválido.");
             return;
         }
         String storedName;
