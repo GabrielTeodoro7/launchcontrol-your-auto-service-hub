@@ -173,6 +173,7 @@ smoke = read("scripts/smoke_test_http.py")
 assert "def multipart_request" in smoke and "LC_UPLOAD_DIR" in read(".github/workflows/launchcontrol-validation.yml"), "Smoke test de anexos não está configurado"
 assert 'ai_result.get("fallback") is True' in smoke, "Fallback do Launch AI não está coberto por smoke test"
 assert "rollback_candidate" in smoke, "Smoke test não cobre rollback de importação CSV mista"
+assert "expected=429" in smoke and "Retry-After" in smoke, "Smoke test não cobre limite de tentativas de login"
 for scenario in ["cadastro", "CSRF", "e-mail duplicado", "logout", "senha incorreta", "login com credencial correta"]:
     assert scenario.lower() in smoke.lower(), "Smoke test sem cenário: " + scenario
 for table in ["configuracao_agenda_oficina", "agendamentos", "preferencias_notificacao", "notificacao_entregas"]:
