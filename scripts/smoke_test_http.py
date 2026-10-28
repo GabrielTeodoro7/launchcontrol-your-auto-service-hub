@@ -344,11 +344,15 @@ def main():
                                     "motorizacao": "1.0", "oem": "SMOKE-FILTER-001"})
     fitment, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + query)
     assert any(row.get("status") == "NAO_VERIFICADA" for row in fitment), fitment
+    rollback_candidate = "900001,Honda,Civic,2015,2018,1.5,ROLLBACK-CANDIDATE,NAO_VERIFICADA,,,Linha que deve sofrer rollback"
     invalid_row = "999999,Renault,Sandero,2015,2018,1.0,UNKNOWN,NAO_VERIFICADA,,,Peça inexistente"
     post_csrf(admin, "/api/compatibilidade-pecas/importacao",
-              {"csv": csv_header + "\n" + invalid_row}, admin_csrf, expected=400)
+              {"csv": csv_header + "\\n" + rollback_candidate + "\\n" + invalid_row},
+              admin_csrf, expected=400)
     fitment_after, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + query)
-    assert len(fitment_after) == 1, fitment_after
+    rollback_query = urllib.parse.urlencode({"marca": "Honda", "modelo": "Civic", "ano": "2016", "motorizacao": "1.5"})
+    rollback_rows, _ = json_request(anonymous, "/api/compatibilidade-pecas?" + rollback_query)
+    assert len(fitment_after) == 1 and not rollback_rows, {"fitment": fitment_after, "rollback": rollback_rows}
     logout(admin, admin_csrf)
     checks.append("importação CSV, compatibilidade e rollback de linha inválida")
 
