@@ -16,12 +16,14 @@ Esta matriz relaciona os requisitos do prompt mestre aos artefatos atualmente en
 | Solicitação e comparação de orçamentos | schema e relações iniciais | Fluxo completo pendente |
 | Diagnóstico automotivo | DiagnosticServlet.java | Apenas relato inicial; regras, anexos, laudo e histórico pendentes |
 | Checkout | CheckoutServlet.java | Demonstrativo; orçamento aceito gera pedido e pagamento pendente |
+| Histórico/cancelamento de pagamento demonstrativo | PaymentServlet.java | Inicial; consulta e cancelamento do próprio pagamento pendente de demonstração |
 | Pagamento real por cartão/PIX | Nenhum provedor conectado | Pendente; não há cobrança, tokenização, QR Code válido ou webhook |
 | Evitar pagamento duplicado | CheckoutServlet.java | Verificação inicial por chave de idempotência e pagamento pendente; precisa teste concorrente |
 | Banco MySQL | database/schema.sql | Schema inicial com 13 tabelas; ainda precisa execução/importação em MySQL |
 | DER editável | docs/diagramas/der-launchcontrol.drawio | Criado com base no schema inicial; precisa revisão e exportação PNG/PDF |
+| Casos de uso — visão geral | docs/diagramas/casos-de-uso-launchcontrol.drawio | Criado como escopo-alvo; ainda precisa validação com requisitos do professor |
 | Diagrama de classes existente | projeto-integrador-main/docs/diagramas/diagrama-classes.drawio no ZIP fornecido | Encontrado nos materiais; revisão e sincronização com implementação pendentes |
-| Casos de uso por perfil | Não localizados nos ZIPs inspecionados | Pendentes |
+| Casos de uso detalhados por perfil | Não localizados nos ZIPs inspecionados | Pendentes; há apenas uma visão geral inicial |
 | Testes automatizados | scripts/check_project.py | Verificação estrutural; não substitui teste funcional/integrado |
 | Compilação WAR | pom.xml e workflow GitHub Actions | Configurado; resultado de execução ainda não confirmado |
 | ZIP final acadêmico | Não gerado | Pendente até execução e revisão final |
