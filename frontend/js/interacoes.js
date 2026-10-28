@@ -941,7 +941,9 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
     partsAssistantHistory.push({role:"user",content:message},{role:"assistente",content:visibleAnswer || answer});
     if (partsAssistantHistory.length > 12) partsAssistantHistory.splice(0, partsAssistantHistory.length - 12);
     if (mode === "sintomas") {
-      partsAssistantStatus.textContent = "Orientação preliminar. Não é um diagnóstico técnico; registre o relato ou procure uma oficina quando necessário.";
+      partsAssistantStatus.textContent = result.fallback
+        ? (result.aviso || "Modo guiado sem IA; não é um diagnóstico técnico.")
+        : "Orientação preliminar. Não é um diagnóstico técnico; registre o relato ou procure uma oficina quando necessário.";
     } else if (query && query.toUpperCase() !== "VAZIO" && query.length >= 3) {
       partsAssistantStatus.textContent = "A orientação está pronta; buscando anúncios reais no Mercado Livre.";
       await searchParts(query);
