@@ -127,3 +127,18 @@ A Garagem Inteligente reúne, por veículo cadastrado, solicitações, orçament
 Para isso, os endpoints existentes passaram a devolver campos adicionais de relacionamento e data; não foram criadas tabelas, colunas, dependências ou novas rotas. A consulta de diagnósticos por GET é restrita ao cliente autenticado e filtra pelo identificador da própria conta.
 
 A tela informa que o histórico é limitado aos registros existentes no LaunchControl e não representa necessariamente o histórico completo ou oficial do veículo. A validação ponta a ponta ainda depende de executar a aplicação em um contêiner Jakarta Servlet conectado ao MySQL e testar com contas e registros de homologação.
+
+## LC Parts — consulta real e assistente de IA
+
+O LC Parts consulta anúncios públicos do Mercado Livre pelo endpoint de busca do backend (/api/pecas/busca). Os cartões mostram dados retornados pela fonte e abrem o anúncio original; preço anunciado não é tratado como preço final, frete desconhecido é sinalizado e a compatibilidade nunca é marcada como confirmada automaticamente.
+
+Shopee, OLX e buscas por lojas oficiais são oferecidas como links para pesquisar diretamente na plataforma de origem. A aplicação não afirma que consultou APIs dessas fontes.
+
+O assistente usa a API Responses da OpenAI no servidor Java, sem expor a chave no navegador e sem adicionar dependências. Para ativá-lo, configure no ambiente do servidor:
+
+- OPENAI_API_KEY: chave privada da API OpenAI.
+- OPENAI_MODEL (opcional): modelo habilitado na sua conta; o padrão é gpt-5-mini.
+
+Não coloque a chave no JavaScript, no repositório ou em mensagens de chat. O uso da API pode gerar custos na conta do provedor. Se a chave não estiver configurada, a busca de peças continua funcionando e o assistente informa a configuração ausente.
+
+O assistente ajuda a formular a pesquisa e pode pedir detalhes como versão, motorização ou código OEM. Ele não confirma compatibilidade nem substitui a conferência do anúncio com o vendedor.

@@ -149,6 +149,12 @@ async function loadOrders() {
 function applyRoleUI() {
   const role = currentUser?.perfil;
   document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
+  const partsAssistantNote = document.querySelector("#parts-assistant-note");
+  if (partsAssistantNote) {
+    partsAssistantNote.textContent = role === "CLIENTE"
+      ? "Ao enviar uma mensagem, o texto e os dados da peça preenchidos são enviados ao provedor de IA configurado no servidor. Não inclua dados pessoais. A pesquisa manual continua disponível."
+      : "Entre como cliente para conversar com a IA. A pesquisa manual de peças continua disponível sem login.";
+  }
   document.querySelector("#garagem-inteligente").hidden = role !== "CLIENTE";
   document.querySelector("#office-tools").hidden = role !== "OFICINA";
   document.querySelector("#quote-panel").hidden = !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(role);
@@ -593,35 +599,20 @@ document.querySelector("#parts-vehicle-select").addEventListener("change", event
   form.elements.motorizacao.value = option.dataset.motorizacao || "";
 });
 
-// A pesquisa abre as fontes originais. O LaunchControl não apresenta preços nem anúncios como se os tivesse consultado.
-document.querySelector("#parts-search-form").addEventListener("submit", event => {
-  event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const values = [
-    form.get("marca"), form.get("modelo"), form.get("ano"), form.get("versao"),
-    form.get("motorizacao"), form.get("peca"), form.get("oem"),
-    form.get("cor") ? "cor " + form.get("cor") : "",
-    form.get("condicao")
-  ].map(value => String(value || "").trim()).filter(Boolean);
-  const query = values.join(" ");
-  if (!query) return;
+// Monta links para as lojas. Esses links abrem a plataforma de origem, sem intermediar a compra.
+function renderExternalPartSources(query, container) {
   const encoded = encodeURIComponent(query);
-  const marketSlug = encoded.replace(/%20/g, "-");
+  const slug = query.trim().split(/\s+/).map(encodeURIComponent).join("-");
   const sources = [
-    {name:"Mercado Livre", detail:"Pesquisa no marketplace", url:"https://lista.mercadolivre.com.br/" + marketSlug},
-    {name:"Shopee", detail:"Pesquisa no marketplace", url:"https://shopee.com.br/search?keyword=" + encoded},
-    {name:"OLX", detail:"Pesquisa de anúncios", url:"https://www.olx.com.br/brasil?q=" + encoded},
-    {name:"Google · lojas e fabricantes", detail:"Busca na web, não um catálogo verificado", url:"https://www.google.com/search?q=" + encodeURIComponent(query + " autopeças loja oficial")}
+    {name:"Mercado Livre",detail:"Abrir todos os resultados da pesquisa",url:"https://lista.mercadolivre.com.br/" + slug},
+    {name:"Shopee",detail:"Pesquisa diretamente na Shopee",url:"https://shopee.com.br/search?keyword=" + encoded},
+    {name:"OLX",detail:"Pesquisar anúncios na OLX",url:"https://www.olx.com.br/brasil?q=" + encoded},
+    {name:"Lojas oficiais",detail:"Busca na web; o LaunchControl não verifica quais resultados são oficiais",url:"https://www.google.com/search?q=" + encodeURIComponent(query + " autopeças loja oficial fabricante")}
   ];
-  const results = document.querySelector("#parts-results");
-  results.replaceChildren();
   const heading = document.createElement("h3");
-  heading.textContent = "Pesquisas prontas para abrir";
-  results.append(heading);
-  const summary = document.createElement("p");
-  summary.className = "muted";
-  summary.textContent = "Termos usados: " + query;
-  results.append(summary);
+  heading.className = "parts-external-heading";
+  heading.textContent = "Pesquisar também em outras plataformas";
+  container.append(heading);
   const list = document.createElement("div");
   list.className = "parts-source-list";
   sources.forEach(source => {
@@ -640,10 +631,220 @@ document.querySelector("#parts-search-form").addEventListener("submit", event =>
     item.append(title, detail, link);
     list.append(item);
   });
-  results.append(list);
+  container.append(list);
+}
+
+function validMercadoLivreUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" &&
+      (url.hostname === "mercadolivre.com.br" || url.hostname.endsWith(".mercadolivre.com.br") ||
+       url.hostname === "mercadolibre.com" || url.hostname.endsWith(".mercadolibre.com"));
+  } catch {
+    return false;
+  }
+}
+
+// Consulta o catálogo público do Mercado Livre pelo backend e mantém o clique na loja original.
+async function searchParts(query) {
+  const results = document.querySelector("#parts-results");
+  const status = document.querySelector("#parts-search-status");
+  results.replaceChildren();
   results.hidden = false;
-  document.querySelector("#parts-search-status").textContent = "Pesquisas preparadas. Os anúncios, preços, frete, estoque e compatibilidade devem ser conferidos em cada fonte.";
+  const heading = document.createElement("h3");
+  heading.textContent = "Resultados de pesquisa";
+  results.append(heading);
+  const querySummary = document.createElement("p");
+  querySummary.className = "muted";
+  querySummary.textContent = "Pesquisa: " + query;
+  results.append(querySummary);
+  const loading = document.createElement("p");
+  loading.className = "parts-live-note";
+  loading.textContent = "Consultando anúncios públicos do Mercado Livre…";
+  results.append(loading);
+  status.textContent = "Consultando o Mercado Livre e preparando links para outras lojas.";
+  let liveSearchSucceeded = false;
+  try {
+    const response = await fetch("api/pecas/busca?q=" + encodeURIComponent(query));
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.erro || "Não foi possível consultar o Mercado Livre agora.");
+    loading.remove();
+    liveSearchSucceeded = true;
+    const items = Array.isArray(data.results) ? data.results : [];
+    const note = document.createElement("p");
+    note.className = "parts-live-note";
+    note.textContent = "Fonte consultada: API pública do Mercado Livre. O valor exibido é o preço anunciado; o frete pode não estar incluído. A compatibilidade com seu veículo não foi confirmada pelo LaunchControl.";
+    results.append(note);
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "A API não retornou anúncios para esta consulta. Você ainda pode abrir a pesquisa diretamente na plataforma.";
+      results.append(empty);
+    } else {
+      const liveList = document.createElement("div");
+      liveList.className = "parts-live-list";
+      items.forEach(item => {
+        if (!item || !validMercadoLivreUrl(item.permalink)) return;
+        const card = document.createElement("article");
+        card.className = "parts-live-item";
+        if (item.thumbnail && /^https:\/\//i.test(item.thumbnail)) {
+          const image = document.createElement("img");
+          image.src = item.thumbnail;
+          image.alt = item.title ? "Imagem do anúncio: " + item.title : "Imagem do produto";
+          image.loading = "lazy";
+          image.referrerPolicy = "no-referrer";
+          image.addEventListener("error", () => image.remove(), {once:true});
+          card.append(image);
+        }
+        const title = document.createElement("strong");
+        title.textContent = item.title || "Anúncio sem título";
+        const price = document.createElement("span");
+        price.className = "parts-live-price";
+        if (typeof item.price === "number" && Number.isFinite(item.price)) {
+          const currencyCode = /^[A-Z]{3}$/.test(item.currency_id || "") ? item.currency_id : "BRL";
+          try {
+            price.textContent = new Intl.NumberFormat("pt-BR", {style:"currency",currency:currencyCode}).format(item.price);
+          } catch {
+            price.textContent = item.price.toLocaleString("pt-BR") + " " + currencyCode;
+          }
+        } else {
+          price.textContent = "Preço não informado";
+        }
+        const seller = document.createElement("p");
+        seller.textContent = item.seller && item.seller.nickname ? "Vendedor: " + item.seller.nickname : "Vendedor: consulte o anúncio";
+        const condition = document.createElement("p");
+        condition.textContent = item.condition === "new" ? "Condição informada: novo" :
+          item.condition === "used" ? "Condição informada: usado" : "Condição: confira no anúncio";
+        const shipping = document.createElement("p");
+        shipping.textContent = item.shipping && item.shipping.free_shipping === true ?
+          "O anúncio informa frete grátis; confirme o CEP e as condições." : "Frete não confirmado nesta comparação.";
+        const link = document.createElement("a");
+        link.className = "button button-outline";
+        link.href = item.permalink;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "Ver anúncio no Mercado Livre";
+        card.append(title, price, seller, condition, shipping, link);
+        liveList.append(card);
+      });
+      if (liveList.childElementCount) results.append(liveList);
+      else {
+        const empty = document.createElement("p");
+        empty.className = "muted";
+        empty.textContent = "A API retornou resultados, mas nenhum link passou pela validação de segurança.";
+        results.append(empty);
+      }
+    }
+  } catch (error) {
+    loading.textContent = error.message || "A consulta em tempo real falhou.";
+    loading.className = "parts-live-note";
+    if (!loading.isConnected) results.append(loading);
+  }
+  renderExternalPartSources(query, results);
+  status.textContent = liveSearchSucceeded
+    ? "Pesquisa concluída. Confira o anúncio original, o frete, a reputação do vendedor e a aplicação exata antes de comprar."
+    : "A consulta em tempo real não ficou disponível nesta tentativa; os links externos continuam disponíveis.";
   results.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+document.querySelector("#parts-search-form").addEventListener("submit", event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const values = [
+    form.get("marca"), form.get("modelo"), form.get("ano"), form.get("versao"),
+    form.get("motorizacao"), form.get("peca"), form.get("oem"),
+    form.get("cor") ? "cor " + form.get("cor") : "",
+    form.get("condicao")
+  ].map(value => String(value || "").trim()).filter(Boolean);
+  const query = values.join(" ");
+  if (query.length < 3) {
+    document.querySelector("#parts-search-status").textContent = "Informe o veículo e a peça para montar a pesquisa.";
+    return;
+  }
+  searchParts(query);
+});
+
+const partsAssistantMessages = document.querySelector("#parts-assistant-messages");
+const partsAssistantStatus = document.querySelector("#parts-assistant-status");
+const partsAssistantHistory = [];
+
+function addPartsAssistantMessage(role, text) {
+  const message = document.createElement("div");
+  message.className = "assistant-message " + role;
+  message.textContent = text;
+  partsAssistantMessages.append(message);
+  partsAssistantMessages.scrollTop = partsAssistantMessages.scrollHeight;
+}
+
+function assistantField(answer, field) {
+  const prefix = field + ":";
+  const line = answer.split(/\r?\n/).find(value => value.trim().toLocaleUpperCase("pt-BR").startsWith(prefix));
+  return line ? line.trim().slice(prefix.length).trim() : "";
+}
+
+document.querySelector("#parts-assistant-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!currentUser || currentUser.perfil !== "CLIENTE") {
+    partsAssistantStatus.textContent = "Entre com uma conta de cliente para usar o assistente IA.";
+    if (!authDialog.open) authDialog.showModal();
+    return;
+  }
+  const form = event.currentTarget;
+  const message = form.elements.message.value.trim();
+  if (!message) return;
+  const button = form.querySelector('button[type="submit"]');
+  const partsForm = document.querySelector("#parts-search-form");
+  const parts = new FormData(partsForm);
+  const history = partsAssistantHistory.slice(-6).map(item => item.role + ": " + item.content).join("\n").slice(-2500);
+  addPartsAssistantMessage("user", message);
+  partsAssistantStatus.textContent = "Analisando a descrição e preparando uma busca segura…";
+  button.disabled = true;
+  try {
+    const body = new URLSearchParams({
+      mensagem: message,
+      historico: history,
+      marca: String(parts.get("marca") || ""),
+      modelo: String(parts.get("modelo") || ""),
+      ano: String(parts.get("ano") || ""),
+      versao: String(parts.get("versao") || ""),
+      motorizacao: String(parts.get("motorizacao") || ""),
+      peca: String(parts.get("peca") || ""),
+      oem: String(parts.get("oem") || ""),
+      cor: String(parts.get("cor") || ""),
+      condicao: String(parts.get("condicao") || "")
+    });
+    const response = await fetch("api/assistente-pecas", {
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser.csrf || ""},
+      body:body.toString()
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível consultar o assistente.");
+    const answer = String(result.resposta || "");
+    const orientation = assistantField(answer, "ORIENTACAO");
+    const query = assistantField(answer, "CONSULTA");
+    const missing = assistantField(answer, "FALTA");
+    const visibleAnswer = [
+      orientation || answer,
+      missing && missing.toUpperCase() !== "VAZIO" ? "Para continuar, preciso de: " + missing : ""
+    ].filter(Boolean).join("\n\n");
+    addPartsAssistantMessage("assistant", visibleAnswer || "Não consegui montar uma orientação. Tente explicar a peça e o veículo com outras palavras.");
+    partsAssistantHistory.push({role:"user",content:message},{role:"assistente",content:visibleAnswer || answer});
+    if (partsAssistantHistory.length > 12) partsAssistantHistory.splice(0, partsAssistantHistory.length - 12);
+    if (query && query.toUpperCase() !== "VAZIO" && query.length >= 3) {
+      partsAssistantStatus.textContent = "A orientação está pronta; buscando anúncios reais no Mercado Livre.";
+      await searchParts(query);
+    } else {
+      partsAssistantStatus.textContent = "Responda à pergunta do assistente para refinar a pesquisa.";
+    }
+    form.reset();
+  } catch (error) {
+    const messageText = error.message || "O assistente não respondeu. A pesquisa manual continua disponível.";
+    addPartsAssistantMessage("assistant", messageText);
+    partsAssistantStatus.textContent = messageText;
+  } finally {
+    button.disabled = false;
+  }
 });
 
 document.querySelector("#garage-vehicle-select").addEventListener("change", loadGarage);
