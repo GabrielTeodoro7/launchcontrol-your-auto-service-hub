@@ -106,6 +106,7 @@ public class InventoryServlet extends HttpServlet {
         }
 
         long userId = (Long) session.getAttribute("userId");
+        boolean creating = itemId == 0;
         try (Connection c = Database.getConnection()) {
             c.setAutoCommit(false);
             try {
@@ -148,12 +149,12 @@ public class InventoryServlet extends HttpServlet {
                     }
                 }
                 try (PreparedStatement ps = c.prepareStatement("INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)")) {
-                    ps.setLong(1, userId); ps.setString(2, itemId > 0 ? "ATUALIZAR_ESTOQUE_PECA" : "CRIAR_ESTOQUE_PECA");
+                    ps.setLong(1, userId); ps.setString(2, creating ? "CRIAR_ESTOQUE_PECA" : "ATUALIZAR_ESTOQUE_PECA");
                     ps.setString(3, "pecas"); ps.setLong(4, itemId);
                     ps.setString(5, "Cadastro de estoque atualizado"); ps.executeUpdate();
                 }
                 c.commit();
-                response.setStatus(itemId > 0 ? 200 : 201);
+                response.setStatus(creating ? 201 : 200);
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write("{\"ok\":true,\"id\":" + itemId + "}");
             } catch (SQLException | RuntimeException ex) {
