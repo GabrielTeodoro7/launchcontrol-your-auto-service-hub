@@ -2,7 +2,7 @@
 
 Esta pasta contém a nova implementação independente da plataforma. Ela segue a restrição tecnológica definida para esta entrega: **Java, Jakarta Servlets, HTML, CSS, JavaScript puro, MySQL/SQL e Python para verificações auxiliares**. Não usa React, TypeScript, Vite, TanStack Router, Node.js, Express ou Spring Boot.
 
-O protótipo Lovable e os materiais acadêmicos originais são preservados como referências; não são o backend desta aplicação.
+O frontend web original e os materiais acadêmicos são mantidos separados; esta pasta contém a implementação independente em Java.
 
 ## Estado real desta entrega
 
