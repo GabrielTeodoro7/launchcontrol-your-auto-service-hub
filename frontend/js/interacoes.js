@@ -421,9 +421,9 @@ async function loadQuotes() {
       const description = document.createElement("p"); description.textContent = quote.descricao || "Serviço automotivo";
       const meta = document.createElement("p"); meta.textContent = (quote.oficina || "Oficina") + " · " + currency(quote.valor) + " · Prazo: " + (quote.prazoDias == null ? "a combinar" : quote.prazoDias + " dia(s)");
       const breakdown = document.createElement("p");
-      const hasBreakdown = quote.custoPecas != null || quote.custoMaoObra != null;
-      breakdown.textContent = hasBreakdown && (Number(quote.custoPecas || 0) > 0 || Number(quote.custoMaoObra || 0) > 0)
-        ? "Peças e materiais: " + currency(quote.custoPecas || 0) + " · Mão de obra: " + currency(quote.custoMaoObra || 0)
+      const hasBreakdown = quote.custoPecas != null || quote.custoMaoObra != null || quote.custoOutros != null;
+      breakdown.textContent = hasBreakdown && (Number(quote.custoPecas || 0) > 0 || Number(quote.custoMaoObra || 0) > 0 || Number(quote.custoOutros || 0) > 0)
+        ? "Peças: " + currency(quote.custoPecas || 0) + " · Mão de obra: " + currency(quote.custoMaoObra || 0) + " · Outros: " + currency(quote.custoOutros || 0)
         : "Detalhamento por item não disponível para esta proposta.";
       const terms = document.createElement("p");
       const conditionLabels = {NOVAS:"Peças novas",USADAS:"Peças usadas",RECONDICIONADAS:"Peças recondicionadas",MISTAS:"Peças mistas",NAO_INFORMADA:"Condição das peças não informada"};
