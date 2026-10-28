@@ -15,7 +15,7 @@ services:
       - ./banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql:/docker-entrypoint-initdb.d/03-002_aprovacoes_notificacoes.sql:ro
       - ./banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql:/docker-entrypoint-initdb.d/04-003_agenda_auditoria_integracoes.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"${MYSQL_ROOT_PASSWORD}\" --silent"]
       interval: 5s
       timeout: 5s
       retries: 30
