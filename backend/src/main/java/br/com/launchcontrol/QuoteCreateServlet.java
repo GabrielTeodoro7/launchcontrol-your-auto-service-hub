@@ -41,13 +41,14 @@ public class QuoteCreateServlet extends HttpServlet {
             "SELECT o.id,o.solicitacao_id,o.valor,o.prazo_dias,o.observacoes,o.status,o.criado_em," +
             "ofi.nome_fantasia,s.descricao AS solicitacao_descricao,s.status AS solicitacao_status," +
             "d.garantia_dias,d.validade_dias,d.condicao_pecas," +
-            "itens.custo_pecas,itens.custo_mao_obra " +
+            "itens.custo_pecas,itens.custo_mao_obra,itens.custo_outros " +
             "FROM orcamentos o JOIN oficinas ofi ON ofi.id=o.oficina_id " +
             "JOIN solicitacoes_orcamento s ON s.id=o.solicitacao_id " +
             "LEFT JOIN orcamento_detalhes d ON d.orcamento_id=o.id " +
             "LEFT JOIN (SELECT orcamento_id," +
             "SUM(CASE WHEN tipo='PECA' THEN quantidade*valor_unitario ELSE 0 END) AS custo_pecas," +
-            "SUM(CASE WHEN tipo='MAO_DE_OBRA' THEN quantidade*valor_unitario ELSE 0 END) AS custo_mao_obra " +
+            "SUM(CASE WHEN tipo='MAO_DE_OBRA' THEN quantidade*valor_unitario ELSE 0 END) AS custo_mao_obra," +
+            "SUM(CASE WHEN tipo='OUTRO' THEN quantidade*valor_unitario ELSE 0 END) AS custo_outros " +
             "FROM orcamento_itens GROUP BY orcamento_id) itens ON itens.orcamento_id=o.id ");
         if ("CLIENTE".equals(role)) sql.append("WHERE s.cliente_id=? ");
         else if ("OFICINA".equals(role)) sql.append("WHERE ofi.usuario_id=? ");
@@ -67,6 +68,7 @@ public class QuoteCreateServlet extends HttpServlet {
                         .append(",\"valor\":").append(decimal(result, "valor"))
                         .append(",\"custoPecas\":").append(nullableDecimal(result, "custo_pecas"))
                         .append(",\"custoMaoObra\":").append(nullableDecimal(result, "custo_mao_obra"))
+                        .append(",\"custoOutros\":").append(nullableDecimal(result, "custo_outros"))
                         .append(",\"garantiaDias\":").append(nullableInteger(result, "garantia_dias"))
                         .append(",\"validadeDias\":").append(nullableInteger(result, "validade_dias"))
                         .append(",\"condicaoPecas\":").append(Json.quote(result.getString("condicao_pecas")))
@@ -103,6 +105,7 @@ public class QuoteCreateServlet extends HttpServlet {
         Integer validityDays;
         BigDecimal partsAmount;
         BigDecimal laborAmount;
+        BigDecimal otherAmount;
         BigDecimal amount;
         boolean itemized;
         String observations = value(request.getParameter("observacoes"));
@@ -114,15 +117,17 @@ public class QuoteCreateServlet extends HttpServlet {
             days = Integer.parseInt(value(request.getParameter("prazoDias")));
             warrantyDays = optionalInteger(request.getParameter("garantiaDias"));
             validityDays = optionalInteger(request.getParameter("validadeDias"));
-            itemized = hasValue(request.getParameter("valorPecas")) || hasValue(request.getParameter("valorMaoObra"));
+            itemized = hasValue(request.getParameter("valorPecas")) || hasValue(request.getParameter("valorMaoObra")) || hasValue(request.getParameter("valorOutro"));
             if (itemized) {
                 partsAmount = parseAmount(request.getParameter("valorPecas"));
                 laborAmount = parseAmount(request.getParameter("valorMaoObra"));
-                amount = partsAmount.add(laborAmount).setScale(2, RoundingMode.UNNECESSARY);
+                otherAmount = parseAmount(request.getParameter("valorOutro"));
+                amount = partsAmount.add(laborAmount).add(otherAmount).setScale(2, RoundingMode.UNNECESSARY);
             } else {
                 amount = parseAmount(request.getParameter("valor"));
                 partsAmount = BigDecimal.ZERO.setScale(2);
                 laborAmount = BigDecimal.ZERO.setScale(2);
+                otherAmount = BigDecimal.ZERO.setScale(2);
             }
             if (requestId < 1 || amount.signum() < 0 || amount.scale() > 2 || days < 0 || days > 365
                     || observations.length() > 2000
@@ -213,6 +218,7 @@ public class QuoteCreateServlet extends HttpServlet {
                 if (itemized) {
                     insertItem(connection, quoteId, "PECA", "Peças e materiais", partsAmount);
                     insertItem(connection, quoteId, "MAO_DE_OBRA", "Mão de obra", laborAmount);
+                    insertItem(connection, quoteId, "OUTRO", "Outros custos", otherAmount);
                 } else {
                     insertItem(connection, quoteId, "OUTRO", "Valor global informado pela oficina", amount);
                 }
