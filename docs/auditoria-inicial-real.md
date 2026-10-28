@@ -54,10 +54,11 @@ A pasta `launchcontrol-servlet/` é independente do frontend Lovable existente. 
 - [x] Inspecionar estrutura e tecnologias dos ZIPs.
 - [x] Identificar telas, mock data e ausência de backend/SQL.
 - [x] Criar uma base Java Servlet + JDBC + MySQL.
+- [x] Implementar primeira etapa de cadastro/login, consulta de ordens, bloqueio de orçamento concluído, relato inicial de diagnóstico e checkout demonstrativo com status pendente.
 - [x] Implementar a primeira etapa de cadastro/login de cliente, sessão, hash PBKDF2 e filtro de autenticação/CSRF. Autorização completa de todos os módulos ainda pendente.
 - [ ] Completar CRUD e regras de negócio por perfil.
 - [x] Criar endpoint inicial de relato de diagnóstico e checkout demonstrativo pendente. Fluxos completos, provedor real e demais estados ainda pendentes.
-- [x] Criar um DER editável inicial alinhado ao schema atual em docs/diagramas/der-launchcontrol.drawio. Revisão semântica de todos os diagramas e exportações PNG/PDF ainda pendentes.
+- [x] Criar DER editável inicial em docs/diagramas/der-launchcontrol.drawio e visão geral de casos de uso em docs/diagramas/casos-de-uso-launchcontrol.drawio. Revisão semântica detalhada por perfil e exportações PNG/PDF ainda pendentes.
 - [ ] Compilar e executar com servidor Servlet e MySQL.
 - [ ] Executar testes de integração e responsividade em navegador. Foram executadas verificações estáticas dos arquivos via GitHub; não substituem testes de execução.
 - [ ] Gerar pacote final depois das verificações.
