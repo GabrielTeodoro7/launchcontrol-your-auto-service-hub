@@ -11,14 +11,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-@WebServlet("/api/orcamentos/decisao")
 /**
  * Processa a decisão do cliente de aceitar ou recusar um orçamento e aplica as regras necessárias.
- *
- * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
  */
+@WebServlet("/api/orcamentos/decisao")
 public class QuoteDecisionServlet extends HttpServlet {
-    // Executado quando o navegador envia dados para criar ou alterar alguma informação.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
