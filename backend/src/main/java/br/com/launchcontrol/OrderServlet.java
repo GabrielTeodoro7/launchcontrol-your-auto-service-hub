@@ -25,6 +25,62 @@ public class OrderServlet extends HttpServlet {
             Json.error(response, 403, "Seu perfil não pode consultar ordens de serviço.");
             return;
         }
+        String historyVehicle = request.getParameter("historicoVeiculoId");
+        if (historyVehicle != null && !historyVehicle.isBlank()) {
+            if (!"CLIENTE".equals(role)) {
+                Json.error(response, 403, "Somente clientes podem consultar a linha do tempo dos próprios veículos.");
+                return;
+            }
+            long vehicleId;
+            try {
+                vehicleId = Long.parseLong(historyVehicle);
+                if (vehicleId < 1) throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                Json.error(response, 400, "Identificador de veículo inválido.");
+                return;
+            }
+            try (Connection connection = Database.getConnection()) {
+                try (PreparedStatement owner = connection.prepareStatement("SELECT id FROM veiculos WHERE id=? AND cliente_id=?")) {
+                    owner.setLong(1, vehicleId);
+                    owner.setLong(2, userId);
+                    try (ResultSet result = owner.executeQuery()) {
+                        if (!result.next()) {
+                            Json.error(response, 404, "Veículo não encontrado na sua garagem.");
+                            return;
+                        }
+                    }
+                }
+                String historySql = "SELECT h.id,h.ordem_id,h.status,h.observacao,h.criado_em,os.codigo " +
+                        "FROM ordem_status_historico h JOIN ordens_servico os ON os.id=h.ordem_id " +
+                        "JOIN solicitacoes_orcamento so ON so.id=os.solicitacao_id " +
+                        "WHERE so.veiculo_id=? AND so.cliente_id=? ORDER BY h.criado_em DESC,h.id DESC LIMIT 200";
+                try (PreparedStatement statement = connection.prepareStatement(historySql)) {
+                    statement.setLong(1, vehicleId);
+                    statement.setLong(2, userId);
+                    try (ResultSet result = statement.executeQuery()) {
+                        StringBuilder out = new StringBuilder("[");
+                        boolean first = true;
+                        while (result.next()) {
+                            if (!first) out.append(',');
+                            first = false;
+                            out.append("{\\"id\\":").append(result.getLong("id"))
+                               .append(",\\"ordemId\\":").append(result.getLong("ordem_id"))
+                               .append(",\\"codigo\\":").append(Json.quote(result.getString("codigo")))
+                               .append(",\\"status\\":").append(Json.quote(result.getString("status")))
+                               .append(",\\"observacao\\":").append(Json.quote(result.getString("observacao")))
+                               .append(",\\"criadoEm\\":").append(Json.quote(result.getString("criado_em"))).append('}');
+                        }
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.setHeader("Cache-Control", "no-store");
+                        response.getWriter().write(out.append(']').toString());
+                        return;
+                    }
+                }
+            } catch (SQLException ex) {
+                Json.error(response, 500, "Não foi possível consultar a linha do tempo da ordem.");
+                return;
+            }
+        }
         StringBuilder sql = new StringBuilder(
           "SELECT os.id,os.codigo,os.status,os.inicio_em,os.previsao_em,os.solicitacao_id," +
           "os.criado_em,os.concluido_em,so.veiculo_id," +
@@ -89,6 +145,7 @@ public class OrderServlet extends HttpServlet {
         try (Connection c = Database.getConnection()) {
             c.setAutoCommit(false);
             try {
+                String previousStatus;
                 try (PreparedStatement ps = c.prepareStatement(
                     "SELECT os.status,ofi.usuario_id FROM ordens_servico os " +
                     "LEFT JOIN orcamentos o ON o.id=os.orcamento_id " +
@@ -96,8 +153,12 @@ public class OrderServlet extends HttpServlet {
                     ps.setLong(1, orderId);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) { c.rollback(); Json.error(response, 404, "Ordem não encontrada."); return; }
-                        if ("CONCLUIDO".equals(rs.getString("status"))) {
+                        previousStatus = rs.getString("status");
+                        if ("CONCLUIDO".equals(previousStatus)) {
                             c.rollback(); Json.error(response, 409, "Uma ordem concluída não pode ser reaberta ou alterada."); return;
+                        }
+                        if (!isValidTransition(previousStatus, nextStatus)) {
+                            c.rollback(); Json.error(response, 409, "A transição solicitada não é permitida para o status atual."); return;
                         }
                         if ("OFICINA".equals(role) && rs.getLong("usuario_id") != userId) {
                             c.rollback(); Json.error(response, 403, "Esta ordem não pertence à sua oficina."); return;
@@ -108,6 +169,14 @@ public class OrderServlet extends HttpServlet {
                     "UPDATE ordens_servico SET status=?,inicio_em=COALESCE(inicio_em,NOW())," +
                     "concluido_em=CASE WHEN ?='CONCLUIDO' THEN NOW() ELSE concluido_em END WHERE id=?")) {
                     ps.setString(1, nextStatus); ps.setString(2, nextStatus); ps.setLong(3, orderId); ps.executeUpdate();
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO ordem_status_historico(ordem_id,status,observacao,usuario_id) VALUES(?,?,?,?)")) {
+                    ps.setLong(1, orderId);
+                    ps.setString(2, nextStatus);
+                    ps.setString(3, "Status alterado de " + previousStatus + " para " + nextStatus + ".");
+                    ps.setLong(4, userId);
+                    ps.executeUpdate();
                 }
                 try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)")) {
