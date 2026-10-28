@@ -439,15 +439,19 @@ async function loadQuotes() {
         edit.addEventListener("click", () => {
           const form = document.querySelector("#quote-edit-form");
           form.elements.id.value = quote.id;
+          const hasBreakdown = quote.custoPecas != null || quote.custoMaoObra != null || quote.custoOutros != null;
           form.elements.valorPecas.value = quote.custoPecas ?? 0;
           form.elements.valorMaoObra.value = quote.custoMaoObra ?? 0;
+          form.elements.valorOutro.value = hasBreakdown ? (quote.custoOutros ?? 0) : quote.valor;
           form.elements.garantiaDias.value = quote.garantiaDias ?? "";
           form.elements.validadeDias.value = quote.validadeDias ?? "";
           form.elements.condicaoPecas.value = quote.condicaoPecas || "NAO_INFORMADA";
           updateQuoteTotalPreview(form, "#quote-edit-total-preview");
           form.elements.prazoDias.value = quote.prazoDias ?? 0;
           form.elements.observacoes.value = quote.observacoes ?? "";
-          document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + quote.id + ".";
+          document.querySelector("#quote-edit-status").textContent = hasBreakdown
+            ? "Editando orçamento #" + quote.id + "."
+            : "Esta proposta antiga não tem itens detalhados; o total existente será mantido em Outros custos se você salvar.";
           quoteEditDialog.showModal();
         });
         const editRow = document.createElement("div"); editRow.className = "quote-actions"; editRow.append(edit); card.append(editRow);
@@ -637,7 +641,7 @@ document.querySelector("#quote-form").addEventListener("submit", async event => 
   const status = document.querySelector("#quote-form-status");
   status.textContent = "Enviando orçamento…";
   try {
-    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valorPecas:form.get("valorPecas"),valorMaoObra:form.get("valorMaoObra"),garantiaDias:form.get("garantiaDias"),validadeDias:form.get("validadeDias"),condicaoPecas:form.get("condicaoPecas"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valorPecas:form.get("valorPecas"),valorMaoObra:form.get("valorMaoObra"),valorOutro:form.get("valorOutro"),garantiaDias:form.get("garantiaDias"),validadeDias:form.get("validadeDias"),condicaoPecas:form.get("condicaoPecas"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível enviar orçamento.");
     status.textContent = "Orçamento #" + result.id + " enviado.";
@@ -1340,8 +1344,9 @@ async function loadFitmentStatus(form) {
 function updateQuoteTotalPreview(form, targetSelector) {
   const parts = Number(form.elements.valorPecas?.value || 0);
   const labor = Number(form.elements.valorMaoObra?.value || 0);
+  const other = Number(form.elements.valorOutro?.value || 0);
   const target = document.querySelector(targetSelector);
-  if (target) target.value = currency((Number.isFinite(parts) ? parts : 0) + (Number.isFinite(labor) ? labor : 0));
+  if (target) target.value = currency((Number.isFinite(parts) ? parts : 0) + (Number.isFinite(labor) ? labor : 0) + (Number.isFinite(other) ? other : 0));
 }
 
 document.querySelector("#quote-form").addEventListener("input", () => {
