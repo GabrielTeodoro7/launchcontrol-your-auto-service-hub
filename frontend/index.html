@@ -80,21 +80,24 @@
         <section class="parts-assistant" aria-labelledby="parts-assistant-title">
           <div class="parts-assistant-heading">
             <div>
-              <p class="eyebrow">ASSISTENTE DE PESQUISA</p>
-              <h3 id="parts-assistant-title">Assistente IA do LC Parts</h3>
-              <p class="muted">Descreva a peça do seu jeito. O assistente ajuda a refinar a busca e, quando possível, pesquisa anúncios reais para você abrir na loja de origem.</p>
+              <p class="eyebrow">COPILOTO AUTOMOTIVO</p>
+              <h3 id="parts-assistant-title">Launch AI</h3>
+              <p class="muted">Organize a busca por peças ou descreva sintomas para receber uma orientação preliminar, perguntas úteis e próximos passos seguros.</p>
             </div>
           </div>
-          <div class="parts-assistant-note" id="parts-assistant-note" role="note">Entre como cliente para conversar com a IA. A pesquisa manual de peças continua disponível sem login.</div>
+          <div class="parts-assistant-note" id="parts-assistant-note" role="note">Entre como cliente para usar o Launch AI. A pesquisa manual de peças e os formulários de relato continuam disponíveis.</div>
           <div id="parts-assistant-messages" class="parts-assistant-messages" aria-live="polite" aria-relevant="additions">
             <div class="assistant-message assistant">Posso ajudar a preparar uma busca mais precisa. Por exemplo: “preciso do farol dianteiro direito do Sandero Expression 2016, motor 1.0”. Se faltar algum dado importante, vou perguntar antes de pesquisar.</div>
           </div>
           <form id="parts-assistant-form" class="parts-assistant-form">
-            <label for="parts-assistant-message">O que você está procurando?
-              <textarea id="parts-assistant-message" name="message" rows="2" maxlength="1000" placeholder="Descreva a peça, o carro ou sua dúvida…" required></textarea>
+            <label for="launch-ai-mode">Como posso ajudar?
+              <select id="launch-ai-mode" name="mode"><option value="pecas">Encontrar uma peça</option><option value="sintomas">Entender sintomas do veículo</option></select>
+            </label>
+            <label for="parts-assistant-message">Descreva sua necessidade
+              <textarea id="parts-assistant-message" name="message" rows="2" maxlength="1000" placeholder="Ex.: meu carro faz um ruído ao frear ou preciso de uma peça específica…" required></textarea>
             </label>
             <div class="parts-assistant-actions">
-              <p id="parts-assistant-status" class="form-status" role="status">A IA precisa de uma chave configurada no servidor para responder.</p>
+              <p id="parts-assistant-status" class="form-status" role="status">O Launch AI usa um provedor externo configurado no servidor; as orientações não substituem avaliação profissional.</p>
               <button class="button button-primary" type="submit">Perguntar e pesquisar</button>
             </div>
           </form>
