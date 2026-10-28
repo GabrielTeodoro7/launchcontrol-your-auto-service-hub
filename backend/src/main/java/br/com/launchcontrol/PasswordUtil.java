@@ -21,26 +21,39 @@ public final class PasswordUtil {
         byte[] salt = new byte[16];
         RANDOM.nextBytes(salt);
         byte[] derived = derive(password, salt, ITERATIONS);
-        return "pbkdf2-sha256$" + ITERATIONS + "$" +
-                Base64.getEncoder().withoutPadding().encodeToString(salt) + "$" +
-                Base64.getEncoder().withoutPadding().encodeToString(derived);
+        try {
+            return "pbkdf2-sha256$" + ITERATIONS + "$" +
+                    Base64.getEncoder().withoutPadding().encodeToString(salt) + "$" +
+                    Base64.getEncoder().withoutPadding().encodeToString(derived);
+        } finally {
+            java.util.Arrays.fill(derived, (byte) 0);
+        }
     }
 
     // Verifica a senha informada em relação ao hash armazenado.
     public static boolean verify(char[] password, String stored) throws GeneralSecurityException {
         if (stored == null) return false;
-        String[] parts = stored.split("\\$");
-        if (parts.length != 4 || !parts[0].equals("pbkdf2-sha256")) return false;
-        int iterations = Integer.parseInt(parts[1]);
-        if (iterations < 100_000 || iterations > 1_000_000) return false;
-        byte[] salt = Base64.getDecoder().decode(parts[2]);
-        byte[] expected = Base64.getDecoder().decode(parts[3]);
-        byte[] actual = derive(password, salt, iterations);
-        if (actual.length != expected.length) return false;
-        int diff = 0;
-        for (int i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
-        java.util.Arrays.fill(actual, (byte)0);
-        return diff == 0;
+        try {
+            String[] parts = stored.split("\\$");
+            if (parts.length != 4 || !parts[0].equals("pbkdf2-sha256")) return false;
+            int iterations = Integer.parseInt(parts[1]);
+            if (iterations < 100_000 || iterations > 1_000_000) return false;
+            byte[] salt = Base64.getDecoder().decode(parts[2]);
+            byte[] expected = Base64.getDecoder().decode(parts[3]);
+            byte[] actual = derive(password, salt, iterations);
+            try {
+                if (actual.length != expected.length) return false;
+                int diff = 0;
+                for (int i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
+                return diff == 0;
+            } finally {
+                java.util.Arrays.fill(actual, (byte) 0);
+                java.util.Arrays.fill(expected, (byte) 0);
+                java.util.Arrays.fill(salt, (byte) 0);
+            }
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     // Deriva o hash com PBKDF2, salt e fator de trabalho configurado.
