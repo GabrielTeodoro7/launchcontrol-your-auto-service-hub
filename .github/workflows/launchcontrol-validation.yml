@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - "feature/**"
+      - "fix/**"
+      - "refactor/**"
   pull_request:
     branches:
       - main
@@ -13,9 +15,23 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-and-smoke-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: launchcontrol
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,13 +53,57 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Structural checks
+      - name: Verify project structure and security contracts
         run: python scripts/verificar_projeto.py
 
-      - name: Check JavaScript syntax
-        run: |
-          node --check frontend/js/interacoes.js
-          node --check frontend/js/recursos-complementares.js
+      - name: Check syntax of every frontend JavaScript file
+        run: find frontend/js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
-      - name: Build WAR
+      - name: Build deployable WAR
         run: mvn -B -f backend/pom.xml clean package
+
+      - name: Apply all SQL scripts to a clean MySQL 8.4 database
+        env:
+          MYSQL_PWD: root
+        run: |
+          set -euo pipefail
+          mysql --protocol=TCP -h 127.0.0.1 -uroot < banco-de-dados/modelo.sql
+          mysql --protocol=TCP -h 127.0.0.1 -uroot < banco-de-dados/migracoes/001_ecossistema_automotivo.sql
+          mysql --protocol=TCP -h 127.0.0.1 -uroot < banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql
+          mysql --protocol=TCP -h 127.0.0.1 -uroot < banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql
+          mysql --protocol=TCP -h 127.0.0.1 -uroot -D launchcontrol -e "SHOW TABLES"
+
+      - name: Deploy WAR to Tomcat 11 with Java 25
+        run: |
+          set -euo pipefail
+          docker run -d --name launchcontrol-tomcat \
+            --add-host=host.docker.internal:host-gateway \
+            -p 8080:8080 \
+            -e 'LC_DB_URL=jdbc:mysql://host.docker.internal:3306/launchcontrol?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \
+            -e 'LC_DB_USER=root' \
+            -e 'LC_DB_PASSWORD=root' \
+            -v "$PWD/backend/target/launchcontrol.war:/usr/local/tomcat/webapps/launchcontrol.war:ro" \
+            tomcat:11-jdk25-temurin
+
+      - name: Wait for the application and run HTTP smoke tests
+        env:
+          LAUNCHCONTROL_BASE_URL: http://127.0.0.1:8080/launchcontrol
+        run: |
+          set -euo pipefail
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --silent --show-error --fail "$LAUNCHCONTROL_BASE_URL/api/health" >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            docker logs launchcontrol-tomcat
+            exit 1
+          fi
+          python scripts/smoke_test_http.py
+
+      - name: Print Tomcat logs on failure
+        if: failure()
+        run: docker logs launchcontrol-tomcat || true
