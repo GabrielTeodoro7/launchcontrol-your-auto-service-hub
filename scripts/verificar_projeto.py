@@ -38,6 +38,15 @@ required = [
     "backend/src/main/webapp/WEB-INF/web.xml",
     "banco-de-dados/migracoes/001_ecossistema_automotivo.sql",
     "banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql",
+    "banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql",
+    "backend/src/main/java/br/com/launchcontrol/DashboardAnalyticsServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/AppointmentServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/FitmentImportServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/AuditTrailServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/NotificationPreferencesServlet.java",
+    "backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java",
+    "backend/src/main/java/br/com/launchcontrol/NotificationOutboxListener.java",
+    "frontend/js/launchcontrol-operacoes.js",
     "docs/PLANO-EVOLUCAO-LAUNCHCONTROL.md",
 ]
 missing = [item for item in required if not (ROOT / item).is_file()]
@@ -130,6 +139,16 @@ assert 'id="maintenance-form"' in html and "api/manutencoes" in js, "CarPassport
 assert 'id="repair-timeline"' in html and "historicoVeiculoId" in js, "Oficina Transparente não conectado à interface"
 assert "planningCoverage" in js and "não a saúde mecânica" in html, "AutoCare Score sem regra explicável ou aviso de escopo"
 assert "preservar a identidade visual" in plan.lower() or "preservação visual" in plan.lower(), "Plano técnico sem diretriz de preservação visual"
+
+
+assert all("CREATE TABLE IF NOT EXISTS " + table in read("banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql") for table in ["configuracao_agenda_oficina", "agendamentos", "preferencias_notificacao", "notificacao_entregas"]), "Migração de agenda e notificações externas incompleta"
+assert '@WebServlet("/api/dashboard/analytics")' in read("backend/src/main/java/br/com/launchcontrol/DashboardAnalyticsServlet.java"), "Dashboard gerencial não conectado ao backend"
+assert '@WebServlet("/api/agendamentos")' in read("backend/src/main/java/br/com/launchcontrol/AppointmentServlet.java") and "FOR UPDATE" in read("backend/src/main/java/br/com/launchcontrol/AppointmentServlet.java"), "Agenda sem endpoint ou bloqueio concorrente"
+assert '@WebServlet("/api/compatibilidade-pecas/importacao")' in read("backend/src/main/java/br/com/launchcontrol/FitmentImportServlet.java") and "MAX_ROWS = 500" in read("backend/src/main/java/br/com/launchcontrol/FitmentImportServlet.java"), "Importação CSV de compatibilidade ausente"
+assert '@WebServlet("/api/auditoria")' in read("backend/src/main/java/br/com/launchcontrol/AuditTrailServlet.java"), "Consulta de auditoria ausente"
+assert "RESEND_API_KEY" in read("backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java") and "WHATSAPP_ACCESS_TOKEN" in read("backend/src/main/java/br/com/launchcontrol/NotificationDelivery.java"), "Canais externos de notificação não configuráveis"
+assert 'src="js/launchcontrol-operacoes.js"' in html and 'id="operations-metrics"' in html and 'id="fitment-import-form"' in html, "Interface de operações avançadas ausente"
+assert "api/dashboard/analytics" in read("frontend/js/launchcontrol-operacoes.js") and "api/agendamentos" in read("frontend/js/launchcontrol-operacoes.js"), "Frontend de agenda ou dashboard não conectado"
 
 print("OK: " + str(len(required)) + " arquivos essenciais presentes.")
 print("OK: dependências Servlet/JDBC, " + str(len(tables)) + " tabelas, hash PBKDF2, CSRF, bloqueio de orçamento concluído e checkout demonstrativo.")
