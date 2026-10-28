@@ -55,4 +55,56 @@ public class OrderServlet extends HttpServlet {
             Json.error(response, 500, "Não foi possível consultar as ordens de serviço.");
         }
     }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var session = request.getSession(false);
+        String role = (String)session.getAttribute("userRole");
+        if (!"OFICINA".equals(role) && !"ADMINISTRADOR".equals(role)) {
+            Json.error(response, 403, "Somente a oficina responsável ou administrador pode atualizar a ordem.");
+            return;
+        }
+        long userId = (Long)session.getAttribute("userId");
+        long orderId;
+        String nextStatus = request.getParameter("status");
+        try { orderId = Long.parseLong(request.getParameter("id")); }
+        catch (Exception ex) { Json.error(response, 400, "ID da ordem inválido."); return; }
+        if (!java.util.Set.of("EM_ANDAMENTO", "AGUARDANDO_PECA", "CONCLUIDO").contains(nextStatus)) {
+            Json.error(response, 400, "Status de destino inválido.");
+            return;
+        }
+        try (Connection c = Database.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = c.prepareStatement(
+                    "SELECT os.status,ofi.usuario_id FROM ordens_servico os " +
+                    "LEFT JOIN orcamentos o ON o.id=os.orcamento_id " +
+                    "LEFT JOIN oficinas ofi ON ofi.id=o.oficina_id WHERE os.id=? FOR UPDATE")) {
+                    ps.setLong(1, orderId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) { c.rollback(); Json.error(response, 404, "Ordem não encontrada."); return; }
+                        if ("CONCLUIDO".equals(rs.getString("status"))) {
+                            c.rollback(); Json.error(response, 409, "Uma ordem concluída não pode ser reaberta ou alterada."); return;
+                        }
+                        if ("OFICINA".equals(role) && rs.getLong("usuario_id") != userId) {
+                            c.rollback(); Json.error(response, 403, "Esta ordem não pertence à sua oficina."); return;
+                        }
+                    }
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE ordens_servico SET status=?,inicio_em=COALESCE(inicio_em,NOW())," +
+                    "concluido_em=CASE WHEN ?='CONCLUIDO' THEN NOW() ELSE concluido_em END WHERE id=?")) {
+                    ps.setString(1, nextStatus); ps.setString(2, nextStatus); ps.setLong(3, orderId); ps.executeUpdate();
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)")) {
+                    ps.setLong(1, userId); ps.setString(2, "ATUALIZAR_ORDEM"); ps.setString(3, "ordens_servico");
+                    ps.setLong(4, orderId); ps.setString(5, "Novo status: " + nextStatus); ps.executeUpdate();
+                }
+                c.commit(); response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\\"ok\\":true,\\"id\\":" + orderId + ",\\"status\\":" + Json.quote(nextStatus) + "}");
+            } catch (SQLException | RuntimeException ex) { c.rollback(); throw ex; }
+            finally { c.setAutoCommit(true); }
+        } catch (SQLException ex) { Json.error(response, 500, "Não foi possível atualizar a ordem."); }
+    }
 }
