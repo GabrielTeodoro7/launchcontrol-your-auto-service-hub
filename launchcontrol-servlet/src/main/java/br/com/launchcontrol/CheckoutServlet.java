@@ -52,9 +52,9 @@ public class CheckoutServlet extends HttpServlet {
                             String existingMode = rs.getString("modo");
                             c.commit();
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\\"paymentId\\":" + paymentId + ",\\"pedidoId\\":" + existingOrderId +
-                                ",\\"valor\\":" + existingAmount.toPlainString() + ",\\"status\\":" + Json.quote(existingStatus) +
-                                ",\\"modo\\":" + Json.quote(existingMode) + ",\\"cobrado\\":false}");
+                            response.getWriter().write("{\"paymentId\":" + paymentId + ",\"pedidoId\":" + existingOrderId +
+                                ",\"valor\":" + existingAmount.toPlainString() + ",\"status\":" + Json.quote(existingStatus) +
+                                ",\"modo\":" + Json.quote(existingMode) + ",\"cobrado\":false}");
                             return;
                         }
                     }
@@ -89,8 +89,8 @@ public class CheckoutServlet extends HttpServlet {
                             java.math.BigDecimal existingAmount = rs.getBigDecimal("valor");
                             c.commit();
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\\"paymentId\\":" + paymentId + ",\\"pedidoId\\":" + orderId +
-                                ",\\"valor\\":" + existingAmount.toPlainString() + ",\\"status\\":\\"PENDENTE\\",\\"modo\\":\\"DEMONSTRACAO\\",\\"cobrado\\":false}");
+                            response.getWriter().write("{\"paymentId\":" + paymentId + ",\"pedidoId\":" + orderId +
+                                ",\"valor\":" + existingAmount.toPlainString() + ",\"status\":\"PENDENTE\",\"modo\":\"DEMONSTRACAO\",\"cobrado\":false}");
                             return;
                         }
                     }
