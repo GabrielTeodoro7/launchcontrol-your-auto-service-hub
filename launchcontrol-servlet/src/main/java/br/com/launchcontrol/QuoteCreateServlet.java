@@ -12,9 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @WebServlet("/api/orcamentos")
+/**
+ * Permite que uma oficina crie uma proposta de orçamento para uma solicitação de cliente.
+ *
+ * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
+ */
 public class QuoteCreateServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
+$2HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         String role = (String)session.getAttribute("userRole");
         long userId = (Long)session.getAttribute("userId");
@@ -53,9 +58,8 @@ public class QuoteCreateServlet extends HttpServlet {
             }
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar orçamentos."); }
     }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    // Executado quando o navegador envia dados para criar ou alterar alguma informação.
+$2HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         if (!"OFICINA".equals(session.getAttribute("userRole"))) {
             Json.error(response, 403, "Somente uma conta de oficina pode enviar orçamento.");
