@@ -30,7 +30,7 @@ public class MaintenanceServlet extends HttpServlet {
         String vehicleParam = request.getParameter("veiculoId");
         StringBuilder sql = new StringBuilder(
                 "SELECT h.id,h.veiculo_id,h.categoria,h.descricao,h.data_servico,h.quilometragem," +
-                "h.custo,h.proxima_data,h.proxima_quilometragem,h.oficina,h.criado_em " +
+                "h.custo,h.proxima_data,h.proxima_quilometragem,h.oficina,h.criado_em,v.quilometragem AS quilometragem_atual " +
                 "FROM historico_manutencao h JOIN veiculos v ON v.id=h.veiculo_id " +
                 "WHERE v.cliente_id=? ");
         if (vehicleParam != null && !vehicleParam.isBlank()) sql.append("AND h.veiculo_id=? ");
