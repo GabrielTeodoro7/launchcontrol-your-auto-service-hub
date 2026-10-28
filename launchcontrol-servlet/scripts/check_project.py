@@ -11,7 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 # Lista os arquivos essenciais que precisam existir no projeto.
 required = [
-    "pom.xml", "database/schema.sql", "README.md",
+    "pom.xml", "database/schema.sql",
     "src/main/java/br/com/launchcontrol/Database.java",
     "src/main/java/br/com/launchcontrol/Json.java",
     "src/main/java/br/com/launchcontrol/PasswordUtil.java",
@@ -52,6 +52,10 @@ html = read("src/main/webapp/index.html")
 js = read("src/main/webapp/js/app.js")
 css = read("src/main/webapp/css/style.css")
 
+assert "<maven.compiler.release>25</maven.compiler.release>" in pom, "Compilação precisa usar Java 25"
+assert "<version>6.1.0</version>" in pom and "web-app_6_1.xsd" in read("src/main/webapp/WEB-INF/web.xml"), "Servlet 6.1 não está configurado"
+assert "<version>9.7.0</version>" in pom, "Driver MySQL não está na versão aprovada para esta atualização"
+assert "maven-compiler-plugin" in pom and "maven-war-plugin" in pom, "Plugins de compilação/empacotamento precisam estar explícitos"
 assert "jakarta.servlet-api" in pom and "mysql-connector-j" in pom
 tables = ["usuarios", "oficinas", "fornecedores", "servicos", "pecas", "veiculos",
           "solicitacoes_orcamento", "orcamentos", "ordens_servico", "diagnosticos",

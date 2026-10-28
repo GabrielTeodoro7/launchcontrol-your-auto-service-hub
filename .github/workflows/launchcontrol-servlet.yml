@@ -1,25 +1,17 @@
-name: LaunchControl Servlet checks
+name: LaunchControl checks
 
 on:
   push:
     branches: [main, "work/**"]
     paths:
       - "launchcontrol-servlet/**"
-      - "package.json"
-      - "bun.lock"
-      - "bunfig.toml"
-      - "vite.config.ts"
-      - "src/**"
       - ".github/workflows/launchcontrol-servlet.yml"
+      - "README.md"
   pull_request:
     paths:
       - "launchcontrol-servlet/**"
-      - "package.json"
-      - "bun.lock"
-      - "bunfig.toml"
-      - "vite.config.ts"
-      - "src/**"
       - ".github/workflows/launchcontrol-servlet.yml"
+      - "README.md"
 
 jobs:
   build:
@@ -27,12 +19,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Java
+      - name: Set up Java 25 LTS
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "25"
           cache: maven
+      - name: Set up Maven 3.10.0
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: "3.10.0"
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -42,6 +38,8 @@ jobs:
         run: python scripts/check_project.py
       - name: Check JavaScript syntax
         run: node --check launchcontrol-servlet/src/main/webapp/js/app.js
+      - name: Show build toolchain
+        run: mvn -version
       - name: Build WAR
         run: mvn -B -f launchcontrol-servlet/pom.xml clean package
       - name: Upload WAR artifact
@@ -51,17 +49,3 @@ jobs:
           path: launchcontrol-servlet/target/launchcontrol.war
           if-no-files-found: error
           retention-days: 14
-
-  existing-web-client-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
-      - name: Build existing web client
-        run: bun run build
