@@ -144,3 +144,8 @@
 .fitment-result:last-child{border-bottom:0}
 .fitment-result strong{display:block;font-size:13px}
 .fitment-result p{margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+
+
+.quote-cost-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#quote-total-preview,#quote-edit-total-preview{font-weight:800;color:var(--orange)}
+@media(max-width:700px){.quote-cost-fields{grid-template-columns:1fr}}
