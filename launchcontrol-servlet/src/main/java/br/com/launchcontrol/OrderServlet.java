@@ -24,7 +24,8 @@ public class OrderServlet extends HttpServlet {
         StringBuilder sql = new StringBuilder(
           "SELECT os.id,os.codigo,os.status,os.inicio_em,os.previsao_em," +
           "u.nome AS cliente,CONCAT(COALESCE(v.marca,''),' ',COALESCE(v.modelo,'')) AS veiculo," +
-          "COALESCE(sv.nome,so.descricao) AS servico,o.valor " +
+          "COALESCE(sv.nome,so.descricao) AS servico,o.valor,o.id AS orcamento_id," +
+          "o.status AS orcamento_status,o.prazo_dias,o.observacoes " +
           "FROM ordens_servico os JOIN solicitacoes_orcamento so ON so.id=os.solicitacao_id " +
           "JOIN usuarios u ON u.id=so.cliente_id LEFT JOIN veiculos v ON v.id=so.veiculo_id " +
           "LEFT JOIN servicos sv ON sv.id=so.servico_id LEFT JOIN orcamentos o ON o.id=os.orcamento_id ");
@@ -46,6 +47,10 @@ public class OrderServlet extends HttpServlet {
                        .append(",\"veiculo\":").append(Json.quote(rs.getString("veiculo")))
                        .append(",\"servico\":").append(Json.quote(rs.getString("servico")))
                        .append(",\"valor\":").append(rs.getBigDecimal("valor") == null ? "null" : rs.getBigDecimal("valor").toPlainString())
+                       .append(",\"orcamentoId\":").append(rs.getObject("orcamento_id") == null ? "null" : rs.getLong("orcamento_id"))
+                       .append(",\"orcamentoStatus\":").append(Json.quote(rs.getString("orcamento_status")))
+                       .append(",\"prazoDias\":").append(rs.getObject("prazo_dias") == null ? "null" : rs.getInt("prazo_dias"))
+                       .append(",\"observacoes\":").append(Json.quote(rs.getString("observacoes")))
                        .append(",\"inicio\":").append(Json.quote(rs.getString("inicio_em")))
                        .append(",\"previsao\":").append(Json.quote(rs.getString("previsao_em"))).append('}');
                 }
