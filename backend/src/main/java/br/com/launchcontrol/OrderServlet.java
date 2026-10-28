@@ -189,4 +189,14 @@ public class OrderServlet extends HttpServlet {
             finally { c.setAutoCommit(true); }
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível atualizar a ordem."); }
     }
+
+    private static boolean isValidTransition(String current, String next) {
+        return switch (current) {
+            case "PENDENTE" -> "EM_ANDAMENTO".equals(next) || "AGUARDANDO_PECA".equals(next);
+            case "EM_ANDAMENTO" -> "AGUARDANDO_PECA".equals(next) || "CONCLUIDO".equals(next);
+            case "AGUARDANDO_PECA" -> "EM_ANDAMENTO".equals(next) || "CONCLUIDO".equals(next);
+            default -> false;
+        };
+    }
+
 }
