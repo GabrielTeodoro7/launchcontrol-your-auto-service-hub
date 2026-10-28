@@ -5,6 +5,9 @@ const searchInput = document.querySelector("#service-search");
 const dialog = document.querySelector("#detail-dialog");
 const detailsTitle = document.querySelector("#detail-title");
 const detailsContent = document.querySelector("#detail-content");
+const authDialog = document.querySelector("#auth-dialog");
+let authMode = "login";
+let currentUser = null;
 let orders = [];
 
 const statusLabels = {
@@ -131,7 +134,7 @@ document.querySelector("#checkout-form").addEventListener("submit", async event 
   status.textContent = "Criando registro demonstrativo pendente…";
   try {
     const response = await fetch("api/checkout", {
-      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Idempotency-Key":crypto.randomUUID().replaceAll("-","")},
       body:new URLSearchParams({quoteId:form.get("quoteId"),method:form.get("method")})
     });
     const result = await response.json();
@@ -140,4 +143,47 @@ document.querySelector("#checkout-form").addEventListener("submit", async event 
   } catch (error) { status.textContent = error.message; }
 });
 
-loadOrders();
+document.querySelector("#auth-open").addEventListener("click", () => authDialog.showModal());
+document.querySelector("#auth-close").addEventListener("click", () => authDialog.close());
+document.querySelector("#auth-toggle").addEventListener("click", () => {
+  authMode = authMode === "login" ? "register" : "login";
+  document.querySelector("#auth-title").textContent = authMode === "login" ? "Entrar" : "Criar conta";
+  document.querySelector("#auth-submit").textContent = authMode === "login" ? "Entrar" : "Cadastrar";
+  document.querySelector("#auth-name-wrap").hidden = authMode !== "register";
+  document.querySelector("#auth-form [name=password]").autocomplete = authMode === "login" ? "current-password" : "new-password";
+  document.querySelector("#auth-form [name=password]").minLength = authMode === "login" ? 1 : 10;
+  document.querySelector("#auth-toggle").textContent = authMode === "login" ? "Criar uma conta de cliente" : "Já tenho conta? Entrar";
+});
+document.querySelector("#auth-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#auth-status");
+  status.textContent = "Processando…";
+  try {
+    const response = await fetch("api/auth", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:authMode,name:form.get("name"),email:form.get("email"),password:form.get("password")})});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível autenticar.");
+    currentUser = result;
+    document.querySelector("#auth-open").textContent = result.nome + " · Sair";
+    status.textContent = "Autenticado como " + result.perfil + ".";
+    authDialog.close();
+    await loadOrders();
+  } catch (error) { status.textContent = error.message; }
+});
+document.querySelector("#auth-open").addEventListener("dblclick", async () => {
+  if (!currentUser) return;
+  await fetch("api/auth",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:"logout"})});
+  currentUser = null;
+  document.querySelector("#auth-open").textContent = "Entrar";
+  loadOrders();
+});
+(async () => {
+  try {
+    const response = await fetch("api/auth");
+    if (response.ok) {
+      currentUser = await response.json();
+      document.querySelector("#auth-open").textContent = currentUser.nome + " · Sair";
+    }
+  } catch {}
+  loadOrders();
+})();
