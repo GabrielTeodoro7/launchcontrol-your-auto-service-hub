@@ -75,6 +75,25 @@ function renderOrders() {
       });
       group.append(edit);
     }
+    if (!completed && ["OFICINA", "ADMINISTRADOR"].includes(currentUser?.perfil)) {
+      const statusSelect = document.createElement("select"); statusSelect.className = "mini-button"; statusSelect.setAttribute("aria-label", "Novo status da ordem");
+      const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Status…"; statusSelect.append(placeholder);
+      for (const statusValue of ["EM_ANDAMENTO", "AGUARDANDO_PECA", "CONCLUIDO"]) {
+        const option = document.createElement("option"); option.value = statusValue; option.textContent = statusLabels[statusValue] || statusValue; statusSelect.append(option);
+      }
+      const updateStatus = document.createElement("button"); updateStatus.type = "button"; updateStatus.className = "mini-button"; updateStatus.textContent = "Atualizar";
+      updateStatus.addEventListener("click", async () => {
+        if (!statusSelect.value) { statusSelect.focus(); return; }
+        updateStatus.disabled = true;
+        try {
+          const response = await fetch("api/ordens-servico", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:order.id,status:statusSelect.value})});
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.erro || "Não foi possível atualizar status.");
+          await loadOrders();
+        } catch (error) { alert(error.message); updateStatus.disabled = false; }
+      });
+      group.append(statusSelect, updateStatus);
+    }
     actions.append(group); tr.append(actions); rows.append(tr);
   }
 }
