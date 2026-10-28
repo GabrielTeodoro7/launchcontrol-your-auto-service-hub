@@ -26,7 +26,8 @@ public class OrderServlet extends HttpServlet {
             return;
         }
         StringBuilder sql = new StringBuilder(
-          "SELECT os.id,os.codigo,os.status,os.inicio_em,os.previsao_em," +
+          "SELECT os.id,os.codigo,os.status,os.inicio_em,os.previsao_em,os.solicitacao_id," +
+          "os.criado_em,os.concluido_em,so.veiculo_id," +
           "u.nome AS cliente,CONCAT(COALESCE(v.marca,''),' ',COALESCE(v.modelo,'')) AS veiculo," +
           "COALESCE(sv.nome,so.descricao) AS servico,o.valor,o.id AS orcamento_id," +
           "o.status AS orcamento_status,o.prazo_dias,o.observacoes " +
@@ -45,6 +46,10 @@ public class OrderServlet extends HttpServlet {
                     if (!first) out.append(',');
                     first = false;
                     out.append("{\"id\":").append(rs.getLong("id"))
+                       .append(",\"solicitacaoId\":").append(rs.getLong("solicitacao_id"))
+                       .append(",\"veiculoId\":").append(rs.getObject("veiculo_id") == null ? "null" : rs.getLong("veiculo_id"))
+                       .append(",\"criadoEm\":").append(Json.quote(rs.getString("criado_em")))
+                       .append(",\"concluidoEm\":").append(Json.quote(rs.getString("concluido_em")))
                        .append(",\"codigo\":").append(Json.quote(rs.getString("codigo")))
                        .append(",\"status\":").append(Json.quote(rs.getString("status")))
                        .append(",\"cliente\":").append(Json.quote(rs.getString("cliente")))

@@ -149,6 +149,7 @@ async function loadOrders() {
 function applyRoleUI() {
   const role = currentUser?.perfil;
   document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
+  document.querySelector("#garagem-inteligente").hidden = role !== "CLIENTE";
   document.querySelector("#office-tools").hidden = role !== "OFICINA";
   document.querySelector("#quote-panel").hidden = !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(role);
   document.querySelector("#checkout").hidden = role !== "CLIENTE";
@@ -164,6 +165,17 @@ async function loadVehicles() {
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível carregar veículos.");
     const partsSelect = document.querySelector("#parts-vehicle-select");
+    const garageSelect = document.querySelector("#garage-vehicle-select");
+    const garagePlaceholder = document.createElement("option");
+    garagePlaceholder.value = "";
+    garagePlaceholder.textContent = result.length ? "Selecione um veículo" : "Cadastre um veículo primeiro";
+    garageSelect.replaceChildren(garagePlaceholder);
+    result.forEach(vehicle => {
+      const option = document.createElement("option");
+      option.value = vehicle.id;
+      option.textContent = vehicle.marca + " " + vehicle.modelo + (vehicle.ano ? " (" + vehicle.ano + ")" : "");
+      garageSelect.append(option);
+    });
     const partsPlaceholder = document.createElement("option");
     partsPlaceholder.value = "";
     partsPlaceholder.textContent = "Preencher manualmente";
@@ -195,6 +207,152 @@ async function loadVehicles() {
 }
 
 // Consulta solicitações do cliente ou da oficina e atualiza a área correspondente.
+// Organiza os registros existentes por veículo, sem afirmar que o histórico seja completo.
+function formatGarageDate(value) {
+  if (!value) return "Data não registrada";
+  const parsed = new Date(String(value).replace(" ", "T"));
+  if (Number.isNaN(parsed.getTime())) return "Data não disponível";
+  return new Intl.DateTimeFormat("pt-BR", {dateStyle:"medium", timeStyle:"short"}).format(parsed);
+}
+
+async function loadGarage() {
+  if (!currentUser || currentUser.perfil !== "CLIENTE") return;
+  const timeline = document.querySelector("#garage-timeline");
+  const diagnostics = document.querySelector("#garage-diagnostics");
+  const summary = document.querySelector("#garage-vehicle-summary");
+  const selectedId = document.querySelector("#garage-vehicle-select").value;
+  timeline.replaceChildren();
+  diagnostics.replaceChildren();
+  summary.replaceChildren();
+  try {
+    const responses = await Promise.all([
+      fetch("api/veiculos"), fetch("api/solicitacoes"), fetch("api/orcamentos"),
+      fetch("api/ordens-servico"), fetch("api/diagnosticos")
+    ]);
+    const labels = ["veículos", "solicitações", "orçamentos", "ordens de serviço", "relatos de diagnóstico"];
+    const data = [];
+    for (let i = 0; i < responses.length; i++) {
+      const result = await responses[i].json();
+      if (!responses[i].ok) throw new Error(result.erro || "Não foi possível carregar " + labels[i] + ".");
+      data.push(result);
+    }
+    const [vehicles, requests, quotes, ordersForGarage, diagnoses] = data;
+    const vehicle = vehicles.find(item => String(item.id) === selectedId);
+    if (vehicle) {
+      const title = document.createElement("strong");
+      title.textContent = [vehicle.marca, vehicle.modelo, vehicle.ano].filter(Boolean).join(" ");
+      const details = document.createElement("p");
+      details.textContent = [
+        vehicle.motorizacao ? "Motor: " + vehicle.motorizacao : "",
+        vehicle.quilometragem != null ? Number(vehicle.quilometragem).toLocaleString("pt-BR") + " km registrados" : "",
+        vehicle.placa ? "Placa: " + vehicle.placa : ""
+      ].filter(Boolean).join(" · ") || "Sem detalhes adicionais cadastrados.";
+      summary.append(title, details);
+    }
+
+    const vehicleRequests = selectedId ? requests.filter(item => String(item.veiculoId) === selectedId) : [];
+    const requestIds = new Set(vehicleRequests.map(item => String(item.id)));
+    const events = [];
+    vehicleRequests.forEach(item => events.push({
+      type:"Solicitação", date:item.criadaEm, sortDate:item.criadaEm,
+      title:"Solicitação #" + item.id, status:item.status,
+      description:item.descricao || "Sem descrição registrada."
+    }));
+    quotes.filter(item => requestIds.has(String(item.solicitacaoId))).forEach(item => events.push({
+      type:"Orçamento", date:item.criadoEm, sortDate:item.criadoEm,
+      title:"Orçamento #" + item.id, status:item.status,
+      description:(item.oficina || "Oficina") + " · " + currency(item.valor) +
+        " · Prazo: " + (item.prazoDias == null ? "a combinar" : item.prazoDias + " dia(s)")
+    }));
+    ordersForGarage.filter(item => requestIds.has(String(item.solicitacaoId))).forEach(item => events.push({
+      type:"Ordem de serviço", date:item.criadoEm, sortDate:item.criadoEm,
+      title:item.codigo || "Ordem #" + item.id, status:item.status,
+      description:(item.servico || "Serviço automotivo") + " · " + currency(item.valor) +
+        (item.concluidoEm ? " · Concluída em " + formatGarageDate(item.concluidoEm) : "")
+    }));
+    events.sort((a,b) => {
+      const first = a.sortDate ? new Date(String(a.sortDate).replace(" ", "T")).getTime() : 0;
+      const second = b.sortDate ? new Date(String(b.sortDate).replace(" ", "T")).getTime() : 0;
+      return second - first;
+    });
+    if (!selectedId) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = vehicles.length ? "Selecione um veículo para consultar seu histórico." : "Você ainda não cadastrou veículos.";
+      timeline.append(empty);
+    } else if (!events.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Não há solicitações, orçamentos ou ordens registrados para este veículo.";
+      timeline.append(empty);
+    } else {
+      events.forEach(event => {
+        const card = document.createElement("article");
+        card.className = "garage-event";
+        const type = document.createElement("span");
+        type.className = "eyebrow";
+        type.textContent = event.type;
+        const title = document.createElement("strong");
+        title.textContent = event.title;
+        const status = document.createElement("span");
+        status.className = "status-badge " + String(event.status || "").toLowerCase();
+        status.textContent = event.status || "Sem status";
+        const description = document.createElement("p");
+        description.textContent = event.description;
+        const date = document.createElement("small");
+        date.textContent = formatGarageDate(event.date);
+        card.append(type, title, status, description, date);
+        timeline.append(card);
+      });
+    }
+
+    if (!diagnoses.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Nenhum relato de diagnóstico registrado.";
+      diagnostics.append(empty);
+    } else {
+      diagnoses.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "garage-event";
+        const title = document.createElement("strong");
+        title.textContent = item.veiculoDescricao || "Veículo não identificado";
+        const status = document.createElement("span");
+        status.className = "status-badge " + String(item.status || "").toLowerCase();
+        status.textContent = item.status || "Sem status";
+        const symptoms = document.createElement("p");
+        symptoms.textContent = item.sintomas || "Sem sintomas registrados.";
+        const priority = document.createElement("small");
+        priority.textContent = "Prioridade: " + (item.prioridade || "não informada") + " · " + formatGarageDate(item.criadoEm);
+        card.append(title, status, symptoms, priority);
+        if (item.hipotesesPreliminares) {
+          const hypotheses = document.createElement("p");
+          hypotheses.textContent = "Hipóteses preliminares: " + item.hipotesesPreliminares;
+          card.append(hypotheses);
+        }
+        if (item.laudoTecnico) {
+          const report = document.createElement("p");
+          report.className = "garage-report";
+          report.textContent = "Laudo técnico registrado: " + item.laudoTecnico;
+          card.append(report);
+        } else {
+          const pending = document.createElement("small");
+          pending.className = "muted";
+          pending.textContent = "Ainda não há laudo técnico registrado.";
+          card.append(pending);
+        }
+        diagnostics.append(card);
+      });
+    }
+  } catch (error) {
+    const message = document.createElement("p");
+    message.className = "form-status";
+    message.textContent = error.message || "Não foi possível carregar a garagem.";
+    timeline.append(message);
+    diagnostics.textContent = "Os relatos não puderam ser carregados nesta tentativa.";
+  }
+}
+
 async function loadRequests() {
   if (!currentUser || currentUser.perfil !== "CLIENTE") return;
   const list = document.querySelector("#request-list");
@@ -265,7 +423,7 @@ async function loadQuotes() {
               const res = await fetch("api/orcamentos/decisao", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({orcamentoId:quote.id,decisao:decision})});
               const data = await res.json();
               if (!res.ok) throw new Error(data.erro || "Não foi possível registrar a decisão.");
-              await loadQuotes(); await loadOrders();
+              await loadQuotes(); await loadOrders(); await loadGarage();
               const formStatus = document.querySelector("#checkout-status");
               if (decision === "ACEITAR") formStatus.textContent = "Orçamento aceito. Use o ID #" + quote.id + " no checkout demonstrativo; nenhum pagamento será cobrado.";
             } catch (error) { alert(error.message); button.disabled = false; }
@@ -379,6 +537,7 @@ document.querySelector("#vehicle-form").addEventListener("submit", async event =
     event.currentTarget.reset();
     status.textContent = "Veículo #" + result.id + " salvo no banco.";
     await loadVehicles();
+    await loadGarage();
   } catch (error) { status.textContent = error.message; }
 });
 
@@ -402,6 +561,7 @@ document.querySelector("#request-form").addEventListener("submit", async event =
     await loadQuotes();
     await loadOfficeRequests();
     await loadPayments();
+    await loadGarage();
   } catch (error) { status.textContent = error.message; }
 });
 
@@ -486,7 +646,8 @@ document.querySelector("#parts-search-form").addEventListener("submit", event =>
   results.scrollIntoView({behavior:"smooth", block:"nearest"});
 });
 
-document.querySelector("#refresh-button").addEventListener("click", loadOrders);
+document.querySelector("#garage-vehicle-select").addEventListener("change", loadGarage);
+document.querySelector("#refresh-button").addEventListener("click", async () => { await loadOrders(); await loadGarage(); });
 searchInput.addEventListener("input", renderOrders);
 
 // Registra o relato informado pelo cliente; isso não é um diagnóstico técnico confirmado.
@@ -564,6 +725,7 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     await loadOrders();
     await loadVehicles();
     await loadRequests();
+    await loadGarage();
   } catch (error) { status.textContent = error.message; }
 });
 (async () => {
@@ -576,8 +738,9 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   } catch {}
   applyRoleUI();
   loadOrders();
-  loadVehicles();
-  loadRequests();
+  await loadVehicles();
+  await loadRequests();
+  await loadGarage();
   loadQuotes();
   loadOfficeRequests();
   loadPayments();

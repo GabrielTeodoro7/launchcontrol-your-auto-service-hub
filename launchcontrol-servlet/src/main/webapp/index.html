@@ -21,6 +21,7 @@
         <a class="nav-item" href="#servicos"><span>▤</span> Serviços</a>
         <a class="nav-item" href="#quote-panel"><span>▧</span> Orçamentos</a>
         <a class="nav-item" href="#lc-parts"><span>⚙</span> LC Parts</a>
+        <a class="nav-item" href="#garagem-inteligente"><span>▣</span> Minha garagem</a>
         <a class="nav-item" href="#diagnostico"><span>⌁</span> Diagnóstico</a>
         <a class="nav-item" href="#checkout"><span>▣</span> Checkout demonstrativo</a>
       </nav>
@@ -107,6 +108,39 @@
             <p id="request-status" class="form-status" role="status">A solicitação será registrada no banco de dados.</p>
             <div id="request-list" class="request-list" aria-live="polite"></div>
           </form>
+        </div>
+      </section>
+      <!-- A garagem organiza apenas os registros que existem para o cliente autenticado. -->
+      <section class="panel smart-garage" id="garagem-inteligente" hidden>
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">HISTÓRICO DO VEÍCULO</p>
+            <h2>Garagem Inteligente</h2>
+            <p class="muted">Consulte solicitações, orçamentos e ordens relacionados ao veículo selecionado.</p>
+          </div>
+        </div>
+        <div class="garage-notice" role="note">
+          <strong>Histórico disponível no LaunchControl</strong>
+          <p>Aqui aparecem somente os registros que a plataforma possui. Isso não representa necessariamente o histórico completo ou oficial do veículo.</p>
+        </div>
+        <label class="garage-vehicle-label" for="garage-vehicle-select">Escolha um veículo cadastrado
+          <select id="garage-vehicle-select">
+            <option value="">Carregando veículos…</option>
+          </select>
+        </label>
+        <div id="garage-vehicle-summary" class="garage-vehicle-summary" aria-live="polite"></div>
+        <div class="garage-columns">
+          <section class="garage-subsection">
+            <h3>Histórico de solicitações e serviços</h3>
+            <div id="garage-timeline" class="garage-timeline" aria-live="polite">
+              <p class="muted">Selecione um veículo para consultar os registros relacionados.</p>
+            </div>
+          </section>
+          <section class="garage-subsection">
+            <h3>Relatos de diagnóstico</h3>
+            <p class="muted">Os relatos são informações fornecidas pelo cliente; somente um laudo registrado pela equipe técnica será apresentado como laudo.</p>
+            <div id="garage-diagnostics" class="garage-diagnostics" aria-live="polite"></div>
+          </section>
         </div>
       </section>
       <!-- Lista de orçamentos permitidos ao usuário conectado. -->

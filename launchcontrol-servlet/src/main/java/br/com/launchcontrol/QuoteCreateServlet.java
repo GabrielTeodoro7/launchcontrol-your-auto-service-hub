@@ -48,6 +48,7 @@ public class QuoteCreateServlet extends HttpServlet {
                        .append(",\"prazoDias\":").append(rs.getObject("prazo_dias") == null ? "null" : rs.getInt("prazo_dias"))
                        .append(",\"observacoes\":").append(Json.quote(rs.getString("observacoes")))
                        .append(",\"status\":").append(Json.quote(rs.getString("status")))
+                       .append(",\"criadoEm\":").append(Json.quote(rs.getString("criado_em")))
                        .append(",\"oficina\":").append(Json.quote(rs.getString("nome_fantasia")))
                        .append(",\"descricao\":").append(Json.quote(rs.getString("solicitacao_descricao")))
                        .append(",\"solicitacaoStatus\":").append(Json.quote(rs.getString("solicitacao_status"))).append('}');

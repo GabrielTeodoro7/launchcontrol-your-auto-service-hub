@@ -26,7 +26,7 @@ public class RequestServlet extends HttpServlet {
             return;
         }
         StringBuilder sql = new StringBuilder(
-          "SELECT s.id,s.descricao,s.status,s.criada_em,u.nome AS cliente," +
+          "SELECT s.id,s.veiculo_id,s.descricao,s.status,s.criada_em,u.nome AS cliente," +
           "CONCAT(COALESCE(v.marca,''),' ',COALESCE(v.modelo,'')) AS veiculo,sv.nome AS servico " +
           "FROM solicitacoes_orcamento s JOIN usuarios u ON u.id=s.cliente_id " +
           "LEFT JOIN veiculos v ON v.id=s.veiculo_id LEFT JOIN servicos sv ON sv.id=s.servico_id ");
@@ -42,6 +42,7 @@ public class RequestServlet extends HttpServlet {
                     if (!first) out.append(',');
                     first = false;
                     out.append("{\"id\":").append(rs.getLong("id"))
+                       .append(",\"veiculoId\":").append(rs.getObject("veiculo_id") == null ? "null" : rs.getLong("veiculo_id"))
                        .append(",\"descricao\":").append(Json.quote(rs.getString("descricao")))
                        .append(",\"status\":").append(Json.quote(rs.getString("status")))
                        .append(",\"cliente\":").append(Json.quote(rs.getString("cliente")))
