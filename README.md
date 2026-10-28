@@ -51,6 +51,34 @@ A plataforma mantém a identidade visual própria do projeto e utiliza uma arqui
 
 ## 🚀 Comece aqui
 
+### Opção mais fácil: iniciar com um clique (Windows)
+
+1. Instale e abra o **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**.
+2. Baixe o projeto e entre na pasta do repositório.
+3. Dê dois cliques em `INICIAR-LAUNCHCONTROL.bat`.
+4. Aguarde o build, o banco MySQL e o Tomcat iniciarem.
+5. Abra **http://localhost:8080/launchcontrol/**.
+
+O Docker cria o banco `launchcontrol`, aplica automaticamente o modelo e as três migrações na ordem correta, cria o usuário local da aplicação, compila o WAR com Java 25 e inicia o Tomcat 11. Não precisa instalar Java, Maven, MySQL ou Tomcat separadamente: o Docker usa as imagens compatíveis.
+
+Também é possível iniciar pelo terminal, na raiz do projeto:
+
+```bash
+docker compose up --build
+```
+
+Para encerrar, pressione `Ctrl+C`. Para iniciar de novo sem reconstruir, use `docker compose up -d`; para ver os logs, `docker compose logs -f aplicacao banco`.
+
+**Primeira execução:** pode levar alguns minutos para baixar imagens e dependências. Mantenha o terminal aberto enquanto usa o modo interativo. As credenciais padrão do Compose são apenas para desenvolvimento local; não as use em produção.
+
+**Se já tentou iniciar e o banco local ficou com esquema incompleto:** pare os containers e recrie o volume local com `docker compose down -v`, depois execute `docker compose up --build`. Atenção: `down -v` apaga os dados guardados no banco e anexos locais deste ambiente Docker. Não execute se precisar preservar esses dados.
+
+O MySQL fica acessível pela máquina na porta `3307` (usuário `launchcontrol_app`, banco `launchcontrol`); a aplicação acessa internamente pela porta `3306`. Se a porta `8080` ou `3307` já estiver ocupada, encerre o serviço que a utiliza ou altere o mapeamento no `docker-compose.yml`.
+
+### Instalação manual
+
+A instalação manual abaixo é opcional; use-a se não quiser utilizar Docker.
+
 ### Instalação rápida
 
 Pré-requisitos: **JDK 25**, **Maven 3.9+**, **MySQL 8.4+** e **Apache Tomcat 11**.
