@@ -48,6 +48,7 @@ required = [
     "backend/src/main/java/br/com/launchcontrol/NotificationOutboxListener.java",
     "frontend/js/launchcontrol-operacoes.js",
     "scripts/smoke_test_http.py",
+    "scripts/seed_smoke_test.sql",
     ".github/workflows/launchcontrol-validation.yml",
     "docs/PLANO-EVOLUCAO-LAUNCHCONTROL.md",
 ]
