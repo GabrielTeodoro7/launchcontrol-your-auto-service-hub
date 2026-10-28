@@ -158,3 +158,32 @@ Se o ambiente de execução ou credenciais estiverem indisponíveis, registrar e
 - **Inspecionado estaticamente:** README, `pom.xml`, interface principal, CSS, JavaScript principal, schema SQL e classes centrais de IA, diagnóstico, autenticação, orçamento, ordem, busca e estoque.
 - **Ainda necessário:** execução de build/testes, integração real com MySQL, teste de navegador e validação com credenciais do provedor externo.
 - **Sem alegação de sucesso de testes:** nenhuma execução de teste é afirmada neste documento.
+
+
+## 10. Implementação registrada após a auditoria
+
+As alterações abaixo foram gravadas na branch `feature/ecossistema-automotivo-inteligente`. A existência dos arquivos não equivale à aprovação de testes de integração.
+
+| Capacidade | Alterações realizadas | Limitações conhecidas |
+|---|---|---|
+| Launch AI | O assistente existente ganhou modo de triagem de sintomas, instruções separadas para peças/sintomas, limite simples por sessão, detecção conservadora de alguns sinais críticos e fallback guiado sem IA para o modo de sintomas. | A detecção de risco por palavras-chave não é exaustiva nem substitui protocolo clínico/mecânico; o modo de peças continua dependendo da chave externa. Falta validar a integração com credenciais reais. |
+| SmartQuote | O backend calcula o total de peças/materiais, mão de obra e outros custos; registra garantia, validade e condição das peças; a comparação exibe esses campos quando disponíveis. A edição atualiza itens e detalhes na mesma transação. | Não há ainda editor de múltiplas linhas arbitrárias; a interface atual detalha três categorias agregadas. Tributos e descontos não foram modelados sem regra de negócio definida. |
+| CarPassport | API e formulário de histórico de manutenção persistido, com data, quilometragem, custo, oficina declarada e próxima manutenção. | Anexos, notas fiscais, fotos, PDF e deduplicação com serviços importados precisam de uma etapa própria. Registros manuais não são verificados automaticamente. |
+| Fitment Engine | Nova tabela de compatibilidade com fonte, referência, status e data de verificação; endpoint de consulta e integração com a pesquisa LC Parts. Registros sem fonte/data são rebaixados para não verificados. | O catálogo nasce vazio e depende de dados confiáveis cadastrados. Nenhuma compatibilidade é inferida de anúncios externos. |
+| Oficina Transparente | Tabela de eventos de status, registro inicial após aceite, registro de transições, validação de transições permitidas e consulta da linha do tempo por veículo. | Fotos/documentos, aprovação formal de serviços adicionais e notificações ainda não foram implementados. Ordens antigas não recebem eventos retroativos inventados. |
+| AutoCare Score | Indicadores de gastos do ano, custo acumulado, manutenção vencida e cobertura dos lembretes. O texto da interface esclarece que não é uma avaliação de saúde mecânica. | O cálculo de quilometragem depende do valor atual cadastrado pelo proprietário; previsões técnicas do fabricante ainda não estão integradas. |
+
+### Migração
+
+As novas tabelas foram separadas em `banco-de-dados/migracoes/001_ecossistema_automotivo.sql`, para execução depois do esquema-base. A migração é aditiva e usa `CREATE TABLE IF NOT EXISTS`; faça backup antes de aplicá-la em banco com dados relevantes.
+
+### Validação ainda pendente
+
+- Build Maven e empacotamento WAR via GitHub Actions.
+- Execução do verificador estrutural e verificação de sintaxe JavaScript.
+- Testes com MySQL real, incluindo aplicação da migração e cenários de autorização.
+- Testes no navegador em desktop e dispositivo móvel.
+- Testes de ponta a ponta do provedor de IA com credenciais de ambiente.
+- Verificação da integridade dos dados de catálogo e da linha do tempo em banco já existente.
+
+Nenhum teste é marcado como aprovado neste documento até que seu resultado seja consultado.
