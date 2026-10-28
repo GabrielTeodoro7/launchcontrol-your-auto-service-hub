@@ -20,6 +20,11 @@ public final class Database {
         if (url == null || user == null || password == null) {
             throw new SQLException("Configure LC_DB_URL, LC_DB_USER e LC_DB_PASSWORD.");
         }
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException exception) {
+            throw new SQLException("MySQL Connector/J não está disponível no classpath da aplicação.", exception);
+        }
         return DriverManager.getConnection(url, user, password);
     }
 }
