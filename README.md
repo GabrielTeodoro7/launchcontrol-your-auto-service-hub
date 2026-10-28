@@ -231,7 +231,7 @@ Sem credenciais válidas, o sistema continua registrando notificações internas
 
 ### Operação avançada
 - Dashboard com contagens e valores derivados de registros existentes.
-- Agenda com expediente por dia, capacidade simultânea e verificação de sobreposição no servidor.
+- Agenda com expediente por dia, capacidade simultânea, fuso horário de Brasília (America/Sao_Paulo) e verificação de sobreposição no servidor; reservas que atravessam a meia-noite são rejeitadas.
 - Histórico de auditoria limitado pelo perfil e pela propriedade dos registros.
 - Preferências de notificações e fila persistente para canais externos opcionais.
 
@@ -354,6 +354,7 @@ Controles presentes no código incluem:
 - SQL parametrizado por `PreparedStatement` nos fluxos consultados.
 - Sessão no servidor, expiração por inatividade e cookie HTTP-only.
 - Token CSRF validado para métodos HTTP que alteram estado.
+- Limitação básica por endereço IP para tentativas de login e cadastro; em produção, complemente com rate limiting na borda e considere proxies reversos.
 - Verificações de propriedade e de perfil nas rotas de negócio.
 - Validações de transição de status e transações para operações sensíveis.
 - Cabeçalhos defensivos de resposta e prevenção de cache de respostas da API.
