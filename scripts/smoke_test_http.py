@@ -53,6 +53,40 @@ def json_request(opener, path, method="GET", data=None, headers=None, expected=2
         raise AssertionError(f"Resposta não é JSON em {method} {path}: {body[:300]}") from error
 
 
+
+def multipart_request(opener, path, fields, file_field, filename, content_type, file_bytes, csrf, expected=200):
+    boundary = "----LaunchControlSmoke" + uuid.uuid4().hex
+    body = bytearray()
+    for name, value in fields.items():
+        body.extend(f"--{boundary}\r\n".encode())
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode())
+        body.extend(str(value).encode("utf-8"))
+        body.extend(b"\r\n")
+    body.extend(f"--{boundary}\r\n".encode())
+    body.extend(f'Content-Disposition: form-data; name="{file_field}"; filename="{filename}"\r\n'.encode())
+    body.extend(f"Content-Type: {content_type}\r\n\r\n".encode())
+    body.extend(file_bytes)
+    body.extend(f"\r\n--{boundary}--\r\n".encode())
+    req = urllib.request.Request(
+        BASE_URL + path,
+        data=bytes(body),
+        method="POST",
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}", "X-CSRF-Token": csrf},
+    )
+    try:
+        with opener.open(req, timeout=15) as response:
+            code, payload = response.status, response.read()
+    except urllib.error.HTTPError as error:
+        code, payload = error.code, error.read()
+    if expected is not None and code != expected:
+        raise AssertionError(f"POST {path} multipart: esperado HTTP {expected}, recebido {code}; corpo={payload[:500]!r}")
+    if not payload:
+        return {}, b""
+    try:
+        return json.loads(payload.decode("utf-8")), payload
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return {}, payload
+
 def login(opener, email):
     result, _ = json_request(opener, "/api/auth", method="POST",
                              data={"action": "login", "email": email, "password": TEST_PASSWORD})
@@ -130,7 +164,12 @@ def main():
     vehicle_id = vehicle["id"]
     vehicles, _ = json_request(customer, "/api/veiculos")
     assert any(v["id"] == vehicle_id for v in vehicles), vehicles
+    ai_result, _ = post_csrf(customer, "/api/assistente-pecas",
+                             {"modo": "sintomas", "mensagem": "O pedal do freio está muito duro e o carro demora para parar"},
+                             csrf)
+    assert ai_result.get("fallback") is True and "não é uma resposta gerada por IA" in ai_result.get("aviso", ""), ai_result
     checks.append("cadastro e consulta de veículo")
+    record(checks, "Launch AI em modo de contingência sem credencial externa")
 
     today = dt.datetime.now(dt.timezone.utc).date()
     maintenance, _ = post_csrf(customer, "/api/manutencoes",
@@ -148,7 +187,19 @@ def main():
                                "priority": "NORMAL"}, csrf, expected=201)
     diagnostics, _ = json_request(customer, "/api/diagnosticos")
     assert any(row.get("id") == diagnostic["id"] for row in diagnostics), diagnostics
-    checks.append("CarPassport e relato de diagnóstico")
+    pdf_bytes = b"%PDF-1.4\\n1 0 obj <<>> endobj\\ntrailer <<>>\\n%%EOF\\n"
+    attachment, _ = multipart_request(customer, "/api/anexos-manutencao",
+                                      {"historicoId": str(maintenance["id"])}, "arquivo",
+                                      "relatorio-smoke.pdf", "application/pdf", pdf_bytes, csrf)
+    attachment_id = attachment["id"]
+    attachment_list, _ = json_request(customer, f"/api/anexos-manutencao?veiculoId={vehicle_id}")
+    assert any(item.get("id") == attachment_id for item in attachment_list), attachment_list
+    _, downloaded, download_headers = request(customer, f"/api/anexos-manutencao?download={attachment_id}")
+    assert downloaded.startswith("%PDF-1.4") and download_headers.get("X-Content-Type-Options") == "nosniff"
+    multipart_request(customer, "/api/anexos-manutencao",
+                      {"historicoId": str(maintenance["id"])}, "arquivo",
+                      "fake.pdf", "application/pdf", b"this is not a PDF", csrf, expected=415)
+    checks.append("CarPassport, relato de diagnóstico e upload/download seguro de anexos")
 
     service_rows, _ = json_request(anonymous, "/api/servicos")
     assert any(row.get("id") == 900001 for row in service_rows), "Serviço de teste não foi semeado"
