@@ -15,6 +15,7 @@ import java.sql.SQLException;
 public class QuoteServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        request.setCharacterEncoding("UTF-8");
         if (!"OFICINA".equals(request.getSession(false).getAttribute("userRole"))
                 && !"ADMINISTRADOR".equals(request.getSession(false).getAttribute("userRole"))) {
             Json.error(response, 403, "Somente a oficina autorizada pode alterar o orçamento.");
@@ -24,11 +25,12 @@ public class QuoteServlet extends HttpServlet {
         long quoteId;
         BigDecimal amount;
         int days;
+        String observations = request.getParameter("observacoes") == null ? "" : request.getParameter("observacoes").trim();
         try {
             quoteId = Long.parseLong(request.getParameter("id"));
             amount = new BigDecimal(request.getParameter("valor"));
             days = Integer.parseInt(request.getParameter("prazoDias"));
-            if (quoteId < 1 || amount.signum() < 0 || amount.scale() > 2 || amount.compareTo(new BigDecimal("99999999.99")) > 0 || days < 0 || days > 365) throw new IllegalArgumentException();
+            if (quoteId < 1 || amount.signum() < 0 || amount.scale() > 2 || amount.compareTo(new BigDecimal("99999999.99")) > 0 || days < 0 || days > 365 || observations.length() > 2000) throw new IllegalArgumentException();
         } catch (Exception ex) {
             Json.error(response, 400, "Informe orçamento, valor e prazo válidos.");
             return;
@@ -58,7 +60,7 @@ public class QuoteServlet extends HttpServlet {
                 try (PreparedStatement ps = c.prepareStatement(
                         "UPDATE orcamentos SET valor=?,prazo_dias=?,observacoes=? WHERE id=?")) {
                     ps.setBigDecimal(1, amount); ps.setInt(2, days);
-                    ps.setString(3, request.getParameter("observacoes"));
+                    ps.setString(3, observations.isEmpty() ? null : observations);
                     ps.setLong(4, quoteId); ps.executeUpdate();
                 }
                 try (PreparedStatement ps = c.prepareStatement(
