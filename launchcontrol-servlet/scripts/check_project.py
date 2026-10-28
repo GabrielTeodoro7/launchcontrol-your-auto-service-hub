@@ -79,7 +79,9 @@ assert 'id="garagem-inteligente"' in html and 'id="garage-timeline"' in html, "I
 assert "async function loadGarage()" in js and "api/diagnosticos" in js, "Histórico da garagem não conectado aos endpoints existentes"
 assert "solicitacaoId" in read("src/main/java/br/com/launchcontrol/OrderServlet.java") and "veiculoId" in read("src/main/java/br/com/launchcontrol/RequestServlet.java"), "Relacionamentos para o histórico da garagem ausentes"
 assert all(host in js for host in ["lista.mercadolivre.com.br", "shopee.com.br/search", "olx.com.br/brasil"]), "Pesquisas externas do LC Parts ausentes"
-assert "noopener noreferrer" in js and "não consulta APIs de marketplaces" in html, "Transparência e segurança dos links externos ausentes"
+assert "noopener noreferrer" in js and "api/pecas/busca" in js, "Busca real e segurança dos links externos ausentes"
+assert "api/assistente-pecas" in js and 'id="parts-assistant-form"' in html, "Assistente IA do LC Parts ausente"
+assert '"/api/pecas/busca".equals(path)' in read("src/main/java/br/com/launchcontrol/AuthFilter.java"), "Consulta pública de peças não liberada no filtro de autenticação"
 assert "A solicitação já foi aceita" in read("src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Proteção contra aceitar múltiplos orçamentos ausente"
 
 print("OK: " + str(len(required)) + " arquivos essenciais presentes.")
