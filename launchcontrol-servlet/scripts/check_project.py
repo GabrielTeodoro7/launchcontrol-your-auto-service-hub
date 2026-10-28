@@ -13,6 +13,7 @@ required = [
     "src/main/java/br/com/launchcontrol/QuoteServlet.java",
     "src/main/java/br/com/launchcontrol/DiagnosticServlet.java",
     "src/main/java/br/com/launchcontrol/CheckoutServlet.java",
+    "src/main/java/br/com/launchcontrol/PaymentServlet.java",
     "src/main/webapp/index.html", "src/main/webapp/css/style.css",
     "src/main/webapp/js/app.js", "src/main/webapp/WEB-INF/web.xml",
 ]
@@ -26,6 +27,7 @@ pom = read("pom.xml")
 schema = read("database/schema.sql")
 quote = read("src/main/java/br/com/launchcontrol/QuoteServlet.java")
 checkout = read("src/main/java/br/com/launchcontrol/CheckoutServlet.java")
+payments = read("src/main/java/br/com/launchcontrol/PaymentServlet.java")
 password = read("src/main/java/br/com/launchcontrol/PasswordUtil.java")
 auth_filter = read("src/main/java/br/com/launchcontrol/AuthFilter.java")
 html = read("src/main/webapp/index.html")
@@ -41,6 +43,7 @@ assert "PBKDF2WithHmacSHA256" in password, "Hash de senha não localizado"
 assert "X-CSRF-Token" in auth_filter, "Proteção CSRF não localizada"
 assert "CONCLUIDO" in quote and "não podem ser alterados" in quote, "Bloqueio de orçamento concluído não localizado"
 assert "PENDENTE" in checkout and "DEMONSTRACAO" in checkout and "cobrado" in checkout, "Checkout demonstrativo precisa permanecer pendente"
+assert "CANCELADO" in payments and "cobrancaRealizada" in payments, "Cancelamento seguro de pagamento demonstrativo não localizado"
 assert 'order.status === "CONCLUIDO"' in js and "if (!completed)" in js, "Ação de edição deve ser omitida para serviços concluídos"
 assert not any(token in (html + js + css).lower() for token in ["react", "typescript", "vite"]), "Tecnologia não autorizada detectada no frontend"
 assert "localStorage" not in js, "O frontend não deve usar localStorage como persistência de domínio"
