@@ -105,6 +105,12 @@ jobs:
             -v "$PWD/backend/target/launchcontrol.war:/usr/local/tomcat/webapps/launchcontrol.war:ro" \
             tomcat:11-jdk25-temurin
 
+      - name: Verify runtime configuration and MySQL DNS
+        run: |
+          set -euo pipefail
+          docker exec launchcontrol-tomcat sh -c 'test -n "$LC_DB_URL" && test -n "$LC_DB_USER" && test -n "$LC_DB_PASSWORD"'
+          docker exec launchcontrol-tomcat getent hosts launchcontrol-mysql
+
       - name: Wait for application health and run business-flow smoke tests
         env:
           LAUNCHCONTROL_BASE_URL: http://127.0.0.1:8080/launchcontrol
