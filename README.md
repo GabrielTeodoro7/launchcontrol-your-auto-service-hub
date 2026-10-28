@@ -69,7 +69,11 @@ O servidor precisa usar uma versão do JDK compatível com o `pom.xml` e consegu
 - **SmartQuote:** separa peças e materiais, mão de obra e outros custos; o backend calcula o total e registra garantia, validade e condição das peças quando informadas.
 - **CarPassport:** registra manutenções informadas pelo cliente, com custos, quilometragem e próximas datas/quilometragens. Os registros declarados não são apresentados como laudos verificados.
 - **Fitment Engine:** consulta o catálogo local de aplicação de peças e mostra fonte e estado de verificação. Ausência de registros não significa incompatibilidade.
-- **Oficina Transparente:** registra transições de status das ordens e disponibiliza uma linha do tempo por veículo. Não inventa eventos históricos retroativos.
+- **Oficina Transparente:** registra transições de status das ordens e disponibiliza uma linha do tempo por veículo. Notifica cliente e oficina sobre decisões de orçamento e mudanças de status, sem inventar eventos históricos retroativos.
+- **Serviços adicionais:** a oficina envia propostas com descrição e valor; o cliente aceita ou recusa explicitamente. A conclusão da ordem é bloqueada enquanto houver propostas pendentes.
+- **Totais atualizados:** ordens exibem o valor-base somado aos serviços adicionais aceitos, sem sobrescrever o orçamento original.
+- **Avaliações verificadas:** clientes podem avaliar uma única vez cada ordem concluída que lhes pertence; a interface mostra notas e comentários registrados.
+- **CarPassport complementar:** exporta o histórico por meio da impressão do navegador e permite anexar PDF/PNG/JPEG de até 5 MB. Configure `LC_UPLOAD_DIR` fora da pasta pública do Tomcat. Lembretes usam apenas a próxima data e quilometragem informadas pelo usuário.
 - **AutoCare Score:** mostra indicadores explicáveis de planejamento, gastos registrados e cobertura dos lembretes; não avalia a saúde mecânica do veículo.
 
 O catálogo de compatibilidade depende de referências confiáveis cadastradas no banco. As integrações de IA dependem da configuração do provedor. A presença do código não comprova, por si só, funcionamento em produção.
