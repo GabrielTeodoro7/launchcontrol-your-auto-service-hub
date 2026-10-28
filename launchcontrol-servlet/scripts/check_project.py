@@ -10,6 +10,10 @@ required = [
     "src/main/java/br/com/launchcontrol/AuthServlet.java",
     "src/main/java/br/com/launchcontrol/AuthFilter.java",
     "src/main/java/br/com/launchcontrol/OrderServlet.java",
+    "src/main/java/br/com/launchcontrol/VehicleServlet.java",
+    "src/main/java/br/com/launchcontrol/RequestServlet.java",
+    "src/main/java/br/com/launchcontrol/QuoteCreateServlet.java",
+    "src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java",
     "src/main/java/br/com/launchcontrol/QuoteServlet.java",
     "src/main/java/br/com/launchcontrol/DiagnosticServlet.java",
     "src/main/java/br/com/launchcontrol/CheckoutServlet.java",
@@ -42,6 +46,11 @@ assert all("CREATE TABLE IF NOT EXISTS " + table in schema for table in tables),
 assert "PBKDF2WithHmacSHA256" in password, "Hash de senha não localizado"
 assert "X-CSRF-Token" in auth_filter, "Proteção CSRF não localizada"
 assert "CONCLUIDO" in quote and "não podem ser alterados" in quote, "Bloqueio de orçamento concluído não localizado"
+assert "CONCLUIDO" in read("src/main/java/br/com/launchcontrol/OrderServlet.java"), "Bloqueio de reabertura de ordem concluída não localizado"
+assert "cliente_id" in read("src/main/java/br/com/launchcontrol/VehicleServlet.java"), "Isolamento de veículos por cliente não localizado"
+assert "FOR UPDATE" in read("src/main/java/br/com/launchcontrol/RequestServlet.java"), "Validação de propriedade de veículo na solicitação não localizada"
+assert "CRIAR_ORCAMENTO" in read("src/main/java/br/com/launchcontrol/QuoteCreateServlet.java"), "Auditoria de criação de orçamento não localizada"
+assert "ACEITAR" in read("src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Decisão de orçamento não localizada"
 assert "PENDENTE" in checkout and "DEMONSTRACAO" in checkout and "cobrado" in checkout, "Checkout demonstrativo precisa permanecer pendente"
 assert "CANCELADO" in payments and "cobrancaRealizada" in payments, "Cancelamento seguro de pagamento demonstrativo não localizado"
 assert 'order.status === "CONCLUIDO"' in js and "if (!completed)" in js, "Ação de edição deve ser omitida para serviços concluídos"
