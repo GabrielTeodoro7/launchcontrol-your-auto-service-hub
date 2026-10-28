@@ -53,3 +53,26 @@
 .parts-source .button{margin-top:auto;text-decoration:none;font-size:12px}
 @media(max-width:1000px){.parts-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.parts-source-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.parts-fields,.parts-source-list{grid-template-columns:1fr}.parts-source p{min-height:0}}
+
+
+/* Garagem Inteligente: apresenta dados relacionados sem alterar o padrão visual existente. */
+.smart-garage{scroll-margin-top:20px}
+.garage-notice{border:1px solid #57331f;background:#211912;border-radius:9px;padding:13px 15px;margin-bottom:18px}
+.garage-notice strong{color:#ffb17d;font-size:13px}
+.garage-notice p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.garage-vehicle-label{display:grid;gap:7px;max-width:520px;font-size:12px;font-weight:700}
+.garage-vehicle-label select{width:100%;background:#0e1319;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:11px 12px;font:inherit}
+.garage-vehicle-summary{margin:14px 0}
+.garage-vehicle-summary strong{font-size:15px}
+.garage-vehicle-summary p{color:var(--muted);font-size:12px;margin:4px 0}
+.garage-columns{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:18px}
+.garage-subsection{min-width:0}
+.garage-subsection h3{font-size:14px;margin:0 0 10px}
+.garage-timeline,.garage-diagnostics{display:grid;gap:10px}
+.garage-event{min-width:0;border:1px solid var(--line);border-radius:9px;padding:12px;background:#101720}
+.garage-event strong{display:block;font-size:12px;margin:5px 0}
+.garage-event .status-badge{display:inline-flex;margin-top:4px}
+.garage-event p{font-size:12px;color:var(--muted);margin:7px 0;overflow-wrap:anywhere}
+.garage-event small{font-size:11px;color:var(--muted)}
+.garage-event .garage-report{border-left:2px solid var(--orange);padding-left:10px;color:var(--text)}
+@media(max-width:1000px){.garage-columns{grid-template-columns:1fr}}
