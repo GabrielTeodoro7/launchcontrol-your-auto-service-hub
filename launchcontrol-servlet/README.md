@@ -18,8 +18,8 @@ Implementado nesta etapa:
 - Schema MySQL inicial com usuários, veículos, serviços, oficinas, fornecedores, peças, solicitações, orçamentos, ordens, diagnósticos, pedidos, pagamentos e auditoria.
 
 Ainda pendente:
-- CRUD completo e autorização para todos os módulos e perfis.
-- Tela de gerenciamento de orçamentos e ligação completa do fluxo da oficina.
+- CRUD completo para todos os módulos e perfis; esta entrega cobre apenas operações iniciais de veículos, solicitações, orçamentos e ordens.
+- Fluxo de oficina ainda precisa de testes integrados com contas e dados reais de homologação.
 - Integração com provedor de pagamentos, tokenização, QR Code PIX real e webhooks assinados.
 - Regras de diagnóstico configuráveis, anexos, laudos e histórico completo.
 - Testes de integração, segurança, execução em contêiner Servlet e validação visual em navegador.
