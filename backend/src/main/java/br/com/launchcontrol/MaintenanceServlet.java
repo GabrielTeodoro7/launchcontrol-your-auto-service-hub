@@ -103,7 +103,7 @@ public class MaintenanceServlet extends HttpServlet {
             if (!nextDateValue.isBlank()) nextDate = Date.valueOf(LocalDate.parse(nextDateValue));
             String nextMileageValue = value(request.getParameter("proximaQuilometragem"));
             if (!nextMileageValue.isBlank()) nextMileage = Integer.valueOf(nextMileageValue);
-            if (vehicleId < 1 || mileage < 0 || mileage > 2_000_000 || cost.signum() < 0
+            if (vehicleId < 1 || mileage < 0 || mileage > 2_000_000 || serviceDate.after(Date.valueOf(LocalDate.now())) || cost.signum() < 0
                     || category.length() < 2 || category.length() > 100
                     || description.length() < 3 || description.length() > 2000
                     || shop.length() > 160 || (nextMileage != null && (nextMileage < mileage || nextMileage > 2_000_000))
