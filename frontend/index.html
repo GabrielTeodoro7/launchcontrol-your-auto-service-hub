@@ -7,6 +7,8 @@
   <title>LaunchControl | Painel</title>
   <link rel="stylesheet" href="css/estilo-principal.css">
   <script src="js/interacoes.js" defer></script>
+  <script src="js/recursos-complementares.js" defer></script>
+  <script src="js/launchcontrol-operacoes.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
@@ -23,6 +25,7 @@
         <a class="nav-item" href="#customer-tools" data-profiles="CLIENTE"><span>✳</span> Experiência por perfil</a>
         <a class="nav-item" href="#estoque-inteligente" data-profiles="FORNECEDOR,ADMINISTRADOR"><span>▦</span> Inteligência de estoque</a>
         <a class="nav-item" href="#checkout" data-profiles="CLIENTE"><span>▣</span> Checkout demonstrativo</a>
+        <a class="nav-item" href="#operations-panel" data-profiles="CLIENTE,OFICINA,ADMINISTRADOR"><span>◷</span> Operação avançada</a>
       </nav>
       <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
     </aside>
@@ -77,24 +80,31 @@
           <button class="button button-primary" type="submit">Pesquisar peças</button>
           <p id="parts-search-status" class="form-status" role="status">Informe o veículo e a peça. Os resultados serão abertos nas fontes externas.</p>
         </form>
+        <section id="fitment-status" class="parts-notice" role="status" hidden>
+          <strong>Fitment Engine · compatibilidade de peças</strong>
+          <div id="fitment-results"></div>
+        </section>
         <section class="parts-assistant" aria-labelledby="parts-assistant-title">
           <div class="parts-assistant-heading">
             <div>
-              <p class="eyebrow">ASSISTENTE DE PESQUISA</p>
-              <h3 id="parts-assistant-title">Assistente IA do LC Parts</h3>
-              <p class="muted">Descreva a peça do seu jeito. O assistente ajuda a refinar a busca e, quando possível, pesquisa anúncios reais para você abrir na loja de origem.</p>
+              <p class="eyebrow">COPILOTO AUTOMOTIVO</p>
+              <h3 id="parts-assistant-title">Launch AI</h3>
+              <p class="muted">Organize a busca por peças ou descreva sintomas para receber uma orientação preliminar, perguntas úteis e próximos passos seguros.</p>
             </div>
           </div>
-          <div class="parts-assistant-note" id="parts-assistant-note" role="note">Entre como cliente para conversar com a IA. A pesquisa manual de peças continua disponível sem login.</div>
+          <div class="parts-assistant-note" id="parts-assistant-note" role="note">Entre como cliente para usar o Launch AI. A pesquisa manual de peças e os formulários de relato continuam disponíveis.</div>
           <div id="parts-assistant-messages" class="parts-assistant-messages" aria-live="polite" aria-relevant="additions">
             <div class="assistant-message assistant">Posso ajudar a preparar uma busca mais precisa. Por exemplo: “preciso do farol dianteiro direito do Sandero Expression 2016, motor 1.0”. Se faltar algum dado importante, vou perguntar antes de pesquisar.</div>
           </div>
           <form id="parts-assistant-form" class="parts-assistant-form">
-            <label for="parts-assistant-message">O que você está procurando?
-              <textarea id="parts-assistant-message" name="message" rows="2" maxlength="1000" placeholder="Descreva a peça, o carro ou sua dúvida…" required></textarea>
+            <label for="launch-ai-mode">Como posso ajudar?
+              <select id="launch-ai-mode" name="mode"><option value="pecas">Encontrar uma peça</option><option value="sintomas">Entender sintomas do veículo</option></select>
+            </label>
+            <label for="parts-assistant-message">Descreva sua necessidade
+              <textarea id="parts-assistant-message" name="message" rows="2" maxlength="1000" placeholder="Ex.: meu carro faz um ruído ao frear ou preciso de uma peça específica…" required></textarea>
             </label>
             <div class="parts-assistant-actions">
-              <p id="parts-assistant-status" class="form-status" role="status">A IA precisa de uma chave configurada no servidor para responder.</p>
+              <p id="parts-assistant-status" class="form-status" role="status">O Launch AI usa um provedor externo configurado no servidor; as orientações não substituem avaliação profissional.</p>
               <button class="button button-primary" type="submit">Perguntar e pesquisar</button>
             </div>
           </form>
@@ -157,6 +167,38 @@
             <div id="garage-diagnostics" class="garage-diagnostics" aria-live="polite"></div>
           </section>
         </div>
+        <section class="garage-subsection maintenance-passport">
+          <h3>Passaporte digital de manutenção</h3>
+          <p class="muted">Registre serviços e próximas manutenções. Os dados informados pelo proprietário são identificados como registros declarados, não como laudos oficiais.</p>
+          <h4>AutoCare Score · organização do planejamento</h4>
+          <p class="muted">O indicador mede a cobertura dos lembretes registrados, não a saúde mecânica nem a segurança do veículo.</p>
+          <div id="maintenance-summary" class="garage-vehicle-summary" aria-live="polite"></div>
+          <div class="garage-columns">
+            <div>
+              <h4>Histórico registrado</h4>
+              <div id="maintenance-timeline" class="garage-timeline" aria-live="polite"><p class="muted">Selecione um veículo para consultar manutenções.</p></div>
+            </div>
+            <form id="maintenance-form" class="stack-form">
+              <h4>Adicionar manutenção</h4>
+              <label>Categoria<input name="categoria" required maxlength="100" placeholder="Ex.: troca de óleo"></label>
+              <label>Descrição<textarea name="descricao" required minlength="3" maxlength="2000" rows="3" placeholder="Serviço realizado e observações"></textarea></label>
+              <label>Data do serviço<input name="dataServico" type="date" required></label>
+              <label>Quilometragem no serviço<input name="quilometragem" type="number" min="0" max="2000000" required></label>
+              <label>Custo total (R$)<input name="custo" type="number" min="0" max="99999999.99" step="0.01" required></label>
+              <label>Oficina (opcional)<input name="oficina" maxlength="160" placeholder="Nome informado pelo proprietário"></label>
+              <label>Próxima data (opcional)<input name="proximaData" type="date"></label>
+              <label>Próxima quilometragem (opcional)<input name="proximaQuilometragem" type="number" min="0" max="2000000"></label>
+              <button class="button button-primary" type="submit">Salvar manutenção</button>
+              <p id="maintenance-status" class="form-status" role="status">Selecione um veículo para começar.</p>
+            </form>
+          </div>
+        </section>
+        <section class="garage-subsection repair-transparency">
+          <h3>Oficina Transparente · linha do tempo</h3>
+          <p class="muted">A linha do tempo mostra mudanças de status registradas pelo backend. Ordens antigas podem não ter eventos anteriores à ativação deste histórico.</p>
+          <div id="repair-timeline" class="garage-timeline" aria-live="polite"><p class="muted">Selecione um veículo para consultar atualizações.</p></div>
+          <p id="repair-timeline-status" class="form-status" role="status">As atualizações dependem dos registros feitos pela oficina.</p>
+        </section>
       </section>
       <section class="panel quote-panel" id="quote-panel" hidden>
         <div class="panel-heading"><div><p class="eyebrow">PROPOSTAS</p><h2>Orçamentos</h2><p class="muted">Compare as propostas recebidas. Ao aceitar, uma ordem de serviço é criada.</p></div></div>
@@ -175,8 +217,15 @@
           <form id="quote-form" class="stack-form">
             <h3>Enviar orçamento</h3>
             <label>ID da solicitação<input name="solicitacaoId" type="number" min="1" required></label>
-            <label>Valor total (R$)<input name="valor" type="number" min="0" max="99999999.99" step="0.01" required></label>
+            <div class="parts-fields quote-cost-fields"><label>Peças e materiais (R$)<input name="valorPecas" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+            <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+            <label>Outros custos (R$)<input name="valorOutro" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
+            <label>Total calculado (R$)<input id="quote-total-preview" type="text" value="R$ 0,00" readonly aria-describedby="quote-total-note"></label>
+            <p id="quote-total-note" class="muted">Prévia visual. O total oficial é recalculado e validado pelo backend.</p>
             <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
+            <div class="parts-fields quote-cost-fields"><label>Garantia (dias, opcional)<input name="garantiaDias" type="number" min="0" max="3650"></label>
+            <label>Validade da proposta (dias, opcional)<input name="validadeDias" type="number" min="0" max="365"></label></div>
+            <label>Condição das peças<select name="condicaoPecas"><option value="NAO_INFORMADA">Não informada</option><option value="NOVAS">Novas</option><option value="USADAS">Usadas</option><option value="RECONDICIONADAS">Recondicionadas</option><option value="MISTAS">Mistas</option></select></label>
             <label>Observações<textarea name="observacoes" maxlength="2000" rows="3"></textarea></label>
             <button class="button button-primary" type="submit">Enviar orçamento</button>
             <p id="quote-form-status" class="form-status" role="status">O orçamento será gravado no MySQL.</p>
@@ -197,6 +246,21 @@
           <div class="action-group"><button class="button button-primary" type="submit">Salvar peça</button><button class="mini-button" id="inventory-cancel-edit" type="button">Limpar formulário</button></div>
           <p class="form-status" id="inventory-status" role="status">Os dados serão salvos no estoque existente no MySQL.</p>
         </form>
+        <section id="fitment-admin-tools" class="garage-subsection" hidden>
+          <h3>Catálogo de compatibilidade · administração</h3>
+          <p class="muted">Cadastre somente referências com fonte identificável. Marque como confirmada ou incompatível apenas quando houver evidência técnica verificável.</p>
+          <form id="fitment-admin-form" class="stack-form">
+            <div class="parts-fields"><label>ID da peça ativa<input name="pecaId" type="number" min="1" required></label><label>Marca do veículo<input name="marcaVeiculo" maxlength="80" required></label><label>Modelo do veículo<input name="modeloVeiculo" maxlength="100" required></label></div>
+            <div class="parts-fields"><label>Ano inicial (opcional)<input name="anoInicio" type="number" min="1950" max="2100"></label><label>Ano final (opcional)<input name="anoFim" type="number" min="1950" max="2100"></label><label>Motorização (opcional)<input name="motorizacao" maxlength="80"></label></div>
+            <label>Código OEM (opcional)<input name="codigoOem" maxlength="80"></label>
+            <label>Estado de verificação<select name="status"><option value="NAO_VERIFICADA">Não verificada</option><option value="CONFIRMADA">Confirmada por fonte</option><option value="INCOMPATIVEL">Incompatível segundo fonte</option></select></label>
+            <label>Fonte técnica / fornecedor<input name="fonte" maxlength="180" placeholder="Ex.: catálogo do fabricante" required></label>
+            <label>Referência / URL / identificador<input name="referencia" maxlength="500" placeholder="Identificador verificável da fonte" required></label>
+            <label>Observações<textarea name="observacoes" maxlength="500" rows="2"></textarea></label>
+            <button class="button button-primary" type="submit">Registrar referência</button>
+            <p id="fitment-admin-status" class="form-status" role="status">Somente administradores podem registrar referências.</p>
+          </form>
+        </section>
       </section>
       <section class="panel" id="servicos">
         <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO</p><h2>Ordens de serviço</h2><p class="muted">Ações são controladas pelo status real retornado pelo backend.</p></div><label class="search-box"><span class="sr-only">Pesquisar serviços</span><input id="service-search" type="search" placeholder="Pesquisar cliente, veículo ou serviço"></label></div>
@@ -209,6 +273,56 @@
       </div>
       <section class="panel checkout-panel" id="checkout"><div><p class="eyebrow">PAGAMENTOS</p><h2>Checkout de demonstração</h2><p class="muted">Sem provedor de pagamento configurado, o sistema não cobra, não gera PIX válido e não aprova transações reais.</p></div><form id="checkout-form" class="checkout-form"><label>ID do orçamento<input name="quoteId" type="number" min="1" required placeholder="ID do orçamento existente"></label><label>Método<select name="method"><option value="PIX_DEMO">PIX — demonstração</option><option value="CARTAO_DEMO">Cartão — demonstração</option></select></label><button class="button button-primary" type="submit">Criar pagamento pendente</button></form><p id="checkout-status" class="form-status" role="status">A operação demonstrativa ficará pendente e será identificada como demonstração.</p><div class="payment-history-block"><button class="button button-outline" id="load-payments" type="button">Consultar histórico de pagamentos</button><div id="payment-history" class="payment-history" aria-live="polite"></div></div></section>
       <footer>LaunchControl · Java Servlet · MySQL · HTML, CSS e JavaScript</footer>
+
+      <section class="panel" id="operations-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">ANÁLISE OPERACIONAL</p><h2>Indicadores gerenciais</h2><p class="muted">Totais e valores derivados de registros existentes, limitados ao escopo da sua conta.</p></div><button class="button button-outline" id="operations-refresh" type="button">Atualizar indicadores</button></div>
+        <div id="operations-metrics" class="operations-metrics"><p class="muted">Entre para carregar os indicadores.</p></div>
+        <p id="operations-dashboard-status" class="form-status" role="status">Os valores refletem dados persistidos; não representam previsão de faturamento.</p>
+      </section>
+      <section class="panel" id="appointment-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">AGENDA INTELIGENTE</p><h2>Agendamentos e capacidade</h2><p class="muted">A reserva verifica expediente e capacidade da oficina no servidor para evitar conflitos.</p></div></div>
+        <form id="appointment-create-form" class="stack-form" hidden>
+          <h3>Solicitar atendimento</h3>
+          <div class="parts-fields"><label>Oficina<select id="appointment-office" name="oficinaId" required><option value="">Carregando oficinas…</option></select></label><label>Veículo cadastrado<select id="appointment-vehicle" name="veiculoId" required><option value="">Carregando veículos…</option></select></label><label>Início local<input name="inicio" type="datetime-local" required></label></div>
+          <div class="parts-fields"><label>Duração<select name="duracaoMinutos"><option value="30">30 minutos</option><option value="60" selected>1 hora</option><option value="90">1 hora e 30 minutos</option><option value="120">2 horas</option><option value="180">3 horas</option><option value="240">4 horas</option></select></label><label>Observações (opcional)<input name="observacoes" maxlength="500" placeholder="Descreva o serviço desejado"></label></div>
+          <button class="button button-primary" type="submit">Solicitar agendamento</button>
+          <p class="integration-note">A oficina precisa configurar os horários antes de receber reservas. O agendamento é uma solicitação, não uma confirmação de serviço concluído.</p>
+        </form>
+        <form id="appointment-config-form" class="stack-form" hidden>
+          <h3>Configurar expediente e capacidade</h3>
+          <div id="schedule-office-wrap" hidden><label>Oficina<select id="schedule-office-id" name="oficinaId"><option value="">Selecione a oficina</option></select></label></div>
+          <div id="appointment-config-note" class="integration-note" hidden>O sistema associa o expediente à oficina vinculada à sua conta.</div>
+          <div class="parts-fields"><label>Dia da semana<select name="diaSemana" required><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></label><label>Início<input name="horaInicio" type="time" value="08:00" required></label><label>Fim<input name="horaFim" type="time" value="18:00" required></label></div>
+          <label>Capacidade simultânea<input name="capacidade" type="number" min="1" max="50" value="1" required></label>
+          <button class="button button-primary" type="submit">Salvar expediente</button><p id="appointment-config-status" class="form-status" role="status">Defina o horário de cada dia atendido.</p>
+        </form>
+        <p id="appointment-status" class="form-status" role="status">Os agendamentos são carregados após autenticação.</p>
+        <h3>Agenda registrada</h3><div id="appointment-list" class="appointment-list"><p class="muted">Entre para consultar agendamentos.</p></div>
+      </section>
+      <section class="panel" id="fitment-import-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">CATÁLOGO TÉCNICO</p><h2>Importação em lote de compatibilidade</h2><p class="muted">Importação transacional de até 500 registros CSV. Um erro impede que qualquer linha seja gravada.</p></div></div>
+        <p class="integration-note">Cabeçalho obrigatório: <code>pecaId,marcaVeiculo,modeloVeiculo,anoInicio,anoFim,motorizacao,codigoOem,status,fonte,referencia,observacoes</code>. Status aceitos: CONFIRMADA, INCOMPATIVEL ou NAO_VERIFICADA. Os dois primeiros exigem fonte e referência. A importação não valida a veracidade da fonte; essa responsabilidade permanece com o administrador.</p>
+        <form id="fitment-import-form" class="stack-form">
+          <label>Selecionar CSV<input id="fitment-import-file" type="file" accept=".csv,text/csv"></label>
+          <label>Conteúdo CSV<textarea id="fitment-import-csv" class="csv-field" name="csv" rows="8" maxlength="500000" required placeholder="pecaId,marcaVeiculo,modeloVeiculo,anoInicio,anoFim,motorizacao,codigoOem,status,fonte,referencia,observacoes"></textarea></label>
+          <button class="button button-primary" type="submit">Validar e importar</button><p id="fitment-import-status" class="form-status" role="status">Até 500 linhas de dados por importação.</p>
+        </form>
+      </section>
+      <section class="panel" id="audit-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">RASTREABILIDADE</p><h2>Histórico de auditoria</h2><p class="muted">Eventos persistidos, com data e responsável quando disponíveis. A visibilidade é limitada por perfil.</p></div><button class="button button-outline" id="audit-refresh" type="button">Atualizar histórico</button></div>
+        <div id="audit-list" class="audit-list"><p class="muted">Entre para consultar eventos.</p></div>
+      </section>
+      <section class="panel" id="notification-preferences-panel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">CENTRAL DE AVISOS</p><h2>Preferências de notificação</h2><p class="muted">As notificações internas continuam disponíveis. E-mail e WhatsApp dependem de credenciais válidas no servidor.</p></div></div>
+        <form id="notification-preferences-form" class="stack-form">
+          <p id="notification-email-address" class="muted">Carregando e-mail cadastrado…</p>
+          <label class="inline-check"><input id="notification-email" type="checkbox" checked> Receber notificações por e-mail</label>
+          <label class="inline-check"><input id="notification-whatsapp" type="checkbox"> Receber notificações pelo WhatsApp</label>
+          <label>Número do WhatsApp com código do país<input id="notification-phone" type="tel" maxlength="20" placeholder="+5511999999999"></label>
+          <button class="button button-primary" type="submit">Salvar preferências</button>
+          <p id="notification-preferences-status" class="form-status" role="status">As preferências são pessoais e podem ser alteradas a qualquer momento.</p>
+        </form>
+      </section>
     </main>
   </div>
   <dialog id="auth-dialog" class="detail-dialog">
@@ -228,8 +342,14 @@
       <button class="dialog-close" id="quote-edit-close" type="button" aria-label="Fechar">×</button>
       <p class="eyebrow">GESTÃO DE ORÇAMENTO</p><h2>Editar orçamento</h2>
       <input type="hidden" name="id">
-      <label>Valor total (R$)<input name="valor" type="number" min="0" max="99999999.99" step="0.01" required></label>
+      <div class="parts-fields quote-cost-fields"><label>Peças e materiais (R$)<input name="valorPecas" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+      <label>Mão de obra (R$)<input name="valorMaoObra" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label>
+      <label>Outros custos (R$)<input name="valorOutro" type="number" min="0" max="99999999.99" step="0.01" value="0.00" required></label></div>
+      <label>Total calculado (R$)<input id="quote-edit-total-preview" type="text" value="R$ 0,00" readonly></label>
       <label>Prazo estimado (dias)<input name="prazoDias" type="number" min="0" max="365" required></label>
+      <div class="parts-fields quote-cost-fields"><label>Garantia (dias)<input name="garantiaDias" type="number" min="0" max="3650"></label>
+      <label>Validade (dias)<input name="validadeDias" type="number" min="0" max="365"></label></div>
+      <label>Condição das peças<select name="condicaoPecas"><option value="NAO_INFORMADA">Não informada</option><option value="NOVAS">Novas</option><option value="USADAS">Usadas</option><option value="RECONDICIONADAS">Recondicionadas</option><option value="MISTAS">Mistas</option></select></label>
       <label>Observações<textarea name="observacoes" maxlength="2000" rows="3"></textarea></label>
       <button class="button button-primary" type="submit">Salvar alterações</button>
       <p id="quote-edit-status" class="form-status" role="status">Orçamentos aceitos ou serviços concluídos não podem ser alterados.</p>

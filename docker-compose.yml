@@ -1,0 +1,45 @@
+services:
+  banco:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_local_nao_usar_em_producao}
+      MYSQL_DATABASE: launchcontrol
+      MYSQL_USER: launchcontrol_app
+      MYSQL_PASSWORD: ${LC_DB_PASSWORD:-launchcontrol_local_123}
+    ports:
+      - "3307:3306"
+    volumes:
+      - launchcontrol-dados:/var/lib/mysql
+      - ./banco-de-dados/modelo.sql:/docker-entrypoint-initdb.d/01-modelo.sql:ro
+      - ./banco-de-dados/migracoes/001_ecossistema_automotivo.sql:/docker-entrypoint-initdb.d/02-001_ecossistema_automotivo.sql:ro
+      - ./banco-de-dados/migracoes/002_aprovacoes_notificacoes.sql:/docker-entrypoint-initdb.d/03-002_aprovacoes_notificacoes.sql:ro
+      - ./banco-de-dados/migracoes/003_agenda_auditoria_integracoes.sql:/docker-entrypoint-initdb.d/04-003_agenda_auditoria_integracoes.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  aplicacao:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      banco:
+        condition: service_healthy
+    environment:
+      LC_DB_URL: jdbc:mysql://banco:3306/launchcontrol?useSSL=false&serverTimezone=UTC
+      LC_DB_USER: launchcontrol_app
+      LC_DB_PASSWORD: ${LC_DB_PASSWORD:-launchcontrol_local_123}
+      LC_UPLOAD_DIR: /var/launchcontrol/uploads
+    ports:
+      - "8080:8080"
+    volumes:
+      - launchcontrol-anexos:/var/launchcontrol/uploads
+    restart: unless-stopped
+
+volumes:
+  launchcontrol-dados:
+  launchcontrol-anexos:

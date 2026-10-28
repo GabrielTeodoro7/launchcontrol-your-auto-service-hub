@@ -23,9 +23,15 @@ public class AuthFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) rawResponse;
         String path = request.getRequestURI().substring(request.getContextPath().length());
 
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setHeader("X-Frame-Options", "DENY");
+        response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+        response.setHeader("Cache-Control", "no-store");
+
         // Rotas públicas que não exigem sessão autenticada.
         if ("/api/auth".equals(path) || "/api/servicos".equals(path) || "/api/health".equals(path)
-                || ("/api/pecas/busca".equals(path) && "GET".equalsIgnoreCase(request.getMethod()))) {
+                || (("/api/pecas/busca".equals(path) || "/api/compatibilidade-pecas".equals(path)) && "GET".equalsIgnoreCase(request.getMethod()))) {
             chain.doFilter(request, response);
             return;
         }
@@ -38,7 +44,10 @@ public class AuthFilter implements Filter {
         }
 
         // Requisições de alteração exigem o token CSRF associado à sessão.
-        if ("POST".equalsIgnoreCase(request.getMethod())) {
+        String method = request.getMethod();
+        boolean safeMethod = "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method)
+                || "OPTIONS".equalsIgnoreCase(method);
+        if (!safeMethod) {
             String expected = (String) session.getAttribute("csrfToken");
             String supplied = request.getHeader("X-CSRF-Token");
             if (expected == null || supplied == null || !MessageDigest.isEqual(

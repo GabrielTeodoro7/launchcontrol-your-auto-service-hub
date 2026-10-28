@@ -188,5 +188,29 @@ CREATE TABLE IF NOT EXISTS auditoria (
   INDEX idx_auditoria_entidade (entidade, entidade_id, criado_em)
 );
 
-CREATE INDEX idx_servicos_ativo_nome ON servicos(ativo, nome);
-CREATE INDEX idx_pecas_ativo_nome ON pecas(ativo, nome);
+-- Criação idempotente dos índices: o esquema-base pode ser reaplicado sem falhar por índice existente.
+SET @lc_index_exists = (
+  SELECT COUNT(*) FROM information_schema.statistics
+  WHERE table_schema = DATABASE() AND table_name = 'servicos' AND index_name = 'idx_servicos_ativo_nome'
+);
+SET @lc_index_sql = IF(
+  @lc_index_exists = 0,
+  'CREATE INDEX idx_servicos_ativo_nome ON servicos(ativo, nome)',
+  'SELECT 1'
+);
+PREPARE lc_index_stmt FROM @lc_index_sql;
+EXECUTE lc_index_stmt;
+DEALLOCATE PREPARE lc_index_stmt;
+
+SET @lc_index_exists = (
+  SELECT COUNT(*) FROM information_schema.statistics
+  WHERE table_schema = DATABASE() AND table_name = 'pecas' AND index_name = 'idx_pecas_ativo_nome'
+);
+SET @lc_index_sql = IF(
+  @lc_index_exists = 0,
+  'CREATE INDEX idx_pecas_ativo_nome ON pecas(ativo, nome)',
+  'SELECT 1'
+);
+PREPARE lc_index_stmt FROM @lc_index_sql;
+EXECUTE lc_index_stmt;
+DEALLOCATE PREPARE lc_index_stmt;

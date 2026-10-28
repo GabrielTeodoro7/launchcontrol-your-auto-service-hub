@@ -23,6 +23,34 @@ import java.util.Base64;
 @WebServlet("/api/auth")
 public class AuthServlet extends HttpServlet {
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final long RATE_WINDOW_MILLIS = 15 * 60 * 1000L;
+    private static final java.util.Map<String, AttemptWindow> ATTEMPTS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static final class AttemptWindow {
+        private long startedAt;
+        private int count;
+        private AttemptWindow(long now) { startedAt = now; }
+    }
+
+    private static synchronized boolean allowAttempt(String key, int limit) {
+        long now = System.currentTimeMillis();
+        if (ATTEMPTS.size() > 5_000) {
+            ATTEMPTS.entrySet().removeIf(entry -> now - entry.getValue().startedAt >= RATE_WINDOW_MILLIS);
+        }
+        AttemptWindow window = ATTEMPTS.get(key);
+        if (window == null) {
+            if (ATTEMPTS.size() >= 10_000) return false;
+            window = new AttemptWindow(now);
+            ATTEMPTS.put(key, window);
+        }
+        if (now - window.startedAt >= RATE_WINDOW_MILLIS) {
+            window.startedAt = now;
+            window.count = 0;
+        }
+        if (window.count >= limit) return false;
+        window.count++;
+        return true;
+    }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
@@ -43,6 +71,17 @@ public class AuthServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         // O campo action informa qual tarefa de autenticação o formulário quer executar.
         String action = value(request.getParameter("action"));
+        String remoteAddress = value(request.getRemoteAddr());
+        if ("login".equals(action) && !allowAttempt("login|" + remoteAddress, 10)) {
+            response.setHeader("Retry-After", "900");
+            Json.error(response, 429, "Muitas tentativas de login deste endereço. Tente novamente em 15 minutos.");
+            return;
+        }
+        if ("register".equals(action) && !allowAttempt("register|" + remoteAddress, 5)) {
+            response.setHeader("Retry-After", "900");
+            Json.error(response, 429, "Muitas tentativas de cadastro deste endereço. Tente novamente em 15 minutos.");
+            return;
+        }
         if ("logout".equals(action)) {
             HttpSession session = request.getSession(false);
             String expected = session == null ? null : (String) session.getAttribute("csrfToken");

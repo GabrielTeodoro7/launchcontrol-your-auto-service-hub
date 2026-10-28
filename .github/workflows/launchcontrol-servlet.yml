@@ -2,53 +2,100 @@ name: LaunchControl checks
 
 on:
   push:
-    branches: [main, "work/**"]
-    paths:
-      - "backend/**"
-      - ".github/workflows/launchcontrol-servlet.yml"
-      - "README.md"
+    branches:
+      - main
+      - "feature/**"
+      - "fix/**"
+      - "refactor/**"
+      - "work/**"
+      - "cleanup/**"
   pull_request:
-    paths:
-      - "backend/**"
-      - "frontend/**"
-      - "banco-de-dados/**"
-      - "scripts/**"
-      - ".github/workflows/launchcontrol-servlet.yml"
-      - "README.md"
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: launchcontrol-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Java 25 LTS
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "25"
           cache: maven
-      - name: Set up Maven 3.10.0
+
+      - name: Set up Maven
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: "3.10.0"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Structural checks
-        working-directory: .
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Compile Python validation scripts
+        run: python -m py_compile scripts/verificar_projeto.py scripts/smoke_test_http.py
+
+      - name: Validate project structure and security contracts
         run: python scripts/verificar_projeto.py
-      - name: Check JavaScript syntax
-        run: node --check frontend/js/interacoes.js
+
+      - name: Check syntax of every frontend JavaScript file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' files < <(find frontend/js -type f -name '*.js' -print0)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No JavaScript files found under frontend/js."
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            echo "Checking ${file}"
+            node --check "${file}"
+          done
+
       - name: Show build toolchain
-        run: mvn -version
-      - name: Build WAR
+        run: |
+          java -version
+          mvn -version
+          node --version
+          python --version
+
+      - name: Build deployable WAR
         run: mvn -B -f backend/pom.xml clean package
-      - name: Upload WAR artifact
+
+      - name: Verify WAR artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s backend/target/launchcontrol.war
+          jar tf backend/target/launchcontrol.war > /tmp/launchcontrol-war-contents.txt
+          grep -q 'WEB-INF/classes/br/com/launchcontrol/' /tmp/launchcontrol-war-contents.txt
+          grep -q 'index.html' /tmp/launchcontrol-war-contents.txt
+          echo "WAR artifact verified."
+
+      - name: Upload deployable WAR
         uses: actions/upload-artifact@v4
         with:
-          name: launchcontrol-servlet-war
+          name: launchcontrol-war
           path: backend/target/launchcontrol.war
           if-no-files-found: error
           retention-days: 14

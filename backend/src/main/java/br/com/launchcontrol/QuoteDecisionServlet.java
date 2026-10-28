@@ -37,16 +37,21 @@ public class QuoteDecisionServlet extends HttpServlet {
             c.setAutoCommit(false);
             try {
                 long requestId;
+                long workshopUserId;
                 String status;
                 String requestStatus;
                 try (PreparedStatement ps = c.prepareStatement(
-                    "SELECT o.status,s.id AS solicitacao_id,s.status AS solicitacao_status " +
+                    "SELECT o.status,s.id AS solicitacao_id,s.status AS solicitacao_status," +
+                    "o.oficina_id,ofi.usuario_id AS oficina_usuario_id " +
                     "FROM orcamentos o JOIN solicitacoes_orcamento s ON s.id=o.solicitacao_id " +
-                    "WHERE o.id=? AND s.cliente_id=? FOR UPDATE")) {
+                    "JOIN oficinas ofi ON ofi.id=o.oficina_id WHERE o.id=? AND s.cliente_id=? FOR UPDATE")) {
                     ps.setLong(1, quoteId); ps.setLong(2, userId);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) { c.rollback(); Json.error(response, 404, "Orçamento não encontrado para este cliente."); return; }
-                        status = rs.getString("status"); requestId = rs.getLong("solicitacao_id"); requestStatus = rs.getString("solicitacao_status");
+                        status = rs.getString("status");
+                        requestId = rs.getLong("solicitacao_id");
+                        requestStatus = rs.getString("solicitacao_status");
+                        workshopUserId = rs.getLong("oficina_usuario_id");
                     }
                 }
                 if ("ACEITA".equals(requestStatus) || "CONCLUIDA".equals(requestStatus) || "CANCELADA".equals(requestStatus)) {
@@ -62,11 +67,23 @@ public class QuoteDecisionServlet extends HttpServlet {
                     try (PreparedStatement ps = c.prepareStatement("UPDATE solicitacoes_orcamento SET status='ACEITA' WHERE id=?")) {
                         ps.setLong(1, requestId); ps.executeUpdate();
                     }
+                    long orderId;
                     try (PreparedStatement ps = c.prepareStatement(
                         "INSERT INTO ordens_servico(codigo,solicitacao_id,orcamento_id,status) VALUES(?,?,?,'PENDENTE')",
                         PreparedStatement.RETURN_GENERATED_KEYS)) {
                         ps.setString(1, "LC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(java.util.Locale.ROOT));
                         ps.setLong(2, requestId); ps.setLong(3, quoteId); ps.executeUpdate();
+                        try (ResultSet keys = ps.getGeneratedKeys()) {
+                            if (!keys.next()) throw new SQLException("Ordem sem identificador.");
+                            orderId = keys.getLong(1);
+                        }
+                    }
+                    try (PreparedStatement ps = c.prepareStatement(
+                            "INSERT INTO ordem_status_historico(ordem_id,status,observacao,usuario_id) VALUES(?,'PENDENTE',?,?)")) {
+                        ps.setLong(1, orderId);
+                        ps.setString(2, "Ordem criada após aceite do orçamento pelo cliente.");
+                        ps.setLong(3, userId);
+                        ps.executeUpdate();
                     }
                 } else {
                     try (PreparedStatement ps = c.prepareStatement("UPDATE orcamentos SET status='RECUSADO' WHERE id=?")) {
@@ -75,6 +92,17 @@ public class QuoteDecisionServlet extends HttpServlet {
                     try (PreparedStatement ps = c.prepareStatement("UPDATE solicitacoes_orcamento SET status='EM_ANALISE' WHERE id=?")) {
                         ps.setLong(1, requestId); ps.executeUpdate();
                     }
+                }
+                AdditionalServiceServlet.createNotification(c, workshopUserId,
+                        "Decisão sobre orçamento",
+                        "O cliente " + ("ACEITAR".equals(decision) ? "aceitou" : "recusou") +
+                                " o orçamento #" + quoteId + ".",
+                        "DECISAO_ORCAMENTO", quoteId);
+                if ("ACEITAR".equals(decision)) {
+                    AdditionalServiceServlet.createNotification(c, userId,
+                            "Ordem de serviço criada",
+                            "Seu orçamento foi aceito e uma ordem de serviço foi criada.",
+                            "ORDEM_SERVICO", requestId);
                 }
                 try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)")) {

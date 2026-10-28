@@ -7,6 +7,18 @@ const detailsTitle = document.querySelector("#detail-title");
 const detailsContent = document.querySelector("#detail-content");
 const authDialog = document.querySelector("#auth-dialog");
 const quoteEditDialog = document.querySelector("#quote-edit-dialog");
+
+const sidebarLinks = [...document.querySelectorAll(".side-nav .nav-item")];
+sidebarLinks.forEach(link => {
+  link.addEventListener("click", () => {
+    sidebarLinks.forEach(item => {
+      const active = item === link;
+      item.classList.toggle("active", active);
+      if (active) item.setAttribute("aria-current", "page");
+      else item.removeAttribute("aria-current");
+    });
+  });
+});
 let authMode = "login";
 let currentUser = null;
 let orders = [];
@@ -53,7 +65,15 @@ function renderOrders() {
     badge.className = "status-badge " + String(order.status || "PENDENTE").toLowerCase();
     badge.textContent = statusLabels[order.status] || order.status || "Pendente";
     statusCell.append(badge); tr.append(statusCell);
-    const price = document.createElement("td"); price.textContent = currency(order.valor); tr.append(price);
+    const price = document.createElement("td");
+    const baseAmount = order.valor == null ? null : Number(order.valor);
+    const approvedExtras = Number(order.valorAdicionaisAceitos || 0);
+    price.textContent = baseAmount == null ? "—" : currency(baseAmount + approvedExtras);
+    if (baseAmount != null && approvedExtras > 0) {
+      price.title = "Orçamento base: " + currency(baseAmount) + " · Serviços adicionais aceitos: " + currency(approvedExtras);
+      price.setAttribute("aria-label", price.title + " · Total atualizado: " + price.textContent);
+    }
+    tr.append(price);
     const actions = document.createElement("td");
     const group = document.createElement("div"); group.className = "action-group";
     const view = document.createElement("button"); view.type = "button"; view.className = "mini-button"; view.textContent = "Visualizar";
@@ -67,10 +87,16 @@ function renderOrders() {
       edit.addEventListener("click", () => {
         const form = document.querySelector("#quote-edit-form");
         form.elements.id.value = order.orcamentoId;
-        form.elements.valor.value = order.valor ?? "";
+        form.elements.valorPecas.value = 0;
+        form.elements.valorMaoObra.value = 0;
+        form.elements.valorOutro.value = order.valor ?? 0;
+        form.elements.garantiaDias.value = "";
+        form.elements.validadeDias.value = "";
+        form.elements.condicaoPecas.value = "NAO_INFORMADA";
+        updateQuoteTotalPreview(form, "#quote-edit-total-preview");
         form.elements.prazoDias.value = order.prazoDias ?? 0;
         form.elements.observacoes.value = order.observacoes ?? "";
-        document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + order.orcamentoId + ".";
+        document.querySelector("#quote-edit-status").textContent = "A ordem não inclui o detalhamento original; o valor será mantido em Outros custos. Confira a proposta no painel Orçamentos.";
         quoteEditDialog.showModal();
       });
       group.append(edit);
@@ -78,7 +104,8 @@ function renderOrders() {
     if (!completed && ["OFICINA", "ADMINISTRADOR"].includes(currentUser?.perfil)) {
       const statusSelect = document.createElement("select"); statusSelect.className = "mini-button"; statusSelect.setAttribute("aria-label", "Novo status da ordem");
       const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Status…"; statusSelect.append(placeholder);
-      for (const statusValue of ["EM_ANDAMENTO", "AGUARDANDO_PECA", "CONCLUIDO"]) {
+      const allowedTransitions = {PENDENTE:["EM_ANDAMENTO","AGUARDANDO_PECA"],EM_ANDAMENTO:["AGUARDANDO_PECA","CONCLUIDO"],AGUARDANDO_PECA:["EM_ANDAMENTO","CONCLUIDO"]};
+      for (const statusValue of (allowedTransitions[order.status] || [])) {
         const option = document.createElement("option"); option.value = statusValue; option.textContent = statusLabels[statusValue] || statusValue; statusSelect.append(option);
       }
       const updateStatus = document.createElement("button"); updateStatus.type = "button"; updateStatus.className = "mini-button"; updateStatus.textContent = "Atualizar";
@@ -151,10 +178,12 @@ function applyRoleUI() {
   document.querySelector("#diagnostico").hidden = role !== "CLIENTE";
   document.querySelector("#estoque-inteligente").hidden = !["FORNECEDOR", "ADMINISTRADOR"].includes(role);
   document.querySelector("#inventory-supplier-field").hidden = role !== "ADMINISTRADOR";
+  document.querySelector("#fitment-admin-tools").hidden = role !== "ADMINISTRADOR";
   document.querySelectorAll(".nav-item[data-profiles]").forEach(link => {
     const allowed = link.dataset.profiles.split(",");
     link.hidden = !allowed.includes(role);
   });
+  if (typeof window.refreshSupplementalFeatures === "function") window.refreshSupplementalFeatures();
 }
 
 async function loadVehicles() {
@@ -420,17 +449,38 @@ async function loadQuotes() {
       const title = document.createElement("strong"); title.textContent = "Orçamento #" + quote.id + " · Solicitação #" + quote.solicitacaoId;
       const description = document.createElement("p"); description.textContent = quote.descricao || "Serviço automotivo";
       const meta = document.createElement("p"); meta.textContent = (quote.oficina || "Oficina") + " · " + currency(quote.valor) + " · Prazo: " + (quote.prazoDias == null ? "a combinar" : quote.prazoDias + " dia(s)");
+      const breakdown = document.createElement("p");
+      const hasBreakdown = quote.custoPecas != null || quote.custoMaoObra != null || quote.custoOutros != null;
+      breakdown.textContent = hasBreakdown && (Number(quote.custoPecas || 0) > 0 || Number(quote.custoMaoObra || 0) > 0 || Number(quote.custoOutros || 0) > 0)
+        ? "Peças: " + currency(quote.custoPecas || 0) + " · Mão de obra: " + currency(quote.custoMaoObra || 0) + " · Outros: " + currency(quote.custoOutros || 0)
+        : "Detalhamento por item não disponível para esta proposta.";
+      const terms = document.createElement("p");
+      const conditionLabels = {NOVAS:"Peças novas",USADAS:"Peças usadas",RECONDICIONADAS:"Peças recondicionadas",MISTAS:"Peças mistas",NAO_INFORMADA:"Condição das peças não informada"};
+      terms.textContent = [
+        quote.garantiaDias != null ? "Garantia informada: " + quote.garantiaDias + " dia(s)" : "Garantia não informada",
+        quote.validadeDias != null ? "Validade da proposta: " + quote.validadeDias + " dia(s)" : "Validade não informada",
+        conditionLabels[quote.condicaoPecas] || "Condição das peças não informada"
+      ].join(" · ");
       const badge = document.createElement("span"); badge.className = "status-badge " + String(quote.status).toLowerCase(); badge.textContent = quote.status;
-      card.append(title, description, meta, badge);
+      card.append(title, description, meta, breakdown, terms, badge);
       if (currentUser.perfil === "OFICINA" && ["PENDENTE", "ENVIADO"].includes(quote.status)) {
         const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
         edit.addEventListener("click", () => {
           const form = document.querySelector("#quote-edit-form");
           form.elements.id.value = quote.id;
-          form.elements.valor.value = quote.valor;
+          const hasBreakdown = quote.custoPecas != null || quote.custoMaoObra != null || quote.custoOutros != null;
+          form.elements.valorPecas.value = quote.custoPecas ?? 0;
+          form.elements.valorMaoObra.value = quote.custoMaoObra ?? 0;
+          form.elements.valorOutro.value = hasBreakdown ? (quote.custoOutros ?? 0) : quote.valor;
+          form.elements.garantiaDias.value = quote.garantiaDias ?? "";
+          form.elements.validadeDias.value = quote.validadeDias ?? "";
+          form.elements.condicaoPecas.value = quote.condicaoPecas || "NAO_INFORMADA";
+          updateQuoteTotalPreview(form, "#quote-edit-total-preview");
           form.elements.prazoDias.value = quote.prazoDias ?? 0;
           form.elements.observacoes.value = quote.observacoes ?? "";
-          document.querySelector("#quote-edit-status").textContent = "Editando orçamento #" + quote.id + ".";
+          document.querySelector("#quote-edit-status").textContent = hasBreakdown
+            ? "Editando orçamento #" + quote.id + "."
+            : "Esta proposta antiga não tem itens detalhados; o total existente será mantido em Outros custos se você salvar.";
           quoteEditDialog.showModal();
         });
         const editRow = document.createElement("div"); editRow.className = "quote-actions"; editRow.append(edit); card.append(editRow);
@@ -620,7 +670,7 @@ document.querySelector("#quote-form").addEventListener("submit", async event => 
   const status = document.querySelector("#quote-form-status");
   status.textContent = "Enviando orçamento…";
   try {
-    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valor:form.get("valor"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const response = await fetch("api/orcamentos", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({solicitacaoId:form.get("solicitacaoId"),valorPecas:form.get("valorPecas"),valorMaoObra:form.get("valorMaoObra"),valorOutro:form.get("valorOutro"),garantiaDias:form.get("garantiaDias"),validadeDias:form.get("validadeDias"),condicaoPecas:form.get("condicaoPecas"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível enviar orçamento.");
     status.textContent = "Orçamento #" + result.id + " enviado.";
@@ -679,7 +729,7 @@ document.querySelector("#quote-edit-form").addEventListener("submit", async even
   const status = document.querySelector("#quote-edit-status");
   status.textContent = "Salvando alterações…";
   try {
-    const response = await fetch("api/orcamentos/editar", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:form.get("id"),valor:form.get("valor"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
+    const response = await fetch("api/orcamentos/editar", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({id:form.get("id"),valorPecas:form.get("valorPecas"),valorMaoObra:form.get("valorMaoObra"),garantiaDias:form.get("garantiaDias"),validadeDias:form.get("validadeDias"),condicaoPecas:form.get("condicaoPecas"),prazoDias:form.get("prazoDias"),observacoes:form.get("observacoes")})});
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível atualizar orçamento.");
     status.textContent = "Orçamento atualizado.";
@@ -850,7 +900,7 @@ async function searchParts(query) {
   results.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 
-document.querySelector("#parts-search-form").addEventListener("submit", event => {
+document.querySelector("#parts-search-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const values = [
@@ -864,6 +914,7 @@ document.querySelector("#parts-search-form").addEventListener("submit", event =>
     document.querySelector("#parts-search-status").textContent = "Informe o veículo e a peça para montar a pesquisa.";
     return;
   }
+  await loadFitmentStatus(form);
   searchParts(query);
 });
 
@@ -898,6 +949,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   const button = form.querySelector('button[type="submit"]');
   const partsForm = document.querySelector("#parts-search-form");
   const parts = new FormData(partsForm);
+  const mode = form.elements.mode.value === "sintomas" ? "sintomas" : "pecas";
   const history = partsAssistantHistory.slice(-6).map(item => item.role + ": " + item.content).join("\n").slice(-2500);
   addPartsAssistantMessage("user", message);
   partsAssistantStatus.textContent = "Analisando a descrição e preparando uma busca segura…";
@@ -905,6 +957,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   try {
     const body = new URLSearchParams({
       mensagem: message,
+      modo: mode,
       historico: history,
       marca: String(parts.get("marca") || ""),
       modelo: String(parts.get("modelo") || ""),
@@ -927,14 +980,22 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
     const orientation = assistantField(answer, "ORIENTACAO");
     const query = assistantField(answer, "CONSULTA");
     const missing = assistantField(answer, "FALTA");
+    const alert = assistantField(answer, "ALERTA");
+    const safetySignal = result.alertaSeguranca === true;
     const visibleAnswer = [
       orientation || answer,
-      missing && missing.toUpperCase() !== "VAZIO" ? "Para continuar, preciso de: " + missing : ""
+      missing && missing.toUpperCase() !== "VAZIO" ? "Para continuar, preciso de: " + missing : "",
+      mode === "sintomas" && (safetySignal || alert.toUpperCase() === "URGENTE")
+        ? "ALERTA DE SEGURANÇA: não continue dirigindo se houver risco. Pare em local seguro, desligue o motor se for seguro e procure assistência profissional ou guincho." : ""
     ].filter(Boolean).join("\n\n");
     addPartsAssistantMessage("assistant", visibleAnswer || "Não consegui montar uma orientação. Tente explicar a peça e o veículo com outras palavras.");
     partsAssistantHistory.push({role:"user",content:message},{role:"assistente",content:visibleAnswer || answer});
     if (partsAssistantHistory.length > 12) partsAssistantHistory.splice(0, partsAssistantHistory.length - 12);
-    if (query && query.toUpperCase() !== "VAZIO" && query.length >= 3) {
+    if (mode === "sintomas") {
+      partsAssistantStatus.textContent = result.fallback
+        ? (result.aviso || "Modo guiado sem IA; não é um diagnóstico técnico.")
+        : "Orientação preliminar. Não é um diagnóstico técnico; registre o relato ou procure uma oficina quando necessário.";
+    } else if (query && query.toUpperCase() !== "VAZIO" && query.length >= 3) {
       partsAssistantStatus.textContent = "A orientação está pronta; buscando anúncios reais no Mercado Livre.";
       await searchParts(query);
     } else {
@@ -950,7 +1011,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   }
 });
 
-document.querySelector("#garage-vehicle-select").addEventListener("change", loadGarage);
+document.querySelector("#garage-vehicle-select").addEventListener("change", async () => { await loadGarage(); await loadMaintenance(); await loadRepairTimeline(); });
 document.querySelector("#refresh-button").addEventListener("click", async () => { await loadOrders(); await loadGarage(); });
 searchInput.addEventListener("input", renderOrders);
 
@@ -996,6 +1057,7 @@ document.querySelector("#auth-open").addEventListener("click", async () => {
     const response = await fetch("api/auth", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({action:"logout"})});
     if (!response.ok) throw new Error("Não foi possível encerrar a sessão.");
     currentUser = null;
+    window.dispatchEvent(new Event("launchcontrol:session"));
     document.querySelector("#auth-open").textContent = "Entrar";
     applyRoleUI();
     await loadOrders();
@@ -1021,6 +1083,7 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.erro || "Não foi possível autenticar.");
     currentUser = result;
+    window.dispatchEvent(new Event("launchcontrol:session"));
     document.querySelector("#auth-open").textContent = result.nome + " · Sair";
     status.textContent = "Autenticado como " + result.perfil + ".";
     authDialog.close();
@@ -1039,6 +1102,7 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     const response = await fetch("api/auth");
     if (response.ok) {
       currentUser = await response.json();
+      window.dispatchEvent(new Event("launchcontrol:session"));
       document.querySelector("#auth-open").textContent = currentUser.nome + " · Sair";
     }
   } catch {}
@@ -1052,3 +1116,315 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
   loadInventory();
   loadPayments();
 })();
+
+// CarPassport: histórico de manutenção persistido pelo endpoint Java existente na branch.
+function formatMaintenanceDate(value) {
+  if (!value) return "Não informado";
+  const parsed = new Date(String(value).slice(0, 10) + "T12:00:00");
+  return Number.isNaN(parsed.getTime())
+    ? "Data indisponível"
+    : new Intl.DateTimeFormat("pt-BR", {dateStyle:"medium"}).format(parsed);
+}
+
+async function loadMaintenance() {
+  const vehicleId = document.querySelector("#garage-vehicle-select").value;
+  const timeline = document.querySelector("#maintenance-timeline");
+  const summary = document.querySelector("#maintenance-summary");
+  const status = document.querySelector("#maintenance-status");
+  timeline.replaceChildren();
+  summary.replaceChildren();
+
+  if (!currentUser || currentUser.perfil !== "CLIENTE") {
+    timeline.textContent = "Entre como cliente para consultar o passaporte digital.";
+    return;
+  }
+  if (!vehicleId) {
+    timeline.textContent = "Selecione um veículo para consultar manutenções.";
+    status.textContent = "Selecione um veículo para começar.";
+    return;
+  }
+
+  timeline.textContent = "Consultando histórico de manutenção…";
+  try {
+    const response = await fetch("api/manutencoes?veiculoId=" + encodeURIComponent(vehicleId), {
+      headers: {"Accept":"application/json"}
+    });
+    const records = await response.json();
+    if (!response.ok) throw new Error(records.erro || "Não foi possível carregar o histórico.");
+    const total = records.reduce((sum, item) => sum + Number(item.custo || 0), 0);
+    const currentYear = new Date().getFullYear();
+    const annualSpend = records.reduce((sum, item) =>
+      String(item.dataServico || "").slice(0, 4) === String(currentYear) ? sum + Number(item.custo || 0) : sum, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentMileage = records.length && records[0].quilometragemAtual != null
+      ? Number(records[0].quilometragemAtual) : null;
+    const dueRecords = records.filter(item => {
+      const dateDue = item.proximaData
+        ? new Date(String(item.proximaData).slice(0, 10) + "T00:00:00") < today
+        : false;
+      const mileageDue = item.proximaQuilometragem != null && currentMileage != null
+        ? Number(item.proximaQuilometragem) <= currentMileage : false;
+      return dateDue || mileageDue;
+    });
+    const plannedRecords = records.filter(item => item.proximaData || item.proximaQuilometragem != null).length;
+    const planningCoverage = records.length ? Math.round(plannedRecords / records.length * 100) : null;
+    const upcoming = records.filter(item => item.proximaData || item.proximaQuilometragem != null)
+      .sort((a, b) => String(a.proximaData || "9999-12-31").localeCompare(String(b.proximaData || "9999-12-31")))[0];
+    const nextCare = upcoming
+      ? [upcoming.proximaData ? formatMaintenanceDate(upcoming.proximaData) : "",
+         upcoming.proximaQuilometragem != null ? Number(upcoming.proximaQuilometragem).toLocaleString("pt-BR") + " km" : ""]
+        .filter(Boolean).join(" / ")
+      : "Não informado";
+    const metrics = [
+      ["Registros", String(records.length)],
+      ["Gasto neste ano", currency(annualSpend)],
+      ["Manutenções vencidas", String(dueRecords.length)],
+      ["Próximo cuidado", nextCare],
+      ["Planejamento registrado", planningCoverage == null ? "Sem dados" : planningCoverage + "%"],
+      ["Custo acumulado", currency(total)]
+    ];
+    metrics.forEach(([label, value]) => {
+      const item = document.createElement("div");
+      item.className = "garage-summary-item";
+      const title = document.createElement("span");
+      title.textContent = label;
+      const valueNode = document.createElement("strong");
+      valueNode.textContent = value;
+      item.append(title, valueNode);
+      summary.append(item);
+    });
+
+    if (!records.length) {
+      timeline.textContent = "Nenhuma manutenção cadastrada para este veículo. Registre o primeiro serviço ao lado.";
+    } else {
+      records.forEach(record => {
+        const item = document.createElement("article");
+        item.className = "garage-timeline-item";
+        const title = document.createElement("strong");
+        title.textContent = record.categoria + " · " + formatMaintenanceDate(record.dataServico);
+        const description = document.createElement("p");
+        description.textContent = record.descricao;
+        const detail = document.createElement("p");
+        detail.textContent = [
+          record.quilometragem != null ? Number(record.quilometragem).toLocaleString("pt-BR") + " km" : "",
+          "Custo: " + currency(record.custo),
+          record.oficina ? "Oficina informada: " + record.oficina : "",
+          record.proximaData ? "Próxima data: " + formatMaintenanceDate(record.proximaData) : "",
+          record.proximaQuilometragem != null ? "Próxima quilometragem: " + Number(record.proximaQuilometragem).toLocaleString("pt-BR") + " km" : ""
+        ].filter(Boolean).join(" · ");
+        const provenance = document.createElement("small");
+        provenance.textContent = "Registro informado pelo proprietário; não equivale a laudo ou comprovante verificado.";
+        item.append(title, description, detail, provenance);
+        timeline.append(item);
+      });
+    }
+    status.textContent = records.length + (records.length === 1 ? " manutenção registrada." : " manutenções registradas.");
+  } catch (error) {
+    timeline.textContent = error.message || "Não foi possível carregar o histórico.";
+    status.textContent = error.message || "Falha ao consultar o passaporte digital.";
+  }
+}
+
+document.querySelector("#maintenance-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const status = document.querySelector("#maintenance-status");
+  const vehicleId = document.querySelector("#garage-vehicle-select").value;
+  if (!currentUser || currentUser.perfil !== "CLIENTE") {
+    status.textContent = "Entre como cliente para registrar uma manutenção.";
+    return;
+  }
+  if (!vehicleId) {
+    status.textContent = "Selecione um veículo antes de salvar.";
+    return;
+  }
+  const form = new FormData(event.currentTarget);
+  status.textContent = "Salvando manutenção…";
+  const body = new URLSearchParams({
+    veiculoId: vehicleId,
+    categoria: form.get("categoria"),
+    descricao: form.get("descricao"),
+    dataServico: form.get("dataServico"),
+    quilometragem: form.get("quilometragem"),
+    custo: form.get("custo"),
+    oficina: form.get("oficina"),
+    proximaData: form.get("proximaData"),
+    proximaQuilometragem: form.get("proximaQuilometragem")
+  });
+  try {
+    const response = await fetch("api/manutencoes", {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+        "X-CSRF-Token":currentUser.csrf || ""
+      },
+      body
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível salvar a manutenção.");
+    event.currentTarget.reset();
+    status.textContent = "Manutenção registrada. Atualizando o histórico…";
+    await loadMaintenance();
+  } catch (error) {
+    status.textContent = error.message || "Falha ao salvar a manutenção.";
+  }
+});
+
+
+// Oficina Transparente: consulta apenas eventos gravados pelo backend para o veículo do cliente.
+async function loadRepairTimeline() {
+  const vehicleId = document.querySelector("#garage-vehicle-select").value;
+  const timeline = document.querySelector("#repair-timeline");
+  const status = document.querySelector("#repair-timeline-status");
+  timeline.replaceChildren();
+  if (!currentUser || currentUser.perfil !== "CLIENTE" || !vehicleId) {
+    timeline.textContent = "Selecione um veículo para consultar atualizações registradas.";
+    return;
+  }
+  status.textContent = "Consultando eventos registrados…";
+  try {
+    const response = await fetch("api/ordens-servico?historicoVeiculoId=" + encodeURIComponent(vehicleId), {
+      headers: {"Accept":"application/json"}
+    });
+    const events = await response.json();
+    if (!response.ok) throw new Error(events.erro || "Não foi possível consultar a linha do tempo.");
+    if (!events.length) {
+      timeline.textContent = "Ainda não há eventos de status registrados para este veículo. Ordens antigas podem não possuir histórico retroativo.";
+    } else {
+      events.forEach(event => {
+        const item = document.createElement("article");
+        item.className = "garage-timeline-item";
+        const title = document.createElement("strong");
+        title.textContent = (event.codigo || "Ordem #" + event.ordemId) + " · " + (statusLabels[event.status] || event.status);
+        const detail = document.createElement("p");
+        detail.textContent = event.observacao || "Alteração de status registrada pela plataforma.";
+        const date = document.createElement("small");
+        date.textContent = formatMaintenanceDate(event.criadoEm);
+        item.append(title, detail, date);
+        timeline.append(item);
+      });
+    }
+    status.textContent = events.length + (events.length === 1 ? " evento registrado." : " eventos registrados.");
+  } catch (error) {
+    timeline.textContent = error.message || "Não foi possível consultar a linha do tempo.";
+    status.textContent = error.message || "Falha ao consultar os eventos.";
+  }
+}
+
+
+// Fitment Engine: mostra apenas evidências do catálogo local, sem inferir compatibilidade a partir do anúncio.
+async function loadFitmentStatus(form) {
+  const panel = document.querySelector("#fitment-status");
+  const results = document.querySelector("#fitment-results");
+  panel.hidden = false;
+  results.textContent = "Consultando referências de aplicação cadastradas…";
+  const params = new URLSearchParams({
+    marca: String(form.get("marca") || ""),
+    modelo: String(form.get("modelo") || ""),
+    ano: String(form.get("ano") || ""),
+    motorizacao: String(form.get("motorizacao") || ""),
+    oem: String(form.get("oem") || ""),
+    peca: String(form.get("peca") || "")
+  });
+  try {
+    const response = await fetch("api/compatibilidade-pecas?" + params.toString(), {
+      headers: {"Accept":"application/json"}
+    });
+    const items = await response.json();
+    if (!response.ok) throw new Error(items.erro || "Não foi possível consultar o catálogo de compatibilidade.");
+    results.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Não há referência cadastrada para essa combinação no catálogo local. Isso não significa que a peça seja incompatível; confirme o código OEM com uma fonte confiável ou com o fornecedor.";
+      results.append(empty);
+      return;
+    }
+    items.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "fitment-result";
+      const title = document.createElement("strong");
+      title.textContent = item.peca || "Peça sem nome";
+      const state = document.createElement("p");
+      if (item.status === "CONFIRMADA") {
+        state.textContent = "Compatibilidade registrada como confirmada pela fonte informada.";
+      } else if (item.status === "INCOMPATIVEL") {
+        state.textContent = "A referência consultada indica incompatibilidade para esta aplicação.";
+      } else {
+        state.textContent = "Compatibilidade não verificada. Não use esta referência como confirmação técnica.";
+      }
+      const details = document.createElement("p");
+      details.textContent = [
+        item.codigoOem ? "OEM: " + item.codigoOem : "",
+        item.codigoPeca ? "Código cadastrado: " + item.codigoPeca : "",
+        item.fonte ? "Fonte: " + item.fonte : "Fonte não informada",
+        item.verificadoEm ? "Verificado em: " + formatMaintenanceDate(item.verificadoEm) : "Data de verificação não informada",
+        item.observacoes || ""
+      ].filter(Boolean).join(" · ");
+      card.append(title, state, details);
+      if (item.referencia) {
+        const reference = document.createElement("p");
+        reference.textContent = "Referência: " + item.referencia;
+        card.append(reference);
+      }
+      results.append(card);
+    });
+  } catch (error) {
+    results.textContent = (error.message || "Falha ao consultar compatibilidade.") + " A pesquisa comercial continua disponível, mas não confirma aplicação técnica.";
+  }
+}
+
+
+function updateQuoteTotalPreview(form, targetSelector) {
+  const parts = Number(form.elements.valorPecas?.value || 0);
+  const labor = Number(form.elements.valorMaoObra?.value || 0);
+  const other = Number(form.elements.valorOutro?.value || 0);
+  const target = document.querySelector(targetSelector);
+  if (target) target.value = currency((Number.isFinite(parts) ? parts : 0) + (Number.isFinite(labor) ? labor : 0) + (Number.isFinite(other) ? other : 0));
+}
+
+document.querySelector("#quote-form").addEventListener("input", () => {
+  updateQuoteTotalPreview(document.querySelector("#quote-form"), "#quote-total-preview");
+});
+document.querySelector("#quote-edit-form").addEventListener("input", () => {
+  updateQuoteTotalPreview(document.querySelector("#quote-edit-form"), "#quote-edit-total-preview");
+});
+
+
+document.querySelector("#fitment-admin-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#fitment-admin-status");
+  if (!currentUser || currentUser.perfil !== "ADMINISTRADOR") {
+    status.textContent = "Somente administradores podem cadastrar referências de compatibilidade.";
+    return;
+  }
+  status.textContent = "Registrando referência no catálogo…";
+  try {
+    const response = await fetch("api/compatibilidade-pecas", {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+        "X-CSRF-Token":currentUser.csrf || ""
+      },
+      body: new URLSearchParams({
+        pecaId: form.get("pecaId"),
+        marcaVeiculo: form.get("marcaVeiculo"),
+        modeloVeiculo: form.get("modeloVeiculo"),
+        anoInicio: form.get("anoInicio"),
+        anoFim: form.get("anoFim"),
+        motorizacao: form.get("motorizacao"),
+        codigoOem: form.get("codigoOem"),
+        status: form.get("status"),
+        fonte: form.get("fonte"),
+        referencia: form.get("referencia"),
+        observacoes: form.get("observacoes")
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível registrar a referência.");
+    status.textContent = "Referência #" + result.id + " registrada. Verifique a fonte e consulte a aplicação pela pesquisa LC Parts.";
+    event.currentTarget.reset();
+  } catch (error) {
+    status.textContent = error.message || "Falha ao registrar a referência.";
+  }
+});

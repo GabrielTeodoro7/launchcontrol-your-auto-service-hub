@@ -116,3 +116,63 @@
 .inventory-form h3{margin:0;font-size:14px}
 .nav-item[hidden]{display:none!important}
 @media(max-width:720px){.quote-comparison-tools,.inventory-controls{grid-template-columns:1fr}.inventory-summary{grid-template-columns:1fr}.inventory-list{grid-template-columns:1fr}}
+
+
+/* Passaporte digital: componentes alinhados aos cartões e formulários já existentes. */
+.maintenance-passport{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.maintenance-passport h4{margin:0 0 10px;font-size:13px}
+.maintenance-passport .garage-columns{align-items:start}
+.maintenance-passport .garage-summary-item{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);min-width:0}
+.maintenance-passport .garage-summary-item span{font-size:11px;color:var(--muted)}
+.maintenance-passport .garage-summary-item strong{font-size:17px;color:var(--orange);overflow-wrap:anywhere}
+.maintenance-passport .garage-timeline-item{padding:13px 0;border-bottom:1px solid var(--line)}
+.maintenance-passport .garage-timeline-item:last-child{border-bottom:0}
+.maintenance-passport .garage-timeline-item strong{display:block;font-size:13px}
+.maintenance-passport .garage-timeline-item p{margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.maintenance-passport .garage-timeline-item small{display:block;margin-top:7px;color:var(--muted);font-size:11px;line-height:1.5}
+.maintenance-passport .stack-form{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+
+
+.repair-transparency{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.repair-transparency .garage-timeline-item{padding:13px 0;border-bottom:1px solid var(--line)}
+.repair-transparency .garage-timeline-item:last-child{border-bottom:0}
+.repair-transparency .garage-timeline-item strong{display:block;font-size:13px}
+.repair-transparency .garage-timeline-item p,.repair-transparency .garage-timeline-item small{display:block;margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+
+
+.fitment-result{padding:12px 0;border-bottom:1px solid var(--line)}
+.fitment-result:last-child{border-bottom:0}
+.fitment-result strong{display:block;font-size:13px}
+.fitment-result p{margin:5px 0;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+
+
+.quote-cost-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#quote-total-preview,#quote-edit-total-preview{font-weight:800;color:var(--orange)}
+@media(max-width:700px){.quote-cost-fields{grid-template-columns:1fr}}
+
+
+.supplemental-tools{margin:22px 0;padding:20px}
+.supplemental-tools .panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.supplemental-tools h2{margin:0;font-size:19px}
+.supplemental-tools h3{margin:0 0 10px;font-size:15px}
+.supplemental-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.supplemental-list{display:grid;gap:10px}
+.supplemental-item{padding:13px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);overflow-wrap:anywhere}
+.supplemental-item strong{display:block;font-size:13px}
+.supplemental-item p{margin:6px 0;color:var(--muted);font-size:12px;line-height:1.6}
+.supplemental-item small{display:block;color:var(--muted);font-size:11px}
+.supplemental-item.is-unread{border-color:var(--orange)}
+.supplemental-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.supplemental-tools .stack-form{margin-top:16px}
+@media(max-width:700px){.supplemental-tools{padding:14px}.supplemental-tools .panel-heading{align-items:flex-start;flex-wrap:wrap}.supplemental-actions .button{flex:1}}
+
+/* Operação ampliada: agenda, indicadores, auditoria e integrações. */
+.operations-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.operations-metrics .stat-card strong{font-size:24px;overflow-wrap:anywhere}
+.integration-note{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#101720;color:var(--muted);font-size:12px;margin:10px 0}
+.audit-list,.appointment-list{display:grid;gap:9px}
+.inline-check{display:flex!important;grid-template-columns:auto 1fr;align-items:center;gap:10px!important}
+.inline-check input{width:auto!important}
+.csv-field{min-height:180px;font:12px/1.5 monospace!important}
+#operations-dashboard-status[data-state="error"],#appointment-status[data-state="error"],#appointment-config-status[data-state="error"],#fitment-import-status[data-state="error"],#notification-preferences-status[data-state="error"]{color:var(--red)}
+@media(max-width:520px){.operations-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
