@@ -3,30 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Encontre serviços automotivos e organize seus orçamentos.">
-  <title>LaunchControl | Serviços automotivos</title>
+  <meta name="description" content="LaunchControl — gestão de serviços automotivos">
+  <title>LaunchControl | Painel</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="js/app.js" defer></script>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="./" aria-label="LaunchControl início"><span class="brand-mark">LC</span><span>LAUNCH<span class="accent">CONTROL</span></span></a>
-    <nav aria-label="Navegação principal"><a href="#servicos">Serviços</a><a href="#sobre">Como funciona</a></nav>
-  </header>
-  <main>
-    <section class="hero">
-      <p class="eyebrow">SUA JORNADA AUTOMOTIVA, SOB CONTROLE</p>
-      <h1>Cuide do seu carro com <span class="accent">mais confiança.</span></h1>
-      <p class="intro">Pesquise serviços automotivos e encontre opções para planejar a manutenção do seu veículo.</p>
-      <a class="primary-button" href="#servicos">Explorar serviços <span aria-hidden="true">→</span></a>
-    </section>
-    <section class="catalog" id="servicos">
-      <div class="section-heading"><div><p class="eyebrow">CATÁLOGO</p><h2>Serviços disponíveis</h2></div><label class="search"><span class="visually-hidden">Pesquisar serviço</span><input id="service-search" type="search" placeholder="Ex.: troca de óleo"></label></div>
-      <p id="status" class="status" role="status">Carregando serviços…</p>
-      <div id="service-list" class="service-list"></div>
-    </section>
-    <section id="sobre" class="about"><p class="eyebrow">LAUNCHCONTROL</p><h2>Mais clareza para escolher.</h2><p>A plataforma reúne informações para ajudar clientes a pesquisar serviços e, nas próximas etapas, solicitar e comparar orçamentos.</p></section>
-  </main>
-  <footer>LaunchControl · Plataforma de Serviços Automotivos</footer>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="./"><span class="brand-mark">LC</span><span><strong>LAUNCHCONTROL</strong><small>GESTÃO AUTOMOTIVA</small></span></a>
+      <p class="nav-label">MENU PRINCIPAL</p>
+      <nav class="side-nav" aria-label="Menu principal">
+        <a class="nav-item active" href="#dashboard"><span>▦</span> Dashboard</a>
+        <a class="nav-item" href="#servicos"><span>▤</span> Serviços</a>
+        <a class="nav-item" href="#orcamentos"><span>▧</span> Orçamentos</a>
+        <a class="nav-item" href="#diagnostico"><span>⌁</span> Diagnóstico</a>
+        <a class="nav-item" href="#checkout"><span>▣</span> Checkout demonstrativo</a>
+      </nav>
+      <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar"><div><p class="eyebrow">PAINEL DE CONTROLE</p><h1 id="dashboard">Visão geral</h1></div><div class="topbar-actions"><span class="api-status" id="api-status">Verificando API…</span><button class="button button-outline" id="refresh-button" type="button">Atualizar</button></div></header>
+      <section class="welcome"><div><p class="eyebrow">LAUNCHCONTROL</p><h2>Controle total da <span>jornada automotiva.</span></h2><p>Consulte os serviços persistidos no MySQL e acompanhe os status reais do atendimento.</p></div><div class="welcome-mark" aria-hidden="true">LC</div></section>
+      <section class="stats-grid" aria-label="Resumo de serviços">
+        <article class="stat-card"><span class="stat-icon orange">▤</span><p>Ordens de serviço</p><strong id="stat-total">—</strong><small>Registros do banco</small></article>
+        <article class="stat-card"><span class="stat-icon blue">◷</span><p>Em andamento</p><strong id="stat-progress">—</strong><small>Status em execução</small></article>
+        <article class="stat-card"><span class="stat-icon green">✓</span><p>Concluídos</p><strong id="stat-complete">—</strong><small>Orçamento bloqueado para edição</small></article>
+        <article class="stat-card"><span class="stat-icon purple">⌁</span><p>Aguardando peça</p><strong id="stat-parts">—</strong><small>Dependem de reposição</small></article>
+      </section>
+      <section class="panel" id="servicos">
+        <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO</p><h2>Ordens de serviço</h2><p class="muted">Ações são controladas pelo status real retornado pelo backend.</p></div><label class="search-box"><span class="sr-only">Pesquisar serviços</span><input id="service-search" type="search" placeholder="Pesquisar cliente, veículo ou serviço"></label></div>
+        <div class="table-wrap"><table><thead><tr><th>ORDEM</th><th>CLIENTE</th><th>VEÍCULO</th><th>SERVIÇO</th><th>STATUS</th><th>VALOR</th><th>AÇÕES</th></tr></thead><tbody id="service-rows"><tr><td colspan="7" class="empty">Carregando registros do banco…</td></tr></tbody></table></div>
+        <p class="table-note" id="service-status" role="status">Aguardando resposta do backend.</p>
+      </section>
+      <div class="two-columns">
+        <section class="panel" id="orcamentos"><div class="panel-heading"><div><p class="eyebrow">REGRAS DE NEGÓCIO</p><h2>Orçamentos</h2></div></div><div class="info-row"><span class="info-mark green">✓</span><div><strong>Serviço concluído</strong><p>O botão de edição é ocultado na interface e a API também deve recusar alterações.</p></div></div><div class="info-row"><span class="info-mark orange">!</span><div><strong>Persistência real</strong><p>Esta tela não usa localStorage como fonte dos registros. Os dados vêm do endpoint Java.</p></div></div></section>
+        <section class="panel" id="diagnostico"><div class="panel-heading"><div><p class="eyebrow">ATENDIMENTO</p><h2>Diagnóstico preliminar</h2></div></div><form id="diagnostic-form" class="stack-form"><label>Veículo / identificação<input name="vehicle" required maxlength="120" placeholder="Ex.: Sandero 1.0 2016"></label><label>Sintomas relatados<textarea name="symptoms" required maxlength="2000" rows="3" placeholder="Descreva os sintomas observados"></textarea></label><label>Prioridade<select name="priority"><option value="NORMAL">Normal</option><option value="ALTA">Alta</option><option value="URGENTE">Urgente</option></select></label><button class="button button-primary" type="submit">Registrar relato</button><p class="form-status" id="diagnostic-status" role="status">Relatos são informações do cliente, não diagnóstico técnico validado.</p></form></section>
+      </div>
+      <section class="panel checkout-panel" id="checkout"><div><p class="eyebrow">PAGAMENTOS</p><h2>Checkout de demonstração</h2><p class="muted">Sem provedor de pagamento configurado, o sistema não cobra, não gera PIX válido e não aprova transações reais.</p></div><form id="checkout-form" class="checkout-form"><label>ID do orçamento<input name="quoteId" type="number" min="1" required placeholder="ID do orçamento existente"></label><label>Método<select name="method"><option value="PIX_DEMO">PIX — demonstração</option><option value="CARTAO_DEMO">Cartão — demonstração</option></select></label><button class="button button-primary" type="submit">Criar pagamento pendente</button></form><p id="checkout-status" class="form-status" role="status">A operação demonstrativa ficará pendente e será identificada como demonstração.</p></section>
+      <footer>LaunchControl · Java Servlet · MySQL · HTML, CSS e JavaScript</footer>
+    </main>
+  </div>
+  <dialog id="detail-dialog" class="detail-dialog"><form method="dialog"><button class="dialog-close" aria-label="Fechar">×</button></form><p class="eyebrow">DETALHES DA ORDEM</p><h2 id="detail-title">Ordem</h2><pre id="detail-content"></pre></dialog>
 </body>
 </html>
