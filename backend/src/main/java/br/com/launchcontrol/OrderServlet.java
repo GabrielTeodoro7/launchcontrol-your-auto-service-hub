@@ -146,14 +146,19 @@ public class OrderServlet extends HttpServlet {
             c.setAutoCommit(false);
             try {
                 String previousStatus;
+                String orderCode;
+                long customerId;
                 try (PreparedStatement ps = c.prepareStatement(
-                    "SELECT os.status,ofi.usuario_id FROM ordens_servico os " +
+                    "SELECT os.status,os.codigo,so.cliente_id,ofi.usuario_id FROM ordens_servico os " +
+                    "JOIN solicitacoes_orcamento so ON so.id=os.solicitacao_id " +
                     "LEFT JOIN orcamentos o ON o.id=os.orcamento_id " +
                     "LEFT JOIN oficinas ofi ON ofi.id=o.oficina_id WHERE os.id=? FOR UPDATE")) {
                     ps.setLong(1, orderId);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) { c.rollback(); Json.error(response, 404, "Ordem não encontrada."); return; }
                         previousStatus = rs.getString("status");
+                        orderCode = rs.getString("codigo");
+                        customerId = rs.getLong("cliente_id");
                         if ("CONCLUIDO".equals(previousStatus)) {
                             c.rollback(); Json.error(response, 409, "Uma ordem concluída não pode ser reaberta ou alterada."); return;
                         }
@@ -162,6 +167,19 @@ public class OrderServlet extends HttpServlet {
                         }
                         if ("OFICINA".equals(role) && rs.getLong("usuario_id") != userId) {
                             c.rollback(); Json.error(response, 403, "Esta ordem não pertence à sua oficina."); return;
+                        }
+                    }
+                }
+                if ("CONCLUIDO".equals(nextStatus)) {
+                    try (PreparedStatement pending = c.prepareStatement(
+                            "SELECT COUNT(*) FROM servicos_adicionais WHERE ordem_id=? AND status='PENDENTE'")) {
+                        pending.setLong(1, orderId);
+                        try (ResultSet result = pending.executeQuery()) {
+                            if (result.next() && result.getLong(1) > 0) {
+                                c.rollback();
+                                Json.error(response, 409, "Há serviços adicionais aguardando decisão do cliente. Resolva as propostas antes de concluir a ordem.");
+                                return;
+                            }
                         }
                     }
                 }
@@ -178,6 +196,10 @@ public class OrderServlet extends HttpServlet {
                     ps.setLong(4, userId);
                     ps.executeUpdate();
                 }
+                AdditionalServiceServlet.createNotification(c, customerId,
+                        "Atualização da ordem " + orderCode,
+                        "O status da sua ordem mudou de " + previousStatus + " para " + nextStatus + ".",
+                        "STATUS_ORDEM", orderId);
                 try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO auditoria(usuario_id,acao,entidade,entidade_id,detalhes) VALUES(?,?,?,?,?)")) {
                     ps.setLong(1, userId); ps.setString(2, "ATUALIZAR_ORDEM"); ps.setString(3, "ordens_servico");
