@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Encontre serviços automotivos e organize seus orçamentos.">
+  <title>LaunchControl | Serviços automotivos</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="LaunchControl início"><span class="brand-mark">LC</span><span>LAUNCH<span class="accent">CONTROL</span></span></a>
+    <nav aria-label="Navegação principal"><a href="#servicos">Serviços</a><a href="#sobre">Como funciona</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">SUA JORNADA AUTOMOTIVA, SOB CONTROLE</p>
+      <h1>Cuide do seu carro com <span class="accent">mais confiança.</span></h1>
+      <p class="intro">Pesquise serviços automotivos e encontre opções para planejar a manutenção do seu veículo.</p>
+      <a class="primary-button" href="#servicos">Explorar serviços <span aria-hidden="true">→</span></a>
+    </section>
+    <section class="catalog" id="servicos">
+      <div class="section-heading"><div><p class="eyebrow">CATÁLOGO</p><h2>Serviços disponíveis</h2></div><label class="search"><span class="visually-hidden">Pesquisar serviço</span><input id="service-search" type="search" placeholder="Ex.: troca de óleo"></label></div>
+      <p id="status" class="status" role="status">Carregando serviços…</p>
+      <div id="service-list" class="service-list"></div>
+    </section>
+    <section id="sobre" class="about"><p class="eyebrow">LAUNCHCONTROL</p><h2>Mais clareza para escolher.</h2><p>A plataforma reúne informações para ajudar clientes a pesquisar serviços e, nas próximas etapas, solicitar e comparar orçamentos.</p></section>
+  </main>
+  <footer>LaunchControl · Plataforma de Serviços Automotivos</footer>
+</body>
+</html>
