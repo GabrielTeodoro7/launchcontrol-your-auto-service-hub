@@ -200,7 +200,7 @@ def main():
     quote, _ = post_csrf(workshop, "/api/orcamentos",
                          {"solicitacaoId": str(request_one["id"]), "prazoDias": "3",
                           "valorPecas": "100.00", "valorMaoObra": "50.00", "valorOutro": "10.00",
-                          "garantiaDias": "90", "validadeDias": "7", "condicaoPecas": "NOVA",
+                          "garantiaDias": "90", "validadeDias": "7", "condicaoPecas": "NOVAS",
                           "observacoes": "Orçamento sintético para teste"},
                          workshop_csrf, expected=201)
     assert float(quote["valor"]) == 160.0, quote
