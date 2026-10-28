@@ -23,7 +23,7 @@
       <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
     </aside>
     <main class="main-content">
-      <header class="topbar"><div><p class="eyebrow">PAINEL DE CONTROLE</p><h1 id="dashboard">Visão geral</h1></div><div class="topbar-actions"><span class="api-status" id="api-status">Verificando API…</span><button class="button button-outline" id="refresh-button" type="button">Atualizar</button></div></header>
+      <header class="topbar"><div><p class="eyebrow">PAINEL DE CONTROLE</p><h1 id="dashboard">Visão geral</h1></div><div class="topbar-actions"><span class="api-status" id="api-status">Verificando API…</span><button class="button button-outline" id="auth-open" type="button">Entrar</button><button class="button button-outline" id="refresh-button" type="button">Atualizar</button></div></header>
       <section class="welcome"><div><p class="eyebrow">LAUNCHCONTROL</p><h2>Controle total da <span>jornada automotiva.</span></h2><p>Consulte os serviços persistidos no MySQL e acompanhe os status reais do atendimento.</p></div><div class="welcome-mark" aria-hidden="true">LC</div></section>
       <section class="stats-grid" aria-label="Resumo de serviços">
         <article class="stat-card"><span class="stat-icon orange">▤</span><p>Ordens de serviço</p><strong id="stat-total">—</strong><small>Registros do banco</small></article>
@@ -44,6 +44,18 @@
       <footer>LaunchControl · Java Servlet · MySQL · HTML, CSS e JavaScript</footer>
     </main>
   </div>
+  <dialog id="auth-dialog" class="detail-dialog">
+    <form id="auth-form" class="stack-form">
+      <button class="dialog-close" id="auth-close" type="button" aria-label="Fechar">×</button>
+      <p class="eyebrow">CONTA LAUNCHCONTROL</p><h2 id="auth-title">Entrar</h2>
+      <label id="auth-name-wrap" hidden>Nome completo<input name="name" autocomplete="name" maxlength="120"></label>
+      <label>E-mail<input name="email" type="email" autocomplete="email" required maxlength="190"></label>
+      <label>Senha<input name="password" type="password" autocomplete="current-password" required minlength="10" maxlength="128"></label>
+      <button class="button button-primary" id="auth-submit" type="submit">Entrar</button>
+      <button class="mini-button" id="auth-toggle" type="button">Criar uma conta de cliente</button>
+      <p class="form-status" id="auth-status" role="status">A conta será persistida no MySQL.</p>
+    </form>
+  </dialog>
   <dialog id="detail-dialog" class="detail-dialog"><form method="dialog"><button class="dialog-close" aria-label="Fechar">×</button></form><p class="eyebrow">DETALHES DA ORDEM</p><h2 id="detail-title">Ordem</h2><pre id="detail-content"></pre></dialog>
 </body>
 </html>
