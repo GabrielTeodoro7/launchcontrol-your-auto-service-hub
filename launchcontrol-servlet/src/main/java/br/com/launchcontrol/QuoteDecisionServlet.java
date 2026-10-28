@@ -34,6 +34,7 @@ public class QuoteDecisionServlet extends HttpServlet {
             try {
                 long requestId;
                 String status;
+                String requestStatus;
                 try (PreparedStatement ps = c.prepareStatement(
                     "SELECT o.status,s.id AS solicitacao_id,s.status AS solicitacao_status " +
                     "FROM orcamentos o JOIN solicitacoes_orcamento s ON s.id=o.solicitacao_id " +
@@ -41,8 +42,11 @@ public class QuoteDecisionServlet extends HttpServlet {
                     ps.setLong(1, quoteId); ps.setLong(2, userId);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (!rs.next()) { c.rollback(); Json.error(response, 404, "Orçamento não encontrado para este cliente."); return; }
-                        status = rs.getString("status"); requestId = rs.getLong("solicitacao_id");
+                        status = rs.getString("status"); requestId = rs.getLong("solicitacao_id"); requestStatus = rs.getString("solicitacao_status");
                     }
+                }
+                if ("ACEITA".equals(requestStatus) || "CONCLUIDA".equals(requestStatus) || "CANCELADA".equals(requestStatus)) {
+                    c.rollback(); Json.error(response, 409, "A solicitação já foi aceita, concluída ou cancelada."); return;
                 }
                 if (!"ENVIADO".equals(status) && !"PENDENTE".equals(status)) {
                     c.rollback(); Json.error(response, 409, "Este orçamento não aceita mais decisões."); return;
