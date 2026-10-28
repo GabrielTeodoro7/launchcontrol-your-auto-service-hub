@@ -11,6 +11,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 @WebFilter(urlPatterns = "/api/*")
+/**
+ * Funciona como um porteiro: antes de deixar uma requisição chegar a certas rotas, verifica login, perfil e proteção contra envios forjados.
+ *
+ * Esta classe reúne a lógica de uma responsabilidade específica do sistema.
+ */
 public class AuthFilter implements Filter {
     @Override
     public void doFilter(jakarta.servlet.ServletRequest rawRequest, jakarta.servlet.ServletResponse rawResponse,
