@@ -17,7 +17,7 @@ public final class PasswordUtil {
     private static final int KEY_BITS = 256;
     private PasswordUtil() {}
 
-    public static String hash(char[] password) throws GeneralSecurityException {
+    // Cria um hash de senha com salt aleatório; não guarda a senha original.\n    public static String hash(char[] password) throws GeneralSecurityException {
         byte[] salt = new byte[16];
         RANDOM.nextBytes(salt);
         byte[] derived = derive(password, salt, ITERATIONS);
@@ -26,7 +26,7 @@ public final class PasswordUtil {
                 Base64.getEncoder().withoutPadding().encodeToString(derived);
     }
 
-    public static boolean verify(char[] password, String stored) throws GeneralSecurityException {
+    // Compara uma senha digitada com o hash salvo sem revelar a senha original.\n    public static boolean verify(char[] password, String stored) throws GeneralSecurityException {
         if (stored == null) return false;
         String[] parts = stored.split("\\$");
         if (parts.length != 4 || !parts[0].equals("pbkdf2-sha256")) return false;
