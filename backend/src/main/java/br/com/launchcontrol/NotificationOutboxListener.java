@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class NotificationOutboxListener implements ServletContextListener {
     private ScheduledExecutorService executor;
     @Override public void contextInitialized(ServletContextEvent event) {
+        NotificationDelivery.requeueConfigured();
         executor=Executors.newSingleThreadScheduledExecutor(r->{Thread t=new Thread(r,"launchcontrol-notification-outbox");t.setDaemon(true);return t;});
         executor.scheduleWithFixedDelay(NotificationDelivery::processPending,15,60,TimeUnit.SECONDS);
     }
