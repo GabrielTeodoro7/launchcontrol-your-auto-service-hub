@@ -16,6 +16,20 @@ import java.util.Locale;
 @WebServlet("/api/auth")
 public class AuthServlet extends HttpServlet {
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        var session = request.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            Json.error(response, 401, "Nenhuma sessão autenticada.");
+            return;
+        }
+        response.getWriter().write("{\"id\":" + session.getAttribute("userId") +
+                ",\"nome\":" + Json.quote((String)session.getAttribute("userName")) +
+                ",\"email\":" + Json.quote((String)session.getAttribute("userEmail")) +
+                ",\"perfil\":" + Json.quote((String)session.getAttribute("userRole")) + "}");
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=UTF-8");
