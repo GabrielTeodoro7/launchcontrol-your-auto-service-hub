@@ -1,4 +1,3 @@
-<!-- Página principal. O navegador lê este HTML e monta a estrutura visível da tela. -->
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -10,9 +9,7 @@
   <script src="js/interacoes.js" defer></script>
 </head>
 <body>
-  <!-- app-shell é o contêiner geral: menu lateral e conteúdo principal. -->
   <div class="app-shell">
-    <!-- Menu lateral: os links levam às áreas desta página. -->
     <aside class="sidebar">
       <a class="brand" href="./"><span class="brand-mark">LC</span><span><strong>LAUNCHCONTROL</strong><small>GESTÃO AUTOMOTIVA</small></span></a>
       <p class="nav-label">MENU PRINCIPAL</p>
@@ -29,10 +26,8 @@
       </nav>
       <div class="sidebar-foot"><span class="status-dot"></span><span>Backend Java Servlet</span><small>MySQL via JDBC</small></div>
     </aside>
-    <!-- Área principal, onde ficam indicadores, formulários e tabelas. -->
     <main class="main-content">
       <header class="topbar"><div><p class="eyebrow">PAINEL DE CONTROLE</p><h1 id="dashboard">Visão geral</h1></div><div class="topbar-actions"><span class="api-status" id="api-status">Verificando API…</span><button class="button button-outline" id="auth-open" type="button">Entrar</button><button class="button button-outline" id="refresh-button" type="button">Atualizar</button></div></header>
-      <!-- Apresentação inicial do painel. -->
       <section class="welcome"><div><p class="eyebrow">LAUNCHCONTROL</p><h2>Controle total da <span>jornada automotiva.</span></h2><p>Consulte os serviços persistidos no MySQL e acompanhe os status reais do atendimento.</p></div><div class="welcome-mark" aria-hidden="true">LC</div></section>
       <section class="stats-grid" aria-label="Resumo de serviços">
         <article class="stat-card"><span class="stat-icon orange">▤</span><p>Ordens de serviço</p><strong id="stat-total">—</strong><small>Registros do banco</small></article>
@@ -40,7 +35,6 @@
         <article class="stat-card"><span class="stat-icon green">✓</span><p>Concluídos</p><strong id="stat-complete">—</strong><small>Orçamento bloqueado para edição</small></article>
         <article class="stat-card"><span class="stat-icon purple">⌁</span><p>Aguardando peça</p><strong id="stat-parts">—</strong><small>Dependem de reposição</small></article>
       </section>
-      <!-- LC Parts direciona a pesquisa às plataformas de origem; não inventa anúncios nem preços. -->
       <section class="panel lc-parts" id="lc-parts">
         <div class="panel-heading">
           <div>
@@ -108,7 +102,6 @@
         <div id="parts-results" class="parts-results" aria-live="polite" hidden></div>
         <p class="parts-footnote">Antes de comprar, confira o código OEM, a aplicação exata, a reputação do vendedor, o frete e a política de devolução. O nome do veículo no anúncio não é prova definitiva de compatibilidade.</p>
       </section>
-      <!-- Formulários visíveis apenas para clientes autenticados. -->
       <section class="panel customer-tools" id="customer-tools" hidden>
         <div class="panel-heading"><div><p class="eyebrow">ÁREA DO CLIENTE</p><h2>Meus veículos e solicitações</h2><p class="muted">Cadastros persistidos no MySQL por meio do backend Java.</p></div></div>
         <div class="two-columns">
@@ -133,7 +126,6 @@
           </form>
         </div>
       </section>
-      <!-- A garagem organiza apenas os registros que existem para o cliente autenticado. -->
       <section class="panel smart-garage" id="garagem-inteligente" hidden>
         <div class="panel-heading">
           <div>
@@ -166,7 +158,6 @@
           </section>
         </div>
       </section>
-      <!-- Lista de orçamentos permitidos ao usuário conectado. -->
       <section class="panel quote-panel" id="quote-panel" hidden>
         <div class="panel-heading"><div><p class="eyebrow">PROPOSTAS</p><h2>Orçamentos</h2><p class="muted">Compare as propostas recebidas. Ao aceitar, uma ordem de serviço é criada.</p></div></div>
         <div class="quote-comparison-tools">
@@ -177,7 +168,6 @@
         <div id="quote-comparison-summary" class="comparison-summary" aria-live="polite"></div>
         <div id="quote-list" class="quote-list" aria-live="polite"><p class="muted">Entre para consultar seus orçamentos.</p></div>
       </section>
-      <!-- Ferramentas específicas do perfil de oficina. -->
       <section class="panel office-tools" id="office-tools" hidden>
         <div class="panel-heading"><div><p class="eyebrow">ÁREA DA OFICINA</p><h2>Solicitações de clientes</h2><p class="muted">Envie um orçamento usando o identificador da solicitação.</p></div></div>
         <div class="two-columns">
@@ -208,7 +198,6 @@
           <p class="form-status" id="inventory-status" role="status">Os dados serão salvos no estoque existente no MySQL.</p>
         </form>
       </section>
-      <!-- Tabela de ordens, preenchida dinamicamente pelo app.js. -->
       <section class="panel" id="servicos">
         <div class="panel-heading"><div><p class="eyebrow">OPERAÇÃO</p><h2>Ordens de serviço</h2><p class="muted">Ações são controladas pelo status real retornado pelo backend.</p></div><label class="search-box"><span class="sr-only">Pesquisar serviços</span><input id="service-search" type="search" placeholder="Pesquisar cliente, veículo ou serviço"></label></div>
         <div class="table-wrap"><table><thead><tr><th>ORDEM</th><th>CLIENTE</th><th>VEÍCULO</th><th>SERVIÇO</th><th>STATUS</th><th>VALOR</th><th>AÇÕES</th></tr></thead><tbody id="service-rows"><tr><td colspan="7" class="empty">Carregando registros do banco…</td></tr></tbody></table></div>
@@ -218,12 +207,10 @@
         <section class="panel" id="orcamentos"><div class="panel-heading"><div><p class="eyebrow">REGRAS DE NEGÓCIO</p><h2>Orçamentos</h2></div></div><div class="info-row"><span class="info-mark green">✓</span><div><strong>Serviço concluído</strong><p>O botão de edição é ocultado na interface e a API também deve recusar alterações.</p></div></div><div class="info-row"><span class="info-mark orange">!</span><div><strong>Persistência real</strong><p>Esta tela não usa localStorage como fonte dos registros. Os dados vêm do endpoint Java.</p></div></div></section>
         <section class="panel" id="diagnostico"><div class="panel-heading"><div><p class="eyebrow">ATENDIMENTO</p><h2>Diagnóstico preliminar</h2></div></div><form id="diagnostic-form" class="stack-form"><label>Veículo / identificação<input name="vehicle" required maxlength="120" placeholder="Ex.: Sandero 1.0 2016"></label><label>Sintomas relatados<textarea name="symptoms" required maxlength="2000" rows="3" placeholder="Descreva os sintomas observados"></textarea></label><label>Prioridade<select name="priority"><option value="NORMAL">Normal</option><option value="ALTA">Alta</option><option value="URGENTE">Urgente</option></select></label><button class="button button-primary" type="submit">Registrar relato</button><p class="form-status" id="diagnostic-status" role="status">Relatos são informações do cliente, não diagnóstico técnico validado.</p></form></section>
       </div>
-      <!-- Checkout demonstrativo: não realiza cobrança real. -->
       <section class="panel checkout-panel" id="checkout"><div><p class="eyebrow">PAGAMENTOS</p><h2>Checkout de demonstração</h2><p class="muted">Sem provedor de pagamento configurado, o sistema não cobra, não gera PIX válido e não aprova transações reais.</p></div><form id="checkout-form" class="checkout-form"><label>ID do orçamento<input name="quoteId" type="number" min="1" required placeholder="ID do orçamento existente"></label><label>Método<select name="method"><option value="PIX_DEMO">PIX — demonstração</option><option value="CARTAO_DEMO">Cartão — demonstração</option></select></label><button class="button button-primary" type="submit">Criar pagamento pendente</button></form><p id="checkout-status" class="form-status" role="status">A operação demonstrativa ficará pendente e será identificada como demonstração.</p><div class="payment-history-block"><button class="button button-outline" id="load-payments" type="button">Consultar histórico de pagamentos</button><div id="payment-history" class="payment-history" aria-live="polite"></div></div></section>
       <footer>LaunchControl · Java Servlet · MySQL · HTML, CSS e JavaScript</footer>
     </main>
   </div>
-  <!-- Janelas de diálogo abertas pelo JavaScript para login, detalhes e edição. -->
   <dialog id="auth-dialog" class="detail-dialog">
     <form id="auth-form" class="stack-form">
       <button class="dialog-close" id="auth-close" type="button" aria-label="Fechar">×</button>

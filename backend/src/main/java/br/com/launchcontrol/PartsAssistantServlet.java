@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Ajuda o cliente a refinar a pesquisa de peças usando a API Responses da OpenAI.
+ * Integra o assistente de pesquisa de peças à API Responses da OpenAI.
  */
 @WebServlet("/api/assistente-pecas")
 public class PartsAssistantServlet extends HttpServlet {
@@ -133,7 +133,7 @@ public class PartsAssistantServlet extends HttpServlet {
         return clean.length() > maxLength ? clean.substring(0, maxLength) : clean;
     }
 
-    // Lê o texto de saída do objeto Responses sem adicionar uma biblioteca JSON ao projeto.
+    // Extrai o texto de saída da resposta da API sem dependência adicional de JSON.
     private static String extractOutputText(String json) {
         int cursor = 0;
         while ((cursor = json.indexOf("\"type\"", cursor)) >= 0) {

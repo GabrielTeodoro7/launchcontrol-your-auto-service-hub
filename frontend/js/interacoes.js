@@ -1,9 +1,3 @@
-/*
- * JavaScript executado no navegador. Ele conecta formulários e botões aos endpoints Java.
- * const guarda uma referência que não será reatribuída; let é usado quando o valor muda.
- * fetch() envia uma requisição HTTP; a resposta JSON traz os dados retornados pelo servidor.
- */
-// Os seletores encontram elementos HTML que o JavaScript precisa atualizar.
 const rows = document.querySelector("#service-rows");
 const serviceStatus = document.querySelector("#service-status");
 const apiStatus = document.querySelector("#api-status");
@@ -26,7 +20,6 @@ const statusLabels = {
 };
 const currency = value => value == null ? "—" : Number(value).toLocaleString("pt-BR", {style:"currency",currency:"BRL"});
 
-// Desenha a tabela de ordens usando os dados carregados e aplica o filtro de pesquisa.
 function renderOrders() {
   const term = searchInput.value.trim().toLocaleLowerCase("pt-BR");
   const filtered = orders.filter(order =>
@@ -105,7 +98,6 @@ function renderOrders() {
   }
 }
 
-// Abre uma janela com os principais dados da ordem selecionada.
 function showDetails(order) {
   detailsTitle.textContent = order.codigo || "Ordem #" + order.id;
   detailsContent.textContent = JSON.stringify({
@@ -116,7 +108,6 @@ function showDetails(order) {
   dialog.showModal();
 }
 
-// Pede ao servidor a lista de ordens e atualiza os indicadores e a tabela.
 async function loadOrders() {
   serviceStatus.textContent = "Consultando endpoint Java Servlet…";
   try {
@@ -144,8 +135,6 @@ async function loadOrders() {
   }
 }
 
-
-// Mostra ou esconde áreas da página de acordo com o perfil autenticado.
 function applyRoleUI() {
   const role = currentUser?.perfil;
   document.querySelector("#customer-tools").hidden = role !== "CLIENTE";
@@ -168,7 +157,6 @@ function applyRoleUI() {
   });
 }
 
-// Carrega os veículos do cliente e preenche a lista de seleção.
 async function loadVehicles() {
   if (!currentUser || currentUser.perfil !== "CLIENTE") return;
   const select = document.querySelector("#vehicle-select");
@@ -218,7 +206,6 @@ async function loadVehicles() {
   }
 }
 
-// Consulta solicitações do cliente ou da oficina e atualiza a área correspondente.
 // Organiza os registros existentes por veículo, sem afirmar que o histórico seja completo.
 function formatGarageDate(value) {
   if (!value) return "Data não registrada";
@@ -388,8 +375,6 @@ async function loadRequests() {
   }
 }
 
-
-// Busca os orçamentos que o usuário atual pode visualizar.
 async function loadQuotes() {
   const list = document.querySelector("#quote-list");
   if (!currentUser || !["CLIENTE", "OFICINA", "ADMINISTRADOR"].includes(currentUser.perfil)) {
@@ -477,8 +462,6 @@ async function loadQuotes() {
     const message = document.createElement("p"); message.className = "form-status"; message.textContent = error.message; list.append(message);
   }
 }
-
-// Carrega a lista de solicitações que a oficina pode analisar para preparar orçamentos.
 
 async function loadInventory() {
   if (!currentUser || !["FORNECEDOR", "ADMINISTRADOR"].includes(currentUser.perfil)) return;
@@ -591,8 +574,6 @@ async function loadOfficeRequests() {
   }
 }
 
-
-// Consulta e exibe o histórico de pagamentos demonstrativos.
 async function loadPayments() {
   const list = document.querySelector("#payment-history");
   if (!currentUser || currentUser.perfil !== "CLIENTE") {
@@ -633,7 +614,6 @@ document.querySelector("#load-payments").addEventListener("click", loadPayments)
 document.querySelector("#quote-search").addEventListener("input", () => loadQuotes());
 document.querySelector("#quote-sort").addEventListener("change", () => loadQuotes());
 
-// Este evento envia a proposta criada pela oficina.
 document.querySelector("#quote-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -649,7 +629,6 @@ document.querySelector("#quote-form").addEventListener("submit", async event => 
   } catch (error) { status.textContent = error.message; }
 });
 
-// Quando o cliente envia o formulário, os campos são enviados ao endpoint de veículos.
 document.querySelector("#vehicle-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -670,7 +649,6 @@ document.querySelector("#vehicle-form").addEventListener("submit", async event =
   } catch (error) { status.textContent = error.message; }
 });
 
-// Este evento envia uma nova solicitação de orçamento para o servidor.
 document.querySelector("#request-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
@@ -693,7 +671,6 @@ document.querySelector("#request-form").addEventListener("submit", async event =
     await loadGarage();
   } catch (error) { status.textContent = error.message; }
 });
-
 
 document.querySelector("#quote-edit-close").addEventListener("click", () => quoteEditDialog.close());
 document.querySelector("#quote-edit-form").addEventListener("submit", async event => {
@@ -772,7 +749,6 @@ function validMercadoLivreUrl(value) {
   }
 }
 
-// Consulta o catálogo público do Mercado Livre pelo backend e mantém o clique na loja original.
 async function searchParts(query) {
   const results = document.querySelector("#parts-results");
   const status = document.querySelector("#parts-search-status");
@@ -1035,7 +1011,6 @@ document.querySelector("#auth-toggle").addEventListener("click", () => {
   document.querySelector("#auth-form [name=password]").minLength = authMode === "login" ? 1 : 10;
   document.querySelector("#auth-toggle").textContent = authMode === "login" ? "Criar uma conta de cliente" : "Já tenho conta? Entrar";
 });
-// O formulário de autenticação envia as credenciais ao servidor, que valida o login.
 document.querySelector("#auth-form").addEventListener("submit", async event => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);

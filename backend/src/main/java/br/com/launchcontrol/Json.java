@@ -1,12 +1,12 @@
 package br.com.launchcontrol;
 
 /**
- * Reúne funções simples para montar respostas JSON com segurança. JSON é um formato de texto usado para trocar dados entre o navegador e o servidor.
+ * Centraliza utilitários para serialização de respostas JSON.
  *
  */
 public final class Json {
     private Json() {}
-    // Escapa caracteres especiais para que um texto possa ser incluído com segurança em JSON.
+    // Escapa caracteres reservados conforme a sintaxe JSON.
     public static String quote(String value) {
         if (value == null) return "null";
         StringBuilder out = new StringBuilder("\"");
@@ -25,7 +25,7 @@ public final class Json {
         }
         return out.append('"').toString();
     }
-    // Devolve uma resposta de erro em JSON e define o código HTTP correspondente.
+    // Escreve uma resposta JSON de erro com o status HTTP informado.
     public static void error(jakarta.servlet.http.HttpServletResponse response, int status, String message)
             throws java.io.IOException {
         response.setStatus(status);

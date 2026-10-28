@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 /**
- * Funciona como um porteiro: antes de deixar uma requisição chegar a certas rotas, verifica login, perfil e proteção contra envios forjados.
+ * Aplica as regras de acesso às rotas, incluindo autenticação, autorização por perfil e validação CSRF.
  */
 @WebFilter(urlPatterns = "/api/*")
 public class AuthFilter implements Filter {
@@ -23,21 +23,21 @@ public class AuthFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) rawResponse;
         String path = request.getRequestURI().substring(request.getContextPath().length());
 
-        // Cadastro, login, catálogo de serviços e verificação de saúde podem ser acessados sem sessão.
+        // Rotas públicas que não exigem sessão autenticada.
         if ("/api/auth".equals(path) || "/api/servicos".equals(path) || "/api/health".equals(path)
                 || ("/api/pecas/busca".equals(path) && "GET".equalsIgnoreCase(request.getMethod()))) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Não cria uma sessão nova: verifica se já existe uma sessão autenticada.
+        // Consulta a sessão existente sem criar uma nova.
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             Json.error(response, 401, "Autenticação necessária.");
             return;
         }
 
-        // POST pode alterar dados, então também exige o token CSRF guardado na sessão.
+        // Requisições de alteração exigem o token CSRF associado à sessão.
         if ("POST".equalsIgnoreCase(request.getMethod())) {
             String expected = (String) session.getAttribute("csrfToken");
             String supplied = request.getHeader("X-CSRF-Token");

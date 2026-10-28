@@ -7,7 +7,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Cuida da proteção e da verificação de senhas. A senha não deve ser guardada diretamente no banco; guardamos um resumo criptográfico com salt.
+ * Implementa a geração e a verificação de hashes de senha com salt.
  *
  */
 public final class PasswordUtil {
@@ -16,7 +16,7 @@ public final class PasswordUtil {
     private static final int KEY_BITS = 256;
     private PasswordUtil() {}
 
-    // Cria um hash de senha com salt aleatório; não guarda a senha original.
+    // Gera um hash usando um salt aleatório.
     public static String hash(char[] password) throws GeneralSecurityException {
         byte[] salt = new byte[16];
         RANDOM.nextBytes(salt);
@@ -26,7 +26,7 @@ public final class PasswordUtil {
                 Base64.getEncoder().withoutPadding().encodeToString(derived);
     }
 
-    // Compara uma senha digitada com o hash salvo sem revelar a senha original.
+    // Verifica a senha informada em relação ao hash armazenado.
     public static boolean verify(char[] password, String stored) throws GeneralSecurityException {
         if (stored == null) return false;
         String[] parts = stored.split("\\$");
@@ -43,7 +43,7 @@ public final class PasswordUtil {
         return diff == 0;
     }
 
-    // Executa o algoritmo PBKDF2 com salt e número de repetições definidos. O salt dificulta ataques com tabelas pré-calculadas.
+    // Deriva o hash com PBKDF2, salt e fator de trabalho configurado.
     private static byte[] derive(char[] password, byte[] salt, int iterations) throws GeneralSecurityException {
         PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, KEY_BITS);
         try { return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded(); }
