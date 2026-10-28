@@ -11,7 +11,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @WebServlet("/api/pagamentos")
+/**
+ * Consulta ou cancela registros de pagamento demonstrativos pertencentes ao próprio cliente.
+ *
+ * Esta classe reúne a lógica de uma responsabilidade específica do sistema.
+ */
 public class PaymentServlet extends HttpServlet {
+    // GET é usado principalmente para consultar informações já existentes.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
@@ -45,7 +51,7 @@ public class PaymentServlet extends HttpServlet {
             }
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar pagamentos."); }
     }
-
+    // POST recebe informações para criar ou alterar registros.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
