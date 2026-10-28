@@ -9,7 +9,6 @@ import javax.crypto.spec.PBEKeySpec;
 /**
  * Cuida da proteção e da verificação de senhas. A senha não deve ser guardada diretamente no banco; guardamos um resumo criptográfico com salt.
  *
- * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
  */
 public final class PasswordUtil {
     private static final SecureRandom RANDOM = new SecureRandom();
