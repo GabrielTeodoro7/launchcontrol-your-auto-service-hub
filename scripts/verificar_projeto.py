@@ -106,6 +106,7 @@ assert "INSERT INTO ordem_status_historico" in read("backend/src/main/java/br/co
 assert "isValidTransition" in read("backend/src/main/java/br/com/launchcontrol/OrderServlet.java"), "Validação de transições de status ausente"
 assert "partsAmount.add(laborAmount).add(otherAmount)" in read("backend/src/main/java/br/com/launchcontrol/QuoteCreateServlet.java"), "Total de orçamento não calculado no backend"
 assert "api/compatibilidade-pecas" in js and 'id="fitment-status"' in html, "Fitment Engine não conectado à interface"
+assert 'id="fitment-admin-form"' in html and "Somente administradores" in read("backend/src/main/java/br/com/launchcontrol/FitmentServlet.java"), "Gestão administrativa do catálogo de compatibilidade ausente"
 assert 'id="maintenance-form"' in html and "api/manutencoes" in js, "CarPassport não conectado à interface"
 assert 'id="repair-timeline"' in html and "historicoVeiculoId" in js, "Oficina Transparente não conectado à interface"
 assert "planningCoverage" in js and "não a saúde mecânica" in html, "AutoCare Score sem regra explicável ou aviso de escopo"
