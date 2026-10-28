@@ -63,6 +63,8 @@ Endpoints implementados nesta etapa:
 - POST /api/orcamentos/editar — altera orçamento quando permitido e bloqueia ordens concluídas.
 - POST /api/diagnosticos — registra relato inicial de cliente.
 - POST /api/checkout — cria pagamento demonstrativo pendente para orçamento aceito.
+- GET /api/pagamentos — consulta histórico de pagamentos do cliente autenticado.
+- POST /api/pagamentos — cancela pagamento demonstrativo pendente do próprio cliente.
 
 O formulário de cadastro só cria perfil CLIENTE; não existe cadastro público de contas de oficina ou administrador. Isso evita que qualquer pessoa se atribua privilégios.
 
