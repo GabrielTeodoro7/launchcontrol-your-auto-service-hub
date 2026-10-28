@@ -158,6 +158,7 @@ function applyRoleUI() {
   document.querySelector("#diagnostico").hidden = role !== "CLIENTE";
   document.querySelector("#estoque-inteligente").hidden = !["FORNECEDOR", "ADMINISTRADOR"].includes(role);
   document.querySelector("#inventory-supplier-field").hidden = role !== "ADMINISTRADOR";
+  document.querySelector("#fitment-admin-tools").hidden = role !== "ADMINISTRADOR";
   document.querySelectorAll(".nav-item[data-profiles]").forEach(link => {
     const allowed = link.dataset.profiles.split(",");
     link.hidden = !allowed.includes(role);
@@ -1361,4 +1362,44 @@ document.querySelector("#quote-form").addEventListener("input", () => {
 });
 document.querySelector("#quote-edit-form").addEventListener("input", () => {
   updateQuoteTotalPreview(document.querySelector("#quote-edit-form"), "#quote-edit-total-preview");
+});
+
+
+document.querySelector("#fitment-admin-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#fitment-admin-status");
+  if (!currentUser || currentUser.perfil !== "ADMINISTRADOR") {
+    status.textContent = "Somente administradores podem cadastrar referências de compatibilidade.";
+    return;
+  }
+  status.textContent = "Registrando referência no catálogo…";
+  try {
+    const response = await fetch("api/compatibilidade-pecas", {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+        "X-CSRF-Token":currentUser.csrf || ""
+      },
+      body: new URLSearchParams({
+        pecaId: form.get("pecaId"),
+        marcaVeiculo: form.get("marcaVeiculo"),
+        modeloVeiculo: form.get("modeloVeiculo"),
+        anoInicio: form.get("anoInicio"),
+        anoFim: form.get("anoFim"),
+        motorizacao: form.get("motorizacao"),
+        codigoOem: form.get("codigoOem"),
+        status: form.get("status"),
+        fonte: form.get("fonte"),
+        referencia: form.get("referencia"),
+        observacoes: form.get("observacoes")
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível registrar a referência.");
+    status.textContent = "Referência #" + result.id + " registrada. Verifique a fonte e consulte a aplicação pela pesquisa LC Parts.";
+    event.currentTarget.reset();
+  } catch (error) {
+    status.textContent = error.message || "Falha ao registrar a referência.";
+  }
 });
