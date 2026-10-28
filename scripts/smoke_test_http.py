@@ -10,6 +10,7 @@ import http.cookiejar
 import json
 import os
 import sys
+import traceback
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -70,6 +71,11 @@ def post_csrf(opener, path, data, csrf, expected=200, extra_headers=None):
     headers = {"X-CSRF-Token": csrf}
     headers.update(extra_headers or {})
     return json_request(opener, path, method="POST", data=data, headers=headers, expected=expected)
+
+
+def record(checks, label):
+    record(checks,label)
+    print("  ✓ " + label, flush=True)
 
 
 def main():
@@ -302,9 +308,7 @@ def main():
     logout(supplier, supplier_csrf)
     checks.append("isolamento e consulta de estoque do fornecedor")
 
-    print(f"SMOKE TEST OK — {len(checks)} grupos de integração:")
-    for check in checks:
-        print("  ✓ " + check)
+    print(f"SMOKE TEST OK — {len(checks)} grupos de integração.")
 
 
 if __name__ == "__main__":
@@ -312,4 +316,5 @@ if __name__ == "__main__":
         main()
     except Exception as error:
         print(f"SMOKE TEST FALHOU: {error}", file=sys.stderr)
+        traceback.print_exc()
         sys.exit(1)
