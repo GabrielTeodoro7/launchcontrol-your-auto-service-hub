@@ -26,7 +26,7 @@ public class AuthServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
-        var session = request.getSession(false);
+        HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             Json.error(response, 401, "Nenhuma sessão autenticada.");
             return;
