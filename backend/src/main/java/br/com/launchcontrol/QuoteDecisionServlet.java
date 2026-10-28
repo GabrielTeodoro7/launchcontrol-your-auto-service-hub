@@ -62,11 +62,23 @@ public class QuoteDecisionServlet extends HttpServlet {
                     try (PreparedStatement ps = c.prepareStatement("UPDATE solicitacoes_orcamento SET status='ACEITA' WHERE id=?")) {
                         ps.setLong(1, requestId); ps.executeUpdate();
                     }
+                    long orderId;
                     try (PreparedStatement ps = c.prepareStatement(
                         "INSERT INTO ordens_servico(codigo,solicitacao_id,orcamento_id,status) VALUES(?,?,?,'PENDENTE')",
                         PreparedStatement.RETURN_GENERATED_KEYS)) {
                         ps.setString(1, "LC-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(java.util.Locale.ROOT));
                         ps.setLong(2, requestId); ps.setLong(3, quoteId); ps.executeUpdate();
+                        try (ResultSet keys = ps.getGeneratedKeys()) {
+                            if (!keys.next()) throw new SQLException("Ordem sem identificador.");
+                            orderId = keys.getLong(1);
+                        }
+                    }
+                    try (PreparedStatement ps = c.prepareStatement(
+                            "INSERT INTO ordem_status_historico(ordem_id,status,observacao,usuario_id) VALUES(?,'PENDENTE',?,?)")) {
+                        ps.setLong(1, orderId);
+                        ps.setString(2, "Ordem criada após aceite do orçamento pelo cliente.");
+                        ps.setLong(3, userId);
+                        ps.executeUpdate();
                     }
                 } else {
                     try (PreparedStatement ps = c.prepareStatement("UPDATE orcamentos SET status='RECUSADO' WHERE id=?")) {
