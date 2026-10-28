@@ -960,7 +960,7 @@ document.querySelector("#parts-assistant-form").addEventListener("submit", async
   }
 });
 
-document.querySelector("#garage-vehicle-select").addEventListener("change", async () => { await loadGarage(); await loadMaintenance(); });
+document.querySelector("#garage-vehicle-select").addEventListener("change", async () => { await loadGarage(); await loadMaintenance(); await loadRepairTimeline(); });
 document.querySelector("#refresh-button").addEventListener("click", async () => { await loadOrders(); await loadGarage(); });
 searchInput.addEventListener("input", renderOrders);
 
@@ -1188,3 +1188,44 @@ document.querySelector("#maintenance-form").addEventListener("submit", async eve
     status.textContent = error.message || "Falha ao salvar a manutenção.";
   }
 });
+
+
+// Oficina Transparente: consulta apenas eventos gravados pelo backend para o veículo do cliente.
+async function loadRepairTimeline() {
+  const vehicleId = document.querySelector("#garage-vehicle-select").value;
+  const timeline = document.querySelector("#repair-timeline");
+  const status = document.querySelector("#repair-timeline-status");
+  timeline.replaceChildren();
+  if (!currentUser || currentUser.perfil !== "CLIENTE" || !vehicleId) {
+    timeline.textContent = "Selecione um veículo para consultar atualizações registradas.";
+    return;
+  }
+  status.textContent = "Consultando eventos registrados…";
+  try {
+    const response = await fetch("api/ordens-servico?historicoVeiculoId=" + encodeURIComponent(vehicleId), {
+      headers: {"Accept":"application/json"}
+    });
+    const events = await response.json();
+    if (!response.ok) throw new Error(events.erro || "Não foi possível consultar a linha do tempo.");
+    if (!events.length) {
+      timeline.textContent = "Ainda não há eventos de status registrados para este veículo. Ordens antigas podem não possuir histórico retroativo.";
+    } else {
+      events.forEach(event => {
+        const item = document.createElement("article");
+        item.className = "garage-timeline-item";
+        const title = document.createElement("strong");
+        title.textContent = (event.codigo || "Ordem #" + event.ordemId) + " · " + (statusLabels[event.status] || event.status);
+        const detail = document.createElement("p");
+        detail.textContent = event.observacao || "Alteração de status registrada pela plataforma.";
+        const date = document.createElement("small");
+        date.textContent = formatMaintenanceDate(event.criadoEm);
+        item.append(title, detail, date);
+        timeline.append(item);
+      });
+    }
+    status.textContent = events.length + (events.length === 1 ? " evento registrado." : " eventos registrados.");
+  } catch (error) {
+    timeline.textContent = error.message || "Não foi possível consultar a linha do tempo.";
+    status.textContent = error.message || "Falha ao consultar os eventos.";
+  }
+}
