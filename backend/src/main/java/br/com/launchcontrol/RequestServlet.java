@@ -25,6 +25,22 @@ public class RequestServlet extends HttpServlet {
             Json.error(response, 403, "Seu perfil não pode consultar solicitações.");
             return;
         }
+        if ("OFICINA".equals(role)) {
+            try (Connection connection = Database.getConnection();
+                 PreparedStatement office = connection.prepareStatement(
+                         "SELECT id FROM oficinas WHERE usuario_id=? AND ativa=TRUE")) {
+                office.setLong(1, userId);
+                try (ResultSet result = office.executeQuery()) {
+                    if (!result.next()) {
+                        Json.error(response, 403, "A conta não está vinculada a uma oficina ativa.");
+                        return;
+                    }
+                }
+            } catch (SQLException ex) {
+                Json.error(response, 500, "Não foi possível validar a oficina autenticada.");
+                return;
+            }
+        }
         StringBuilder sql = new StringBuilder(
           "SELECT s.id,s.veiculo_id,s.descricao,s.status,s.criada_em,u.nome AS cliente," +
           "CONCAT(COALESCE(v.marca,''),' ',COALESCE(v.modelo,'')) AS veiculo,sv.nome AS servico " +
