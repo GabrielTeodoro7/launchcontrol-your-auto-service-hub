@@ -17,6 +17,43 @@ import java.sql.SQLException;
 @WebServlet("/api/diagnosticos")
 public class DiagnosticServlet extends HttpServlet {
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession(false);
+        if (!"CLIENTE".equals(session.getAttribute("userRole"))) {
+            Json.error(response, 403, "Somente o cliente pode consultar seus próprios relatos.");
+            return;
+        }
+
+        String sql = "SELECT id,veiculo_descricao,sintomas,prioridade,status,hipoteses_preliminares," +
+                "laudo_tecnico,criado_em,atualizado_em FROM diagnosticos " +
+                "WHERE cliente_id=? ORDER BY criado_em DESC LIMIT 200";
+        try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setLong(1, (Long) session.getAttribute("userId"));
+            try (ResultSet rs = ps.executeQuery()) {
+                StringBuilder out = new StringBuilder("[");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) out.append(',');
+                    first = false;
+                    out.append("{\"id\":").append(rs.getLong("id"))
+                       .append(",\"veiculoDescricao\":").append(Json.quote(rs.getString("veiculo_descricao")))
+                       .append(",\"sintomas\":").append(Json.quote(rs.getString("sintomas")))
+                       .append(",\"prioridade\":").append(Json.quote(rs.getString("prioridade")))
+                       .append(",\"status\":").append(Json.quote(rs.getString("status")))
+                       .append(",\"hipotesesPreliminares\":").append(Json.quote(rs.getString("hipoteses_preliminares")))
+                       .append(",\"laudoTecnico\":").append(Json.quote(rs.getString("laudo_tecnico")))
+                       .append(",\"criadoEm\":").append(Json.quote(rs.getString("criado_em")))
+                       .append(",\"atualizadoEm\":").append(Json.quote(rs.getString("atualizado_em"))).append('}');
+                }
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(out.append(']').toString());
+            }
+        } catch (SQLException ex) {
+            Json.error(response, 500, "Não foi possível consultar os relatos de diagnóstico.");
+        }
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession(false);
