@@ -21,7 +21,6 @@ final class NotificationDelivery {
     static void processPending(){
         String resend=env("RESEND_API_KEY"),from=env("EMAIL_FROM");
         String waToken=env("WHATSAPP_ACCESS_TOKEN"),waPhoneId=env("WHATSAPP_PHONE_NUMBER_ID");
-        if((resend==null||from==null)&&(waToken==null||waPhoneId==null))return;
         try(Connection c=Database.getConnection();PreparedStatement p=c.prepareStatement(
           "SELECT e.id,e.usuario_id,e.canal,e.tentativas,n.titulo,n.mensagem,u.email,COALESCE(pr.email_ativo,TRUE) email_ativo,COALESCE(pr.whatsapp_ativo,FALSE) whatsapp_ativo,pr.whatsapp_numero " +
           "FROM notificacao_entregas e JOIN notificacoes n ON n.id=e.notificacao_id JOIN usuarios u ON u.id=e.usuario_id " +
