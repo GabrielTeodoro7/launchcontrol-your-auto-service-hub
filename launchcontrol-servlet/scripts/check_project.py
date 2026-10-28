@@ -53,7 +53,7 @@ assert "CRIAR_ORCAMENTO" in read("src/main/java/br/com/launchcontrol/QuoteCreate
 assert "ACEITAR" in read("src/main/java/br/com/launchcontrol/QuoteDecisionServlet.java"), "Decisão de orçamento não localizada"
 assert "PENDENTE" in checkout and "DEMONSTRACAO" in checkout and "cobrado" in checkout, "Checkout demonstrativo precisa permanecer pendente"
 assert "CANCELADO" in payments and "cobrancaRealizada" in payments, "Cancelamento seguro de pagamento demonstrativo não localizado"
-assert 'order.status === "CONCLUIDO"' in js and "if (!completed)" in js, "Ação de edição deve ser omitida para serviços concluídos"
+assert 'order.status === "CONCLUIDO"' in js and "canEditQuote = !completed" in js, "Ação de edição deve ser omitida para serviços concluídos"
 assert not any(token in (html + js + css).lower() for token in ["react", "typescript", "vite"]), "Tecnologia não autorizada detectada no frontend"
 assert "localStorage" not in js, "O frontend não deve usar localStorage como persistência de domínio"
 
