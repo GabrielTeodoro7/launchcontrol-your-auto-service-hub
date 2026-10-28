@@ -20,6 +20,8 @@ public class HealthServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write("{\"status\":\"ok\",\"database\":\"connected\"}");
         } catch (SQLException exception) {
+            System.err.println("LaunchControl health check database failure: SQLState="
+                    + exception.getSQLState() + ", vendorCode=" + exception.getErrorCode());
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             response.getWriter().write("{\"status\":\"error\",\"message\":\"database_unavailable\"}");
         }
