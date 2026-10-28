@@ -354,7 +354,7 @@ Controles presentes no código incluem:
 - SQL parametrizado por `PreparedStatement` nos fluxos consultados.
 - Sessão no servidor, expiração por inatividade e cookie HTTP-only.
 - Token CSRF validado para métodos HTTP que alteram estado.
-- Limitação básica por endereço IP para tentativas de login e cadastro; em produção, complemente com rate limiting na borda e considere proxies reversos.
+- Limitação básica por endereço IP: até 10 tentativas de login e 5 tentativas de cadastro em 15 minutos, com resposta 429 e `Retry-After`; em produção, complemente com rate limiting na borda e considere proxies reversos.
 - Verificações de propriedade e de perfil nas rotas de negócio.
 - Validações de transição de status e transações para operações sensíveis.
 - Cabeçalhos defensivos de resposta e prevenção de cache de respostas da API.
@@ -406,7 +406,7 @@ O workflow `.github/workflows/launchcontrol-validation.yml` verifica a estrutura
 - **Build verde:** o código compila e o WAR foi empacotado.
 - **Migrações verdes:** os scripts SQL executaram em uma base limpa da versão configurada no CI.
 - **Smoke test verde:** os cenários HTTP listados acima passaram no ambiente de CI.
-- **Não comprovado automaticamente:** uploads multipart de anexos em todos os navegadores, compatibilidade real de peças, entrega real de e-mail/WhatsApp/IA, experiência em todos os navegadores, segurança de produção, carga e recuperação de desastre.
+- **Não comprovado automaticamente:** envio de IA com chave real, entrega de e-mail/WhatsApp com credenciais reais, experiência em todos os navegadores, segurança de produção, carga e recuperação de desastre.
 
 Não marque uma release como 100% pronta apenas por ter um build verde.
 
