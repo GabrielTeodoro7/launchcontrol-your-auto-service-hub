@@ -129,7 +129,7 @@ public class QuoteCreateServlet extends HttpServlet {
                 laborAmount = BigDecimal.ZERO.setScale(2);
                 otherAmount = BigDecimal.ZERO.setScale(2);
             }
-            if (requestId < 1 || amount.signum() < 0 || amount.scale() > 2 || days < 0 || days > 365
+            if (requestId < 1 || amount.signum() < 0 || amount.scale() > 2 || amount.compareTo(new BigDecimal("99999999.99")) > 0 || days < 0 || days > 365
                     || observations.length() > 2000
                     || (warrantyDays != null && (warrantyDays < 0 || warrantyDays > 3650))
                     || (validityDays != null && (validityDays < 0 || validityDays > 365))
