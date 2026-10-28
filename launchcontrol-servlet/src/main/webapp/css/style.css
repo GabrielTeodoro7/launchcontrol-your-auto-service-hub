@@ -76,3 +76,30 @@
 .garage-event small{font-size:11px;color:var(--muted)}
 .garage-event .garage-report{border-left:2px solid var(--orange);padding-left:10px;color:var(--text)}
 @media(max-width:1000px){.garage-columns{grid-template-columns:1fr}}
+
+/* Assistente LC Parts: reutiliza as cores e os controles já presentes no painel. */
+.parts-assistant{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.parts-assistant-heading h3{font-size:15px;margin:0 0 6px}
+.parts-assistant-heading .muted{max-width:760px}
+.parts-assistant-note{margin:12px 0;padding:10px 12px;border:1px solid #57331f;background:#211912;border-radius:8px;color:var(--muted);font-size:12px}
+.parts-assistant-messages{display:grid;gap:10px;max-height:340px;overflow:auto;padding:2px 2px 10px}
+.assistant-message{max-width:88%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#101720;color:var(--text);font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.assistant-message.user{justify-self:end;border-color:#57331f;background:#211912}
+.assistant-message.assistant{justify-self:start}
+.parts-assistant-form{display:grid;gap:10px}
+.parts-assistant-form label{display:grid;gap:6px;color:var(--text);font-size:12px;font-weight:700}
+.parts-assistant-form textarea{width:100%;resize:vertical;min-height:68px;background:#0e1319;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:11px 12px;font:inherit;font-weight:400}
+.parts-assistant-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.parts-assistant-actions .form-status{margin:0}
+.parts-assistant-actions .button:disabled{opacity:.6;cursor:wait}
+.parts-results .parts-live-note{margin:8px 0 14px;color:var(--muted);font-size:12px}
+.parts-live-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.parts-live-item{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;padding:13px;border:1px solid var(--line);border-radius:9px;background:#101720}
+.parts-live-item img{width:100%;height:120px;object-fit:contain;border-radius:6px;background:#0b0f14}
+.parts-live-item strong{font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.parts-live-item .parts-live-price{font-size:15px;font-weight:700;color:var(--orange)}
+.parts-live-item p{margin:0;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
+.parts-live-item .button{margin-top:auto;text-decoration:none;font-size:12px}
+.parts-external-heading{margin-top:22px!important}
+@media(max-width:1000px){.parts-live-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.parts-assistant-actions{align-items:stretch;flex-direction:column}.parts-assistant-actions .button{width:100%}.assistant-message{max-width:96%}.parts-live-list{grid-template-columns:1fr}.parts-live-item img{height:150px}}
