@@ -38,7 +38,10 @@ def main():
     assert "LAUNCHCONTROL" in body.upper(), "A página inicial não contém a identidade LaunchControl"
     checks.append("página inicial implantada")
 
-    code, body, _ = request(anonymous, "/api/health", expected=200)
+    code, body, headers = request(anonymous, "/api/health", expected=200)
+    assert headers.get("X-Content-Type-Options") == "nosniff", "Cabeçalho nosniff ausente"
+    assert headers.get("X-Frame-Options") == "DENY", "Cabeçalho anti-frame ausente"
+    assert headers.get("Cache-Control") == "no-store", "Resposta de API não deve ser armazenada em cache"
     health = json.loads(body)
     assert health.get("status") == "ok" and health.get("database") == "connected", health
     checks.append("API e conexão MySQL")
