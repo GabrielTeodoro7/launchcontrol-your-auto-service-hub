@@ -14,6 +14,46 @@ import java.sql.SQLException;
 @WebServlet("/api/orcamentos")
 public class QuoteCreateServlet extends HttpServlet {
     @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        var session = request.getSession(false);
+        String role = (String)session.getAttribute("userRole");
+        long userId = (Long)session.getAttribute("userId");
+        if (!"CLIENTE".equals(role) && !"OFICINA".equals(role) && !"ADMINISTRADOR".equals(role)) {
+            Json.error(response, 403, "Seu perfil não pode consultar orçamentos.");
+            return;
+        }
+        StringBuilder sql = new StringBuilder(
+            "SELECT o.id,o.solicitacao_id,o.valor,o.prazo_dias,o.observacoes,o.status,o.criado_em," +
+            "ofi.nome_fantasia,s.descricao AS solicitacao_descricao " +
+            "FROM orcamentos o JOIN oficinas ofi ON ofi.id=o.oficina_id " +
+            "JOIN solicitacoes_orcamento s ON s.id=o.solicitacao_id ");
+        if ("CLIENTE".equals(role)) sql.append("WHERE s.cliente_id=? ");
+        else if ("OFICINA".equals(role)) sql.append("WHERE ofi.usuario_id=? ");
+        sql.append("ORDER BY o.criado_em DESC LIMIT 200");
+        try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            if (!"ADMINISTRADOR".equals(role)) ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                StringBuilder out = new StringBuilder("[");
+                boolean first = true;
+                while (rs.next()) {
+                    if (!first) out.append(',');
+                    first = false;
+                    out.append("{\"id\":").append(rs.getLong("id"))
+                       .append(",\"solicitacaoId\":").append(rs.getLong("solicitacao_id"))
+                       .append(",\"valor\":").append(rs.getBigDecimal("valor").toPlainString())
+                       .append(",\"prazoDias\":").append(rs.getObject("prazo_dias") == null ? "null" : rs.getInt("prazo_dias"))
+                       .append(",\"observacoes\":").append(Json.quote(rs.getString("observacoes")))
+                       .append(",\"status\":").append(Json.quote(rs.getString("status")))
+                       .append(",\"oficina\":").append(Json.quote(rs.getString("nome_fantasia")))
+                       .append(",\"descricao\":").append(Json.quote(rs.getString("solicitacao_descricao"))).append('}');
+                }
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(out.append(']').toString());
+            }
+        } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar orçamentos."); }
+    }
+
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
         if (!"OFICINA".equals(session.getAttribute("userRole"))) {
