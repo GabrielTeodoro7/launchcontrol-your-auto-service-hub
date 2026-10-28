@@ -10,14 +10,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@WebServlet("/api/veiculos")
 /**
  * Permite que um cliente consulte e cadastre seus próprios veículos, respeitando a sessão autenticada.
- *
- * Uma classe é como uma caixa que reúne dados e ações relacionados a uma tarefa.
  */
+@WebServlet("/api/veiculos")
 public class VehicleServlet extends HttpServlet {
-    // Executado quando o navegador faz uma requisição HTTP GET, normalmente para consultar dados.
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         var session = request.getSession(false);
@@ -50,7 +47,6 @@ public class VehicleServlet extends HttpServlet {
             }
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível consultar veículos."); }
     }
-    // Executado quando o navegador envia dados para criar ou alterar alguma informação.
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         request.setCharacterEncoding("UTF-8");
