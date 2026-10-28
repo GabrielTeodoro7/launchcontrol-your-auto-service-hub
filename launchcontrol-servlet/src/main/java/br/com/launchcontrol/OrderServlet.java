@@ -102,7 +102,7 @@ public class OrderServlet extends HttpServlet {
                     ps.setLong(4, orderId); ps.setString(5, "Novo status: " + nextStatus); ps.executeUpdate();
                 }
                 c.commit(); response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\\"ok\\":true,\\"id\\":" + orderId + ",\\"status\\":" + Json.quote(nextStatus) + "}");
+                response.getWriter().write("{\"ok\":true,\"id\":" + orderId + ",\"status\":" + Json.quote(nextStatus) + "}");
             } catch (SQLException | RuntimeException ex) { c.rollback(); throw ex; }
             finally { c.setAutoCommit(true); }
         } catch (SQLException ex) { Json.error(response, 500, "Não foi possível atualizar a ordem."); }
