@@ -118,7 +118,7 @@ jobs:
           set -euo pipefail
           ready=0
           for attempt in $(seq 1 60); do
-            if curl --silent --show-error --fail "$LAUNCHCONTROL_BASE_URL/api/health" >/dev/null; then
+            if curl --silent --fail --max-time 3 "$LAUNCHCONTROL_BASE_URL/api/health" >/dev/null; then
               ready=1
               break
             fi
