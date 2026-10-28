@@ -108,6 +108,95 @@ async function loadOrders() {
   }
 }
 
+
+function applyRoleUI() {
+  document.querySelector("#customer-tools").hidden = !currentUser || currentUser.perfil !== "CLIENTE";
+}
+
+async function loadVehicles() {
+  if (!currentUser || currentUser.perfil !== "CLIENTE") return;
+  const select = document.querySelector("#vehicle-select");
+  try {
+    const response = await fetch("api/veiculos");
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível carregar veículos.");
+    select.replaceChildren();
+    const placeholder = document.createElement("option");
+    placeholder.value = ""; placeholder.textContent = result.length ? "Selecione um veículo" : "Cadastre seu primeiro veículo";
+    select.append(placeholder);
+    result.forEach(vehicle => {
+      const option = document.createElement("option");
+      option.value = vehicle.id;
+      option.textContent = vehicle.id + " · " + vehicle.marca + " " + vehicle.modelo + (vehicle.ano ? " (" + vehicle.ano + ")" : "");
+      select.append(option);
+    });
+    document.querySelector("#vehicle-status").textContent = result.length + (result.length === 1 ? " veículo carregado." : " veículos carregados.");
+  } catch (error) {
+    document.querySelector("#vehicle-status").textContent = error.message;
+  }
+}
+
+async function loadRequests() {
+  if (!currentUser || currentUser.perfil !== "CLIENTE") return;
+  const list = document.querySelector("#request-list");
+  list.replaceChildren();
+  try {
+    const response = await fetch("api/solicitacoes");
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível consultar solicitações.");
+    if (!result.length) {
+      const empty = document.createElement("p"); empty.className = "muted"; empty.textContent = "Você ainda não tem solicitações."; list.append(empty); return;
+    }
+    result.slice(0, 5).forEach(item => {
+      const card = document.createElement("div"); card.className = "request-item";
+      const title = document.createElement("strong"); title.textContent = "Solicitação #" + item.id;
+      const description = document.createElement("p"); description.textContent = item.descricao;
+      const status = document.createElement("span"); status.className = "status-badge " + String(item.status).toLowerCase(); status.textContent = item.status;
+      card.append(title, description, status); list.append(card);
+    });
+  } catch (error) {
+    const message = document.createElement("p"); message.className = "form-status"; message.textContent = error.message; list.append(message);
+  }
+}
+
+document.querySelector("#vehicle-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#vehicle-status");
+  status.textContent = "Salvando veículo…";
+  try {
+    const response = await fetch("api/veiculos", {
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},
+      body:new URLSearchParams({marca:form.get("marca"),modelo:form.get("modelo"),ano:form.get("ano"),quilometragem:form.get("quilometragem"),placa:form.get("placa"),motorizacao:form.get("motorizacao")})
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível salvar veículo.");
+    event.currentTarget.reset();
+    status.textContent = "Veículo #" + result.id + " salvo no banco.";
+    await loadVehicles();
+  } catch (error) { status.textContent = error.message; }
+});
+
+document.querySelector("#request-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#request-status");
+  status.textContent = "Enviando solicitação…";
+  try {
+    const response = await fetch("api/solicitacoes", {
+      method:"POST",
+      headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},
+      body:new URLSearchParams({veiculoId:form.get("veiculoId"),servicoId:form.get("servicoId"),descricao:form.get("descricao")})
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível enviar solicitação.");
+    status.textContent = "Solicitação #" + result.id + " enviada com status " + result.status + ".";
+    event.currentTarget.reset();
+    await loadRequests();
+  } catch (error) { status.textContent = error.message; }
+});
+
 document.querySelector("#refresh-button").addEventListener("click", loadOrders);
 searchInput.addEventListener("input", renderOrders);
 
@@ -151,6 +240,7 @@ document.querySelector("#auth-open").addEventListener("click", async () => {
     if (!response.ok) throw new Error("Não foi possível encerrar a sessão.");
     currentUser = null;
     document.querySelector("#auth-open").textContent = "Entrar";
+    applyRoleUI();
     await loadOrders();
   } catch (error) { apiStatus.textContent = error.message; }
 });
@@ -177,7 +267,10 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
     document.querySelector("#auth-open").textContent = result.nome + " · Sair";
     status.textContent = "Autenticado como " + result.perfil + ".";
     authDialog.close();
+    applyRoleUI();
     await loadOrders();
+    await loadVehicles();
+    await loadRequests();
   } catch (error) { status.textContent = error.message; }
 });
 (async () => {
@@ -188,5 +281,8 @@ document.querySelector("#auth-form").addEventListener("submit", async event => {
       document.querySelector("#auth-open").textContent = currentUser.nome + " · Sair";
     }
   } catch {}
+  applyRoleUI();
   loadOrders();
+  loadVehicles();
+  loadRequests();
 })();
