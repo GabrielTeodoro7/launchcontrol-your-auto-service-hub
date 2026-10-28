@@ -31,10 +31,13 @@ public class RequestServlet extends HttpServlet {
           "FROM solicitacoes_orcamento s JOIN usuarios u ON u.id=s.cliente_id " +
           "LEFT JOIN veiculos v ON v.id=s.veiculo_id LEFT JOIN servicos sv ON sv.id=s.servico_id ");
         if ("CLIENTE".equals(role)) sql.append("WHERE s.cliente_id=? ");
-        else if ("OFICINA".equals(role)) sql.append("WHERE s.status IN ('ENVIADA','EM_ANALISE','ORCAMENTO_ENVIADO') ");
+        else if ("OFICINA".equals(role)) sql.append("WHERE s.status IN ('ENVIADA','EM_ANALISE','ORCAMENTO_ENVIADO') " +
+                "AND (s.servico_id IS NULL OR EXISTS (SELECT 1 FROM servicos service_scope " +
+                "JOIN oficinas office_scope ON office_scope.id=service_scope.oficina_id " +
+                "WHERE service_scope.id=s.servico_id AND office_scope.usuario_id=?)) ");
         sql.append("ORDER BY s.criada_em DESC LIMIT 200");
         try (Connection c = Database.getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
-            if ("CLIENTE".equals(role)) ps.setLong(1, userId);
+            if ("CLIENTE".equals(role) || "OFICINA".equals(role)) ps.setLong(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 StringBuilder out = new StringBuilder("[");
                 boolean first = true;
