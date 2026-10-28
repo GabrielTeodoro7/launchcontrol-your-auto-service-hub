@@ -1,44 +1,143 @@
-const list = document.querySelector("#service-list");
-const statusText = document.querySelector("#status");
+const rows = document.querySelector("#service-rows");
+const serviceStatus = document.querySelector("#service-status");
+const apiStatus = document.querySelector("#api-status");
 const searchInput = document.querySelector("#service-search");
-let searchTimer;
+const dialog = document.querySelector("#detail-dialog");
+const detailsTitle = document.querySelector("#detail-title");
+const detailsContent = document.querySelector("#detail-content");
+let orders = [];
 
-function createCard(service) {
-  const card = document.createElement("article");
-  card.className = "service-card";
-  const title = document.createElement("h3");
-  title.textContent = service.nome;
-  const description = document.createElement("p");
-  description.textContent = service.descricao || service.categoria || "Serviço automotivo";
-  const price = document.createElement("div");
-  price.className = "price";
-  price.textContent = service.precoBase == null
-    ? "Consulte o valor"
-    : Number(service.precoBase).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  card.append(title, description, price);
-  return card;
-}
+const statusLabels = {
+  CONCLUIDO: "Concluído",
+  EM_ANDAMENTO: "Em andamento",
+  AGUARDANDO_PECA: "Aguardando peça",
+  PENDENTE: "Pendente",
+  AGUARDANDO_ANALISE: "Aguardando análise"
+};
+const currency = value => value == null ? "—" : Number(value).toLocaleString("pt-BR", {style:"currency",currency:"BRL"});
 
-async function loadServices(query = "") {
-  statusText.textContent = "Carregando serviços…";
-  list.replaceChildren();
-  try {
-    const response = await fetch("api/servicos?q=" + encodeURIComponent(query));
-    if (!response.ok) throw new Error("Falha na consulta");
-    const services = await response.json();
-    if (services.length === 0) {
-      statusText.textContent = "Nenhum serviço encontrado. Tente outro termo ou cadastre serviços no banco.";
-      return;
+function renderOrders() {
+  const term = searchInput.value.trim().toLocaleLowerCase("pt-BR");
+  const filtered = orders.filter(order =>
+    [order.codigo, order.cliente, order.veiculo, order.servico, statusLabels[order.status] || order.status]
+      .some(value => String(value || "").toLocaleLowerCase("pt-BR").includes(term))
+  );
+  rows.replaceChildren();
+  if (!filtered.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 7;
+    td.className = "empty";
+    td.textContent = orders.length ? "Nenhuma ordem corresponde à pesquisa." : "Nenhuma ordem encontrada no banco de dados.";
+    tr.append(td); rows.append(tr); return;
+  }
+  for (const order of filtered) {
+    const tr = document.createElement("tr");
+    const values = [
+      {text: order.codigo || "#" + order.id, className:"order-id"},
+      {text: order.cliente || "—"},
+      {text: order.veiculo || "—"},
+      {text: order.servico || "—"}
+    ];
+    for (const value of values) {
+      const td = document.createElement("td"); td.textContent = value.text;
+      if (value.className) td.className = value.className;
+      tr.append(td);
     }
-    services.forEach(service => list.append(createCard(service)));
-    statusText.textContent = services.length + (services.length === 1 ? " serviço encontrado." : " serviços encontrados.");
-  } catch {
-    statusText.textContent = "Não foi possível carregar o catálogo. Verifique se o servidor Java e o banco MySQL estão configurados.";
+    const statusCell = document.createElement("td");
+    const badge = document.createElement("span");
+    badge.className = "status-badge " + String(order.status || "PENDENTE").toLowerCase();
+    badge.textContent = statusLabels[order.status] || order.status || "Pendente";
+    statusCell.append(badge); tr.append(statusCell);
+    const price = document.createElement("td"); price.textContent = currency(order.valor); tr.append(price);
+    const actions = document.createElement("td");
+    const group = document.createElement("div"); group.className = "action-group";
+    const view = document.createElement("button"); view.type = "button"; view.className = "mini-button"; view.textContent = "Visualizar";
+    view.addEventListener("click", () => showDetails(order));
+    group.append(view);
+    const edit = document.createElement("button"); edit.type = "button"; edit.className = "mini-button"; edit.textContent = "Editar orçamento";
+    const completed = order.status === "CONCLUIDO";
+    edit.disabled = completed;
+    edit.title = completed ? "Serviços concluídos não permitem edição do orçamento." : "A edição depende de autenticação e permissão da oficina.";
+    edit.addEventListener("click", () => {
+      if (completed) return;
+      alert("A edição só pode ser realizada pela API autenticada da oficina; o formulário de edição ainda não foi liberado nesta etapa.");
+    });
+    group.append(edit); actions.append(group); tr.append(actions); rows.append(tr);
   }
 }
 
-searchInput.addEventListener("input", () => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => loadServices(searchInput.value.trim()), 250);
+function showDetails(order) {
+  detailsTitle.textContent = order.codigo || "Ordem #" + order.id;
+  detailsContent.textContent = JSON.stringify({
+    cliente: order.cliente, veiculo: order.veiculo, servico: order.servico,
+    status: statusLabels[order.status] || order.status, valor: currency(order.valor),
+    inicio: order.inicio || null, previsao: order.previsao || null
+  }, null, 2);
+  dialog.showModal();
+}
+
+async function loadOrders() {
+  serviceStatus.textContent = "Consultando endpoint Java Servlet…";
+  try {
+    const response = await fetch("api/ordens-servico", {headers: {"Accept":"application/json"}});
+    if (response.status === 401) throw new Error("Faça login no backend para consultar as ordens. Nenhuma sessão autenticada foi encontrada.");
+    if (!response.ok) throw new Error("A API respondeu com HTTP " + response.status + ".");
+    const data = await response.json();
+    orders = Array.isArray(data) ? data : [];
+    apiStatus.textContent = "API conectada";
+    apiStatus.classList.add("connected");
+    document.querySelector("#stat-total").textContent = orders.length;
+    document.querySelector("#stat-progress").textContent = orders.filter(x => x.status === "EM_ANDAMENTO").length;
+    document.querySelector("#stat-complete").textContent = orders.filter(x => x.status === "CONCLUIDO").length;
+    document.querySelector("#stat-parts").textContent = orders.filter(x => x.status === "AGUARDANDO_PECA").length;
+    serviceStatus.textContent = "Dados recebidos do backend; os registros não vêm de dados mockados no navegador.";
+    renderOrders();
+  } catch (error) {
+    orders = [];
+    apiStatus.textContent = "API indisponível";
+    apiStatus.classList.remove("connected");
+    document.querySelectorAll("#stat-total,#stat-progress,#stat-complete,#stat-parts").forEach(el => el.textContent = "—");
+    rows.innerHTML = '<tr><td colspan="7" class="empty"></td></tr>';
+    rows.querySelector(".empty").textContent = error.message || "Não foi possível consultar a API.";
+    serviceStatus.textContent = "Configure o servidor Jakarta Servlet e a conexão MySQL. Não exibimos dados de exemplo como se fossem reais.";
+  }
+}
+
+document.querySelector("#refresh-button").addEventListener("click", loadOrders);
+searchInput.addEventListener("input", renderOrders);
+
+document.querySelector("#diagnostic-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#diagnostic-status");
+  status.textContent = "Enviando relato…";
+  try {
+    const response = await fetch("api/diagnosticos", {
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+      body:new URLSearchParams({vehicle:form.get("vehicle"),symptoms:form.get("symptoms"),priority:form.get("priority")})
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível registrar o relato.");
+    status.textContent = "Relato registrado com o identificador " + result.id + ". Ele não equivale a um laudo técnico.";
+    event.currentTarget.reset();
+  } catch (error) { status.textContent = error.message; }
 });
-loadServices();
+
+document.querySelector("#checkout-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const status = document.querySelector("#checkout-status");
+  status.textContent = "Criando registro demonstrativo pendente…";
+  try {
+    const response = await fetch("api/checkout", {
+      method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+      body:new URLSearchParams({quoteId:form.get("quoteId"),method:form.get("method")})
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.erro || "Não foi possível criar o registro.");
+    status.textContent = "Registro de demonstração #" + result.paymentId + " criado com status PENDENTE. Nenhuma cobrança foi realizada.";
+  } catch (error) { status.textContent = error.message; }
+});
+
+loadOrders();
