@@ -1323,7 +1323,8 @@ async function loadFitmentStatus(form) {
     modelo: String(form.get("modelo") || ""),
     ano: String(form.get("ano") || ""),
     motorizacao: String(form.get("motorizacao") || ""),
-    oem: String(form.get("oem") || "")
+    oem: String(form.get("oem") || ""),
+    peca: String(form.get("peca") || "")
   });
   try {
     const response = await fetch("api/compatibilidade-pecas?" + params.toString(), {
