@@ -40,6 +40,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Compile Python test scripts
+        run: python -m py_compile scripts/verificar_projeto.py scripts/smoke_test_http.py
+
       - name: Verify project structure and security contracts
         run: python scripts/verificar_projeto.py
 
