@@ -158,8 +158,9 @@ public class QuoteCreateServlet extends HttpServlet {
                     }
                 }
 
+                Long requestedServiceId = null;
                 try (PreparedStatement statement = connection.prepareStatement(
-                        "SELECT status FROM solicitacoes_orcamento WHERE id=? FOR UPDATE")) {
+                        "SELECT status,servico_id FROM solicitacoes_orcamento WHERE id=? FOR UPDATE")) {
                     statement.setLong(1, requestId);
                     try (ResultSet result = statement.executeQuery()) {
                         if (!result.next()) {
@@ -168,10 +169,27 @@ public class QuoteCreateServlet extends HttpServlet {
                             return;
                         }
                         String status = result.getString("status");
+                        Object rawServiceId = result.getObject("servico_id");
+                        if (rawServiceId != null) requestedServiceId = result.getLong("servico_id");
                         if ("CANCELADA".equals(status) || "CONCLUIDA".equals(status) || "RECUSADA".equals(status)) {
                             connection.rollback();
                             Json.error(response, 409, "A solicitação não aceita novos orçamentos.");
                             return;
+                        }
+                    }
+                }
+
+                if (requestedServiceId != null) {
+                    try (PreparedStatement service = connection.prepareStatement(
+                            "SELECT id FROM servicos WHERE id=? AND oficina_id=? AND ativo=TRUE")) {
+                        service.setLong(1, requestedServiceId);
+                        service.setLong(2, workshopId);
+                        try (ResultSet result = service.executeQuery()) {
+                            if (!result.next()) {
+                                connection.rollback();
+                                Json.error(response, 403, "O serviço solicitado não pertence a esta oficina ou está inativo.");
+                                return;
+                            }
                         }
                     }
                 }
