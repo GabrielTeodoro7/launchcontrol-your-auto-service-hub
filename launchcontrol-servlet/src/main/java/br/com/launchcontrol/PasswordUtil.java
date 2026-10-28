@@ -44,6 +44,7 @@ public final class PasswordUtil {
         return diff == 0;
     }
 
+    // Executa o algoritmo PBKDF2 com salt e número de repetições definidos. O salt dificulta ataques com tabelas pré-calculadas.
     private static byte[] derive(char[] password, byte[] salt, int iterations) throws GeneralSecurityException {
         PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, KEY_BITS);
         try { return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded(); }
