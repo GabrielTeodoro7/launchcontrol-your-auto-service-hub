@@ -33,3 +33,20 @@ CREATE TABLE IF NOT EXISTS notificacoes (
   INDEX idx_notificacoes_usuario_data (usuario_id, criada_em),
   INDEX idx_notificacoes_usuario_nao_lida (usuario_id, lida_em, criada_em)
 );
+
+
+-- Metadados de anexos do passaporte; o arquivo fica fora da pasta pública do servidor.
+CREATE TABLE IF NOT EXISTS anexos_manutencao (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  historico_id BIGINT NOT NULL,
+  cliente_id BIGINT NOT NULL,
+  nome_original VARCHAR(180) NOT NULL,
+  nome_armazenado VARCHAR(80) NOT NULL UNIQUE,
+  tipo_mime VARCHAR(80) NOT NULL,
+  tamanho_bytes INT NOT NULL,
+  criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (historico_id) REFERENCES historico_manutencao(id),
+  FOREIGN KEY (cliente_id) REFERENCES usuarios(id),
+  CONSTRAINT chk_anexo_tamanho CHECK (tamanho_bytes BETWEEN 1 AND 5242880),
+  INDEX idx_anexos_historico (historico_id, criado_em)
+);
