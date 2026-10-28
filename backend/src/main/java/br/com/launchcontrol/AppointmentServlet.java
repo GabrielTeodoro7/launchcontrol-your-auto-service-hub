@@ -77,8 +77,9 @@ public class AppointmentServlet extends HttpServlet {
             int minutes=Integer.parseInt(req.getParameter("duracaoMinutos"));
             if(minutes<30||minutes>240||start.isBefore(LocalDateTime.now().plusMinutes(30))||start.isAfter(LocalDateTime.now().plusDays(60))) throw new IllegalArgumentException();
             end=start.plusMinutes(minutes);
+            if (!start.toLocalDate().equals(end.toLocalDate())) throw new IllegalArgumentException();
             if(notes!=null&&notes.length()>500) throw new IllegalArgumentException();
-        } catch(Exception e){Json.error(res,400,"Informe oficina, veículo, data futura (30 minutos a 60 dias) e duração entre 30 e 240 minutos.");return;}
+        } catch(Exception e){Json.error(res,400,"Informe oficina, veículo, data futura (30 minutos a 60 dias), duração entre 30 e 240 minutos e intervalo dentro do mesmo dia.");return;}
         try(Connection c=Database.getConnection()){
             c.setAutoCommit(false);
             try {
