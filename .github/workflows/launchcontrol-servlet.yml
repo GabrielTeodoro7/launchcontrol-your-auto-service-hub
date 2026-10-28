@@ -4,12 +4,15 @@ on:
   push:
     branches: [main, "work/**"]
     paths:
-      - "launchcontrol-servlet/**"
+      - "backend/**"
       - ".github/workflows/launchcontrol-servlet.yml"
       - "README.md"
   pull_request:
     paths:
-      - "launchcontrol-servlet/**"
+      - "backend/**"
+      - "frontend/**"
+      - "banco-de-dados/**"
+      - "scripts/**"
       - ".github/workflows/launchcontrol-servlet.yml"
       - "README.md"
 
@@ -34,18 +37,18 @@ jobs:
         with:
           python-version: "3.12"
       - name: Structural checks
-        working-directory: launchcontrol-servlet
-        run: python scripts/check_project.py
+        working-directory: .
+        run: python scripts/verificar_projeto.py
       - name: Check JavaScript syntax
-        run: node --check launchcontrol-servlet/src/main/webapp/js/app.js
+        run: node --check frontend/js/interacoes.js
       - name: Show build toolchain
         run: mvn -version
       - name: Build WAR
-        run: mvn -B -f launchcontrol-servlet/pom.xml clean package
+        run: mvn -B -f backend/pom.xml clean package
       - name: Upload WAR artifact
         uses: actions/upload-artifact@v4
         with:
           name: launchcontrol-servlet-war
-          path: launchcontrol-servlet/target/launchcontrol.war
+          path: backend/target/launchcontrol.war
           if-no-files-found: error
           retention-days: 14
