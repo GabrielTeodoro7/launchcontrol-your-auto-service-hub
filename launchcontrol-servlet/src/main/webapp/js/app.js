@@ -429,7 +429,7 @@ document.querySelector("#checkout-form").addEventListener("submit", async event 
 document.querySelector("#auth-open").addEventListener("click", async () => {
   if (!currentUser) { authDialog.showModal(); return; }
   try {
-    const response = await fetch("api/auth", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:new URLSearchParams({action:"logout"})});
+    const response = await fetch("api/auth", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRF-Token":currentUser?.csrf || ""},body:new URLSearchParams({action:"logout"})});
     if (!response.ok) throw new Error("Não foi possível encerrar a sessão.");
     currentUser = null;
     document.querySelector("#auth-open").textContent = "Entrar";
