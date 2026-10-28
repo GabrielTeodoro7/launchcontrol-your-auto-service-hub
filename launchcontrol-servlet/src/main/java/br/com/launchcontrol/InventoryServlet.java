@@ -62,6 +62,7 @@ public class InventoryServlet extends HttpServlet {
                         .append(",\"estoque\":").append(quantity)
                         .append(",\"ativo\":").append(rs.getBoolean("ativo"))
                         .append(",\"fornecedor\":").append(Json.quote(rs.getString("fornecedor")))
+                        .append(",\"fornecedorId\":").append(rs.getObject("fornecedor_id") == null ? "null" : rs.getLong("fornecedor_id"))
                         .append(",\"situacao\":").append(Json.quote(quantity == 0 ? "ZERADO" : quantity <= 5 ? "BAIXO" : "DISPONIVEL"))
                         .append('}');
                 }
@@ -107,6 +108,14 @@ public class InventoryServlet extends HttpServlet {
 
         long userId = (Long) session.getAttribute("userId");
         boolean creating = itemId == 0;
+        long requestedSupplierId = 0;
+        try {
+            String rawSupplierId = request.getParameter("fornecedorId");
+            if (rawSupplierId != null && !rawSupplierId.isBlank()) requestedSupplierId = Long.parseLong(rawSupplierId);
+        } catch (NumberFormatException ex) {
+            Json.error(response, 400, "ID de fornecedor inválido.");
+            return;
+        }
         try (Connection c = Database.getConnection()) {
             c.setAutoCommit(false);
             try {
@@ -119,6 +128,16 @@ public class InventoryServlet extends HttpServlet {
                             supplierId = rs.getLong(1);
                         }
                     }
+                }
+                if ("ADMINISTRADOR".equals(role) && creating) {
+                    if (requestedSupplierId < 1) { c.rollback(); Json.error(response, 400, "Informe o ID de um fornecedor ativo para vincular a nova peça."); return; }
+                    try (PreparedStatement ps = c.prepareStatement("SELECT id FROM fornecedores WHERE id=? AND ativo=TRUE")) {
+                        ps.setLong(1, requestedSupplierId);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (!rs.next()) { c.rollback(); Json.error(response, 404, "Fornecedor ativo não encontrado."); return; }
+                        }
+                    }
+                    supplierId = requestedSupplierId;
                 }
                 if (itemId > 0) {
                     String ownership = "SELECT fornecedor_id FROM pecas WHERE id=? FOR UPDATE";
@@ -137,7 +156,7 @@ public class InventoryServlet extends HttpServlet {
                         ps.setBoolean(7, active); ps.setLong(8, itemId); ps.executeUpdate();
                     }
                 } else {
-                    if (supplierId == null) { c.rollback(); Json.error(response, 400, "Para cadastrar uma peça, a conta deve estar vinculada a um fornecedor."); return; }
+                    if (supplierId == null) { c.rollback(); Json.error(response, 400, "Para cadastrar uma peça, vincule a conta a um fornecedor ativo."); return; }
                     try (PreparedStatement ps = c.prepareStatement("INSERT INTO pecas(fornecedor_id,nome,marca,codigo,descricao,preco,estoque,ativo) VALUES(?,?,?,?,?,?,?,?)", PreparedStatement.RETURN_GENERATED_KEYS)) {
                         ps.setLong(1, supplierId); ps.setString(2, name); ps.setString(3, blankNull(brand));
                         ps.setString(4, blankNull(code)); ps.setString(5, blankNull(description));
