@@ -197,3 +197,18 @@ Foi adicionada uma segunda migração aditiva, `banco-de-dados/migracoes/002_apr
 - **Notificações internas:** a proposta cria notificação para o cliente e a decisão cria notificação para a conta da oficina. A consulta e a marcação de leitura são restritas ao usuário autenticado.
 - **Exportação do passaporte:** a interface gera uma versão de impressão do histórico de manutenção escolhido. O usuário pode selecionar “Salvar como PDF” no diálogo do navegador; não é um PDF produzido no servidor.
 - **Limitações:** o fluxo ainda requer testes de integração com MySQL/Tomcat e teste de navegador. A proposta de adicional fica registrada separadamente do orçamento original; não altera automaticamente o valor da ordem. Anexos são armazenados fora da pasta pública em `LC_UPLOAD_DIR`, com nomes internos aleatórios, validação de assinatura básica, limite de 5 MB e acesso autenticado por proprietário. A retenção e os backups do diretório continuam sob responsabilidade operacional do ambiente.
+
+
+## 11. Incrementos de produto e experiência do cliente
+
+Na continuação do trabalho foram adicionados os seguintes fluxos na mesma aplicação, mantendo HTML/CSS/JavaScript puro e Java Servlet:
+
+- **Decisão de orçamento com notificações:** a oficina recebe notificação quando o cliente aceita ou recusa um orçamento; o cliente recebe confirmação quando a aceitação gera uma ordem. As notificações são persistidas dentro da transação de negócio.
+- **Serviços adicionais e valor da ordem:** o backend expõe a soma dos adicionais aceitos, e a listagem apresenta o total atualizado sem modificar o valor-base do orçamento. A conclusão segue bloqueada enquanto existirem propostas pendentes.
+- **Avaliações pós-serviço:** a interface do cliente permite avaliar ordens concluídas ainda não avaliadas e consultar as avaliações já enviadas. O backend continua sendo a autoridade para validar propriedade, estado concluído e unicidade.
+- **Lembretes informativos:** a garagem destaca datas de manutenção vencidas/próximas e marcos de quilometragem próximos, usando exclusivamente os valores cadastrados pelo proprietário. Não são recomendações do fabricante nem um diagnóstico mecânico.
+- **Verificação estrutural:** o script agora verifica a ligação dos novos fluxos e o cálculo dos adicionais aceitos.
+
+### Validação ainda necessária
+
+O código foi atualizado na branch de trabalho, mas a compilação Maven e a integração ponta a ponta devem ser verificadas na execução de CI mais recente. Ainda são necessários testes com MySQL e Tomcat reais, teste de navegador responsivo, validação de upload/download e configuração do provedor de IA. A aprovação estrutural ou sintática isolada não demonstra que todas as regras funcionam em produção.
