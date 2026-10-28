@@ -37,7 +37,6 @@ public class QuoteDecisionServlet extends HttpServlet {
             c.setAutoCommit(false);
             try {
                 long requestId;
-                long workshopId;
                 long workshopUserId;
                 String status;
                 String requestStatus;
@@ -52,7 +51,6 @@ public class QuoteDecisionServlet extends HttpServlet {
                         status = rs.getString("status");
                         requestId = rs.getLong("solicitacao_id");
                         requestStatus = rs.getString("solicitacao_status");
-                        workshopId = rs.getLong("oficina_id");
                         workshopUserId = rs.getLong("oficina_usuario_id");
                     }
                 }
