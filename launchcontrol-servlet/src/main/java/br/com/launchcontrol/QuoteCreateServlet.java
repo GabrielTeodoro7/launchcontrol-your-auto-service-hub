@@ -24,7 +24,7 @@ public class QuoteCreateServlet extends HttpServlet {
         }
         StringBuilder sql = new StringBuilder(
             "SELECT o.id,o.solicitacao_id,o.valor,o.prazo_dias,o.observacoes,o.status,o.criado_em," +
-            "ofi.nome_fantasia,s.descricao AS solicitacao_descricao " +
+            "ofi.nome_fantasia,s.descricao AS solicitacao_descricao,s.status AS solicitacao_status " +
             "FROM orcamentos o JOIN oficinas ofi ON ofi.id=o.oficina_id " +
             "JOIN solicitacoes_orcamento s ON s.id=o.solicitacao_id ");
         if ("CLIENTE".equals(role)) sql.append("WHERE s.cliente_id=? ");
@@ -45,7 +45,8 @@ public class QuoteCreateServlet extends HttpServlet {
                        .append(",\"observacoes\":").append(Json.quote(rs.getString("observacoes")))
                        .append(",\"status\":").append(Json.quote(rs.getString("status")))
                        .append(",\"oficina\":").append(Json.quote(rs.getString("nome_fantasia")))
-                       .append(",\"descricao\":").append(Json.quote(rs.getString("solicitacao_descricao"))).append('}');
+                       .append(",\"descricao\":").append(Json.quote(rs.getString("solicitacao_descricao")))
+                       .append(",\"solicitacaoStatus\":").append(Json.quote(rs.getString("solicitacao_status"))).append('}');
                 }
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().write(out.append(']').toString());
