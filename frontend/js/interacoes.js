@@ -1098,10 +1098,37 @@ async function loadMaintenance() {
     const records = await response.json();
     if (!response.ok) throw new Error(records.erro || "Não foi possível carregar o histórico.");
     const total = records.reduce((sum, item) => sum + Number(item.custo || 0), 0);
+    const currentYear = new Date().getFullYear();
+    const annualSpend = records.reduce((sum, item) =>
+      String(item.dataServico || "").slice(0, 4) === String(currentYear) ? sum + Number(item.custo || 0) : sum, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const currentMileage = records.length && records[0].quilometragemAtual != null
+      ? Number(records[0].quilometragemAtual) : null;
+    const dueRecords = records.filter(item => {
+      const dateDue = item.proximaData
+        ? new Date(String(item.proximaData).slice(0, 10) + "T00:00:00") < today
+        : false;
+      const mileageDue = item.proximaQuilometragem != null && currentMileage != null
+        ? Number(item.proximaQuilometragem) <= currentMileage : false;
+      return dateDue || mileageDue;
+    });
+    const plannedRecords = records.filter(item => item.proximaData || item.proximaQuilometragem != null).length;
+    const planningCoverage = records.length ? Math.round(plannedRecords / records.length * 100) : null;
+    const upcoming = records.filter(item => item.proximaData || item.proximaQuilometragem != null)
+      .sort((a, b) => String(a.proximaData || "9999-12-31").localeCompare(String(b.proximaData || "9999-12-31")))[0];
+    const nextCare = upcoming
+      ? [upcoming.proximaData ? formatMaintenanceDate(upcoming.proximaData) : "",
+         upcoming.proximaQuilometragem != null ? Number(upcoming.proximaQuilometragem).toLocaleString("pt-BR") + " km" : ""]
+        .filter(Boolean).join(" / ")
+      : "Não informado";
     const metrics = [
       ["Registros", String(records.length)],
-      ["Custo registrado", currency(total)],
-      ["Origem", "Dados cadastrados"]
+      ["Gasto neste ano", currency(annualSpend)],
+      ["Manutenções vencidas", String(dueRecords.length)],
+      ["Próximo cuidado", nextCare],
+      ["Planejamento registrado", planningCoverage == null ? "Sem dados" : planningCoverage + "%"],
+      ["Custo acumulado", currency(total)]
     ];
     metrics.forEach(([label, value]) => {
       const item = document.createElement("div");
